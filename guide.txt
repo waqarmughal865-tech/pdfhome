@@ -1,0 +1,137 @@
+============================================================
+  PDF Home — How to Run
+============================================================
+
+PREREQUISITES
+─────────────
+  • Node.js 18 or later — https://nodejs.org/
+  • npm (comes with Node.js)
+
+
+============================================================
+  EASIEST WAY: 1-CLICK LAUNCH (Windows)
+============================================================
+
+  Simply double-click:
+
+    run.bat
+
+  This will automatically:
+  1. Install dependencies (if not already installed)
+  2. Launch http://localhost:3000 in your default browser
+  3. Start the local server without typing anything in CMD!
+
+
+============================================================
+1. INSTALL DEPENDENCIES (manual CMD alternative)
+============================================================
+
+  Open a terminal in the project folder and run:
+
+    npm install
+
+
+============================================================
+2. RUN IN DEVELOPMENT MODE
+============================================================
+
+    npm run dev
+
+  This starts a local dev server with hot reload.
+  Open your browser to:
+
+    http://localhost:3000
+
+  Changes to source files will refresh automatically.
+
+
+============================================================
+3. BUILD FOR PRODUCTION
+============================================================
+
+    npm run build
+
+  This creates a "dist" folder with all static files.
+  You can host this folder on any web server.
+
+  To preview the production build locally:
+
+    npm run preview
+
+
+============================================================
+4. HOST FROM YOUR LAPTOP (Local Network)
+============================================================
+
+  After building, serve the dist folder:
+
+    npx serve dist -l 3000
+
+  Other devices on your Wi-Fi can access it at:
+
+    http://<YOUR-LOCAL-IP>:3000
+
+  To find your local IP:
+    Windows:   ipconfig
+    Mac/Linux: ifconfig
+
+
+============================================================
+5. MAKE IT ACCESSIBLE FROM THE INTERNET
+============================================================
+
+  Option A — Cloudflare Tunnel (recommended, free)
+  ─────────────────────────────────────────────────
+  1. Install cloudflared:
+     https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/
+
+  2. Run:
+       cloudflared tunnel --url http://localhost:3000
+
+  3. You get a public https:// URL. Share it with anyone.
+     No port forwarding or router config needed.
+
+
+  Option B — ngrok
+  ─────────────────
+  1. Run:
+       npx ngrok http 3000
+
+  2. Copy the https:// URL it gives you.
+
+
+  Option C — Deploy to static hosting
+  ─────────────────────────────────────
+  Upload the "dist" folder to any of these:
+
+    • Netlify     — drag & drop dist folder at app.netlify.com
+    • Vercel      — run: npx vercel dist/
+    • GitHub Pages — push dist/ to a gh-pages branch
+    • Any VPS     — copy dist/ and serve with nginx/apache
+
+
+============================================================
+6. IMPORTANT NOTES
+============================================================
+
+  • All PDF processing happens IN THE BROWSER.
+    Your server never receives or stores PDF files.
+
+  • The server only delivers HTML, CSS, and JavaScript.
+
+  • Supported browsers: Chrome, Edge, Firefox (modern versions).
+
+  • To verify privacy: open Chrome DevTools (F12) → Network tab
+    → use any tool → confirm zero requests contain PDF data.
+
+
+============================================================
+  QUICK REFERENCE
+============================================================
+
+  npm install        Install dependencies (first time)
+  npm run dev        Start dev server → localhost:3000
+  npm run build      Build static files → dist/
+  npm run preview    Preview production build locally
+
+============================================================

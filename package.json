@@ -1,0 +1,23 @@
+{
+  "name": "pdf-home",
+  "private": true,
+  "version": "1.0.0",
+  "description": "PDF Home — Fast, private, in-memory PDF editor, digital signature & office document converter suite",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@pdfsmaller/pdf-encrypt-lite": "^1.2.0",
+    "jszip": "^3.10.2",
+    "pdf-lib": "1.17.1",
+    "pdfjs-dist": "4.9.155",
+    "sortablejs": "1.15.6",
+    "tesseract.js": "^7.0.0"
+  },
+  "devDependencies": {
+    "vite": "6.3.5"
+  }
+}
