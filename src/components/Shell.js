@@ -3,6 +3,7 @@
  */
 
 import { icon } from './icons.js';
+import { initContactModal } from './ContactModal.js';
 
 const TOOLS = [
   { id: 'sign', label: 'Sign PDF', hash: '#/sign-pdf' },
@@ -65,9 +66,9 @@ export function renderShell(appEl) {
               <span style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--color-text-tertiary)">
                 Contact & Support
               </span>
-              <a href="mailto:waqarahmed4071@gmail.com" class="app-footer__link" style="color:var(--color-accent); font-weight:600">
-                ${icon('mail', 14)} waqarahmed4071@gmail.com
-              </a>
+              <button type="button" data-open-contact class="app-footer__link" style="color:var(--color-accent); font-weight:600; background:none; border:none; padding:0; cursor:pointer; font-family:inherit; display:flex; align-items:center; gap:6px">
+                ${icon('mail', 14)} Send Us a Message
+              </button>
             </div>
           </div>
 
@@ -115,8 +116,8 @@ export function renderShell(appEl) {
             <ul class="app-footer__list">
               <li><a class="app-footer__link" href="#/privacy">${icon('chevronRight', 12)} Privacy Policy</a></li>
               <li><a class="app-footer__link" href="#/terms">${icon('chevronRight', 12)} Terms of Service</a></li>
-              <li><a class="app-footer__link" href="#/contact">${icon('chevronRight', 12)} Contact Us</a></li>
-              <li><a class="app-footer__link" href="mailto:waqarahmed4071@gmail.com">${icon('chevronRight', 12)} Direct Support</a></li>
+              <li><a class="app-footer__link" href="#/contact" data-open-contact>${icon('chevronRight', 12)} Contact Us</a></li>
+              <li><button type="button" class="app-footer__link" data-open-contact style="background:none; border:none; padding:0; cursor:pointer; font-family:inherit; color:inherit; text-align:left; display:flex; align-items:center; gap:var(--space-1)">${icon('chevronRight', 12)} Help & Support</button></li>
             </ul>
           </div>
 
@@ -128,12 +129,15 @@ export function renderShell(appEl) {
             <span>Client-Side Document Suite · Zero Server File Storage · Free Online Tools</span>
           </div>
           <div>
-            © 2026 PDF Home. All rights reserved. Created by <a href="mailto:waqarahmed4071@gmail.com" style="color:var(--color-text-secondary); text-decoration:underline">Waqar Ahmed</a>.
+            © 2026 PDF Home. All rights reserved. Created with privacy by Waqar Ahmed.
           </div>
         </div>
       </div>
     </footer>
   `;
+
+  // Initialize Contact Modal
+  initContactModal();
 
   // Theme toggle
   const themeBtn = document.getElementById('theme-toggle');

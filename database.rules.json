@@ -1,0 +1,10 @@
+{
+  "rules": {
+    "contacts": {
+      "$contactId": {
+        ".read": false,
+        ".write": "!data.exists() && newData.hasChildren(['name', 'email', 'message', 'timestamp']) && newData.child('name').isString() && newData.child('name').val().length >= 2 && newData.child('name').val().length <= 60 && newData.child('email').isString() && newData.child('email').val().length <= 100 && newData.child('email').val().contains('@') && newData.child('email').val().contains('.') && newData.child('message').isString() && newData.child('message').val().length >= 5 && newData.child('message').val().length <= 1000 && newData.child('timestamp').isNumber() && newData.child('timestamp').val() <= (now + 120000)"
+      }
+    }
+  }
+}
