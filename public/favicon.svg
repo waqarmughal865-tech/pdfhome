@@ -1,7 +1,43 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" fill="none">
-  <rect width="32" height="32" rx="8" fill="#6366f1"/>
-  <path d="M9 7h8l6 6v12a2 2 0 0 1-2 2H9a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2z" fill="white" fill-opacity="0.9"/>
-  <path d="M17 7v6h6" fill="none" stroke="#6366f1" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-  <rect x="10" y="17" width="8" height="1.5" rx="0.75" fill="#6366f1" fill-opacity="0.6"/>
-  <rect x="10" y="20.5" width="5" height="1.5" rx="0.75" fill="#6366f1" fill-opacity="0.4"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="docGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#0284c7" />
+      <stop offset="50%" stop-color="#0265d6" />
+      <stop offset="100%" stop-color="#0047ba" />
+    </linearGradient>
+    <linearGradient id="foldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+    <filter id="subtleShadow" x="-10%" y="-10%" width="125%" height="125%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#002b66" flood-opacity="0.3" />
+    </filter>
+  </defs>
+
+  <!-- Document Body with Rounded Corners and Fold Cutout -->
+  <g filter="url(#subtleShadow)">
+    <path d="M128 64 C100 64, 80 84, 80 112 L80 400 C80 428, 100 448, 128 448 L384 448 C412 448, 432 428, 432 400 L432 176 L320 64 Z" fill="url(#docGrad)"/>
+  </g>
+
+  <!-- Folded Corner Flap -->
+  <path d="M320 64 L320 160 C320 168, 328 176, 336 176 L432 176 Z" fill="url(#foldGrad)" />
+  <path d="M320 176 L432 176" stroke="#003d99" stroke-width="2" opacity="0.2" />
+
+  <!-- 3 White Document Lines -->
+  <rect x="136" y="140" width="136" height="22" rx="11" fill="#ffffff" fill-opacity="0.95"/>
+  <rect x="136" y="184" width="112" height="22" rx="11" fill="#ffffff" fill-opacity="0.95"/>
+  <rect x="136" y="228" width="76" height="22" rx="11" fill="#ffffff" fill-opacity="0.95"/>
+
+  <!-- House Silhouette at Base -->
+  <!-- Chimney -->
+  <rect x="330" y="278" width="34" height="60" rx="4" fill="#ffffff" />
+  
+  <!-- House Roof & Walls -->
+  <path d="M256 256 L120 376 C116 380, 116 386, 122 386 L150 386 L150 448 L362 448 L362 386 L390 386 C396 386, 396 380, 392 376 Z" fill="#ffffff" />
+
+  <!-- 4 Blue Windows (2x2 Grid) -->
+  <rect x="228" y="340" width="22" height="22" rx="4" fill="#0265d6"/>
+  <rect x="258" y="340" width="22" height="22" rx="4" fill="#0265d6"/>
+  <rect x="228" y="370" width="22" height="22" rx="4" fill="#0265d6"/>
+  <rect x="258" y="370" width="22" height="22" rx="4" fill="#0265d6"/>
 </svg>

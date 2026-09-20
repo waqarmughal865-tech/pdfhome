@@ -8,6 +8,7 @@
  */
 
 import { icon } from '../components/icons.js';
+import { renderAdSlot } from '../components/AdSlot.js';
 import { sanitizeFilename, formatFileSize, readFileAsArrayBuffer, getBasename } from '../utils/file-utils.js';
 import { downloadArrayBuffer } from '../utils/download.js';
 import { pdfToDocx, docxToPdf } from '../pdf/docx-converter.js';
@@ -335,7 +336,7 @@ export function renderConvert(container, initialMode = 'pdf-to-docx') {
                   <div class="worksite-empty__icon">${icon(cfg.icon, 48)}</div>
                   <h3 class="worksite-empty__title">${cfg.title}</h3>
                   <p class="worksite-empty__desc">
-                    Fast, confidential, and bank-grade document conversion. Zero file uploads, zero server queues, and maximum data security.
+                    Fast, confidential, and private document conversion. Zero file uploads, zero server queues, and maximum data security.
                   </p>
                 </div>
               ` : resultBuffer ? `
@@ -374,20 +375,25 @@ export function renderConvert(container, initialMode = 'pdf-to-docx') {
                 </div>
               ` : `
                 <!-- READY TO CONVERT CARD -->
-                <div class="worksite-box" style="padding:var(--space-6); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; min-height:420px; gap:var(--space-3)">
+                <div class="worksite-box" style="padding:var(--space-6); display:flex; flex-direction:column; align-items:center; justify-content:center; text-align:center; min-height:360px; gap:var(--space-3)">
                   <div style="width:64px; height:64px; border-radius:50%; background:rgba(99,102,241,0.08); color:var(--color-primary); display:flex; align-items:center; justify-content:center">
                     ${icon(cfg.icon, 32)}
                   </div>
                   <h3 style="font-size:var(--text-lg); font-weight:var(--weight-semibold); margin:0">Ready to Convert</h3>
                   <p style="font-size:var(--text-sm); color:var(--color-text-secondary); max-width:460px; margin:0">
-                    Click <strong>Convert to ${cfg.targetBadge}</strong> on the left to start. Ultra-fast processing with zero upload queues and bank-grade privacy.
+                    Click <strong>Convert to ${cfg.targetBadge}</strong> on the left to start. Ultra-fast processing with zero upload queues and client-side privacy.
                   </p>
+
+                  <div style="margin-top:var(--space-4); width:100%; max-width:440px">
+                    ${renderAdSlot('rectangle', 'sidebarSquare')}
+                  </div>
                 </div>
               `}
             </main>
 
           </div>
         </div>
+        ${renderAdSlot('banner', 'workspaceBottom')}
       </div>
     `;
 

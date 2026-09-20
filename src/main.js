@@ -105,6 +105,13 @@ function init() {
   
   window.addEventListener('hashchange', navigate);
   navigate();
+
+  // Allow transitions only after the initial paint is completely settled
+  window.requestAnimationFrame(() => {
+    setTimeout(() => {
+      document.documentElement.classList.remove('no-transitions');
+    }, 60);
+  });
 }
 
 // Boot when DOM is ready

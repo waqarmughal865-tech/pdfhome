@@ -108,6 +108,7 @@
   padding: 0 var(--space-6);
   backdrop-filter: blur(12px);
   background: rgba(255, 255, 255, 0.85);
+  flex-wrap: nowrap;
 }
 
 [data-theme="dark"] .app-header {
@@ -115,27 +116,55 @@
 }
 
 .app-header__logo {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
-  font-size: var(--text-md);
-  font-weight: var(--weight-bold);
-  color: var(--color-text-primary);
-  cursor: pointer;
+  gap: 8px;
   text-decoration: none;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  line-height: 1;
+  user-select: none;
+  transition: transform var(--transition-fast), opacity var(--transition-fast);
 }
 
-.app-header__logo-icon {
-  width: 24px;
-  height: 24px;
-  background: var(--color-accent);
-  border-radius: var(--radius-sm);
-  display: flex;
+.app-header__logo:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.app-header__logo-mark {
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
-  font-size: var(--text-xs);
-  font-weight: var(--weight-bold);
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+}
+
+.app-header__logo-img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+  display: block;
+}
+
+.app-header__logo-text {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--color-text-primary);
+  display: inline-flex;
+  align-items: center;
+}
+
+.app-header__logo-text .logo-accent {
+  color: #0284c7;
+  font-weight: 800;
+}
+
+[data-theme="dark"] .app-header__logo-text .logo-accent {
+  color: #38bdf8;
 }
 
 .app-header__nav {
@@ -170,6 +199,7 @@
   display: flex;
   align-items: center;
   gap: var(--space-3);
+  flex-shrink: 0;
 }
 
 /* ── Privacy Badge ── */
@@ -967,4 +997,137 @@
   font-size: 13px;
   color: var(--color-text-secondary);
 }
+
+/* ── AdSense & Engagement Containers ── */
+.ad-container {
+  width: 100%;
+  margin: var(--space-4) auto;
+  position: relative;
+  text-align: center;
+  transition: all var(--transition-base);
+}
+
+.ad-container--leaderboard {
+  max-width: 728px;
+  min-height: 80px;
+}
+
+.ad-container--rectangle {
+  max-width: 336px;
+  min-height: 220px;
+}
+
+.ad-container--banner {
+  max-width: 100%;
+}
+
+.ad-label {
+  display: block;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-tertiary);
+  margin-bottom: 4px;
+}
+
+/* Fallback Card: Pro-Tip & Feature Spotlight */
+.ad-fallback-card {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-5);
+  background: var(--color-bg-secondary);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-xl);
+  box-shadow: 0 2px 10px -2px rgba(0, 0, 0, 0.04);
+  text-align: left;
+  position: relative;
+  overflow: hidden;
+}
+
+.ad-fallback-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 4px;
+  height: 100%;
+  background: var(--color-accent);
+}
+
+.ad-fallback-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-lg);
+  background: var(--color-accent-light);
+  color: var(--color-accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ad-fallback-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.ad-fallback-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.ad-fallback-title span {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 4px;
+  background: rgba(99, 102, 241, 0.12);
+  color: var(--color-accent);
+  font-weight: 800;
+  letter-spacing: 0.05em;
+}
+
+.ad-fallback-desc {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin: 2px 0 0 0;
+  line-height: 1.4;
+}
+
+.ad-fallback-link {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-accent);
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-hover);
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all var(--transition-fast);
+}
+
+.ad-fallback-link:hover {
+  background: var(--color-accent);
+  color: #fff !important;
+}
+
+@media (max-width: 640px) {
+  .ad-fallback-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding: var(--space-3) var(--space-4);
+  }
+  .ad-fallback-link {
+    align-self: flex-start;
+  }
+}
+
 

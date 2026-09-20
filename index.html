@@ -1,10 +1,33 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="light">
+<html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
+  
+  <!-- Instant Zero-Flash Theme Execution: Runs synchronously before any DOM paint -->
+  <script>
+    (function () {
+      try {
+        var theme = localStorage.getItem('pdf-home-theme') || localStorage.getItem('pdf-workspace-theme');
+        if (!theme) {
+          theme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
+        }
+        document.documentElement.setAttribute('data-theme', theme);
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.classList.add('no-transitions');
+        document.documentElement.style.backgroundColor = (theme === 'dark') ? '#0b0f19' : '#f8fafc';
+        document.documentElement.style.colorScheme = theme;
+      } catch (e) {}
+    })();
+  </script>
+
+  <!-- Client-Side Hardening & Anti-XSS Security Policies -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+  <meta name="referrer" content="strict-origin-when-cross-origin" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob: https://cdn.jsdelivr.net; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' blob: data: https://cdn.jsdelivr.net https://tessdata.projectnaptha.com; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';" />
+
   <title>PDF Home — Free Online PDF Editor, Digital Signature & Document Converter</title>
-  <meta name="description" content="All-in-one private PDF editor and document converter. Sign PDF with transparent handwritten signatures, watermark, crop margins, password protect, and convert PDF to Word DOCX, Excel XLSX, PowerPoint PPTX, and OCR searchable text PDF. 100% private in-memory processing." />
+  <meta name="description" content="Free online PDF editor and document converter suite. Sign PDF with transparent handwritten signatures, watermark, crop margins, password protect, and convert PDF to Word DOCX, Excel XLSX, PowerPoint PPTX, and OCR searchable text directly in your browser." />
   <meta name="keywords" content="signature on pdf, sign pdf, transparent signature pdf, electronic signature, digital signature pdf, draw signature, online pdf signer, watermark pdf, protect pdf with password, encrypt pdf, crop pdf margins, number pdf pages, pdf to word, pdf to docx, convert pdf to word, word to pdf, pdf to excel, excel to pdf, pdf to slides, pdf to pptx, picture pdf to text, ocr pdf, searchable pdf, merge pdf, split pdf, compress pdf, reduce pdf size, waqarahmed4071@gmail.com" />
   <meta name="author" content="PDF Home" />
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
@@ -13,16 +36,19 @@
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
   <meta property="og:title" content="PDF Home — Free Online PDF Editor, Digital Signature & Converter" />
-  <meta property="og:description" content="Professional, privacy-first PDF editor and converter. Sign PDF, convert to Word, Excel, Slides, run OCR, and password protect with zero server storage." />
+  <meta property="og:description" content="Professional PDF editor and converter. Sign PDF, convert to Word, Excel, Slides, run OCR, and password protect directly in your browser with zero server storage." />
   <meta property="og:site_name" content="PDF Home" />
   <meta property="og:url" content="https://pdfhome.app/" />
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="PDF Home — Free Online PDF Editor, Digital Signature & Converter" />
-  <meta name="twitter:description" content="Sign PDF documents with transparent signatures, convert PDF to editable Word, Excel, Slides, and run OCR on scanned picture PDFs. 100% private." />
+  <meta name="twitter:description" content="Sign PDF documents with transparent signatures, convert PDF to editable Word, Excel, Slides, and run OCR on scanned picture PDFs with zero server uploads." />
 
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/icon.png" />
+  <link rel="apple-touch-icon" href="/icon.png" />
+  <meta property="og:image" content="https://pdfhome.app/icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -114,7 +140,7 @@
             "name": "How do I add a signature to a PDF online for free?",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "With PDF Home, open the Sign PDF tool, draw your signature or upload a transparent signature image, position it anywhere on the page, and click Save & Export. It is 100% free and private."
+              "text": "With PDF Home, open the Sign PDF tool, draw your signature or upload a transparent signature image, position it anywhere on the page, and click Save & Export. It is free and works directly in your browser."
             }
           },
           {
@@ -155,8 +181,8 @@
     <main style="max-width:960px;margin:40px auto;padding:24px;font-family:sans-serif;line-height:1.6">
       <h1>PDF Home — Online PDF Editor, Digital Signature & Document Converter</h1>
       <p>
-        PDF Home is a professional in-memory document suite allowing you to sign, edit, convert, organize, and protect PDF files securely.
-        Zero server file retention, zero queues, and 100% data privacy.
+        PDF Home is a professional in-browser document suite allowing you to sign, edit, convert, organize, and protect PDF files securely.
+        Zero server file retention, zero queues, and instant client-side execution.
       </p>
       
       <section id="seo-sign-pdf">

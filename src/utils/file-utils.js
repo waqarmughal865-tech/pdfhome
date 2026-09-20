@@ -49,15 +49,28 @@ export function checkFileSize(file) {
 }
 
 /**
- * Sanitize a filename — remove path separators, null bytes, and suspicious characters.
+ * Escape HTML special characters to prevent DOM-based XSS injection.
+ */
+export function escapeHtml(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
+ * Sanitize a filename — remove path separators, null bytes, HTML tags, and dangerous shell characters.
  */
 export function sanitizeFilename(name) {
   if (!name) return 'file';
-  return name
-    .replace(/[/\\:*?"<>|]/g, '_')    // Remove dangerous chars
-    .replace(/\x00/g, '')             // Remove null bytes
-    .replace(/\.{2,}/g, '.')          // Collapse multiple dots
-    .replace(/^\.+/, '')              // Remove leading dots
+  return String(name)
+    .replace(/[/\\:*?"<>|&`';$#%]/g, '_')    // Remove dangerous chars
+    .replace(/[\x00-\x1F\x7F]/g, '')        // Remove non-printable control chars
+    .replace(/\.{2,}/g, '.')                // Collapse multiple dots
+    .replace(/^\.+/, '')                    // Remove leading dots
     .trim()
     || 'file';
 }

@@ -22,9 +22,11 @@ export function renderShell(appEl) {
 
   appEl.innerHTML = `
     <header class="app-header" id="app-header">
-      <a class="app-header__logo" href="#/" id="logo-link">
-        <span class="app-header__logo-icon">${icon('fileText', 16)}</span>
-        <span>PDF Home</span>
+      <a class="app-header__logo" href="#/" id="logo-link" aria-label="PDF Home Home">
+        <span class="app-header__logo-mark">
+          <img src="/favicon.svg" alt="PDFHome" class="app-header__logo-img" width="32" height="32" />
+        </span>
+        <span class="app-header__logo-text">PDF<span class="logo-accent">Home</span></span>
       </a>
       <nav class="app-header__nav" id="main-nav">
         ${TOOLS.map(t => `
@@ -36,11 +38,6 @@ export function renderShell(appEl) {
         `).join('')}
       </nav>
       <div class="app-header__right">
-        <div class="privacy-badge" title="Bank-grade privacy. Zero cloud uploads or server file retention.">
-          <span class="privacy-badge__dot"></span>
-          ${icon('shieldCheck', 12)}
-          <span>100% Private & Secure</span>
-        </div>
         <button class="theme-toggle" id="theme-toggle" title="Toggle theme" aria-label="Toggle dark mode">
           ${(document.documentElement.getAttribute('data-theme') === 'dark') ? icon('sun', 18) : icon('moon', 18)}
         </button>
@@ -56,8 +53,10 @@ export function renderShell(appEl) {
           <!-- Column 1: Brand & Contact -->
           <div style="display:flex; flex-direction:column; gap:var(--space-3)">
             <a class="app-header__logo" href="#/" style="margin-bottom:4px">
-              <span class="app-header__logo-icon">${icon('fileText', 16)}</span>
-              <span>PDF Home</span>
+              <span class="app-header__logo-mark">
+                <img src="/favicon.svg" alt="PDFHome" class="app-header__logo-img" width="32" height="32" />
+              </span>
+              <span class="app-header__logo-text">PDF<span class="logo-accent">Home</span></span>
             </a>
             <p style="font-size:13px; color:var(--color-text-secondary); line-height:1.6; margin:0">
               High-performance, private document suite. Fast in-memory editing, bidirectional office conversion, and digital signatures with zero file retention.
@@ -125,8 +124,8 @@ export function renderShell(appEl) {
 
         <div class="app-footer__bottom">
           <div style="display:flex; align-items:center; gap:8px">
-            <span style="color:#16a34a">${icon('shieldCheck', 16)}</span>
-            <span>Bank-Grade In-Memory Security · Zero File Storage · 100% Free</span>
+            <span style="color:var(--color-text-tertiary)">${icon('shieldCheck', 16)}</span>
+            <span>Client-Side Document Suite · Zero Server File Storage · Free Online Tools</span>
           </div>
           <div>
             © 2026 PDF Home. All rights reserved. Created by <a href="mailto:waqarahmed4071@gmail.com" style="color:var(--color-text-secondary); text-decoration:underline">Waqar Ahmed</a>.
@@ -151,12 +150,22 @@ export function renderShell(appEl) {
   themeBtn.addEventListener('click', () => {
     const active = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
     const next = active === 'dark' ? 'light' : 'dark';
+    
+    // Enable transition only during deliberate user toggle
+    document.documentElement.classList.add('theme-transitioning');
     document.documentElement.setAttribute('data-theme', next);
     document.documentElement.dataset.theme = next;
+    document.documentElement.style.backgroundColor = next === 'dark' ? '#0b0f19' : '#f8fafc';
+    document.documentElement.style.colorScheme = next;
+
     try {
       localStorage.setItem('pdf-home-theme', next);
     } catch (e) {}
     updateThemeButton(next);
+
+    setTimeout(() => {
+      document.documentElement.classList.remove('theme-transitioning');
+    }, 300);
   });
 
   return document.getElementById('main-content');

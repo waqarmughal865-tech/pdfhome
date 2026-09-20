@@ -8,6 +8,7 @@
  */
 
 import { icon } from '../components/icons.js';
+import { renderAdSlot } from '../components/AdSlot.js';
 import { validateFileType, checkFileSize, sanitizeFilename, formatFileSize, readFileAsArrayBuffer, PDF_MIME, getBasename } from '../utils/file-utils.js';
 import { downloadArrayBuffer } from '../utils/download.js';
 import { applyWatermark, applyPageNumbers, applyCrop, lockPDF } from '../pdf/editor-engine.js';
@@ -232,7 +233,7 @@ export function renderPages(container, options = {}) {
                     ${icon('save', 18)} Save & Export PDF
                   </button>
                   <p style="font-size:11px; color:var(--color-text-tertiary); display:flex; align-items:center; justify-content:center; gap:4px; margin:0">
-                    ${icon('shieldCheck', 12)} Bank-Grade Privacy · Zero Server Uploads
+                    ${icon('shieldCheck', 12)} Client-Side Processing · Zero Server Uploads
                   </p>
                 </div>
               ` : ''}
@@ -298,7 +299,7 @@ export function renderPages(container, options = {}) {
                   </div>
 
                   <!-- Canvas Preview Viewport -->
-                  <div class="preview-viewport" id="preview-viewport" style="flex:1; display:flex; align-items:center; justify-content:center; padding:var(--space-4); background:var(--color-bg-tertiary); overflow:auto; position:relative; min-height:360px">
+                  <div class="preview-viewport" id="preview-viewport" style="display:flex; align-items:center; justify-content:center; padding:var(--space-3); background:var(--color-bg-tertiary); overflow:auto; position:relative; height:clamp(260px, 40vh, 440px); min-height:240px">
                     <div class="canvas-container" id="canvas-container" style="position:relative; display:inline-block; box-shadow:0 8px 24px rgba(0,0,0,0.12); border-radius:4px; line-height:0">
                       <canvas id="main-preview-canvas" style="display:block; border-radius:4px; background:#fff"></canvas>
                       
@@ -308,12 +309,31 @@ export function renderPages(container, options = {}) {
                       <div id="live-crop-overlay"></div>
                     </div>
                   </div>
+
+                  <!-- Horizontal Page Filmstrip Dock (Zero-Scroll Page Jumper) -->
+                  <div class="page-filmstrip-bar" id="page-filmstrip-bar">
+                    <div class="page-filmstrip-header">
+                      <div style="display:flex; align-items:center; gap:6px">
+                        <span>${icon('layers', 12)} Quick Page Filmstrip</span>
+                        <span style="font-size:10px; color:var(--color-text-tertiary); font-weight:normal" id="filmstrip-page-count">(${livePages.length} active pages)</span>
+                      </div>
+                      <div style="display:flex; align-items:center; gap:8px">
+                        <span style="font-size:10px; color:var(--color-text-tertiary)">Click page to jump</span>
+                        <button class="btn btn-ghost btn-sm" id="btn-toggle-grid-mode" style="font-size:11px; padding:2px 8px; height:24px" title="Toggle Full Page Grid View">
+                          ${icon('grid', 12)} <span id="toggle-grid-label">Full Page Grid</span>
+                        </button>
+                      </div>
+                    </div>
+                    <div class="page-filmstrip-track" id="page-filmstrip-track">
+                      <!-- Rendered by updateFilmstrip() -->
+                    </div>
+                  </div>
                 </section>
 
                 <!-- ============================================== -->
                 <!-- SECTION 2: BOTTOM BOX — EDIT THE PAGE SECTION -->
                 <!-- ============================================== -->
-                <section class="worksite-box worksite-box--bottom-editor" style="border:1px solid var(--color-border); background:var(--color-bg-secondary)">
+                <section class="worksite-box worksite-box--bottom-editor" id="worksite-bottom-editor" style="border:1px solid var(--color-border); background:var(--color-bg-secondary)">
                   <div style="padding:var(--space-3) var(--space-4); border-bottom:1px solid var(--color-border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:var(--space-2)">
                     <div style="display:flex; align-items:center; gap:var(--space-2)">
                       <span class="worksite-box__badge" style="background:#22c55e; color:#fff; font-weight:600; padding:2px 8px; border-radius:4px; font-size:11px">
@@ -375,12 +395,14 @@ export function renderPages(container, options = {}) {
 
           </div>
         </div>
+        ${renderAdSlot('banner', 'workspaceBottom')}
       </div>
     `;
 
     bindAllEvents();
     if (file && pdfDoc) {
       updateSidebarPages();
+      updateFilmstrip();
       updateHeaderInfo();
       renderPreviewCanvas();
       updateOverlays();
@@ -866,6 +888,15 @@ export function renderPages(container, options = {}) {
       const p = parseInt(btn.getAttribute('data-page'), 10);
       btn.className = `btn btn-sm ${p === activePage ? 'btn-primary' : 'btn-secondary'} page-jump-btn`;
     });
+
+    container.querySelectorAll('.filmstrip-card').forEach(card => {
+      const p = parseInt(card.getAttribute('data-page'), 10);
+      const isAct = p === activePage;
+      card.classList.toggle('filmstrip-card--active', isAct);
+      if (isAct) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+    });
   }
 
   function updateSidebarPages() {
@@ -889,6 +920,55 @@ export function renderPages(container, options = {}) {
         setActivePage(parseInt(btn.getAttribute('data-page'), 10));
       });
     });
+
+    updateFilmstrip();
+  }
+
+  function updateFilmstrip() {
+    const track = container.querySelector('#page-filmstrip-track');
+    const countEl = container.querySelector('#filmstrip-page-count');
+    if (!track) return;
+
+    const livePages = pageOrder.filter(p => !deletedPages.has(p));
+    if (countEl) countEl.textContent = `(${livePages.length} active pages)`;
+
+    track.innerHTML = livePages.map(p => {
+      const isActive = p === activePage;
+      const pEx = isPageExcluded(p);
+      return `
+        <div class="filmstrip-card ${isActive ? 'filmstrip-card--active' : ''}" data-page="${p}" style="position:relative">
+          <div class="filmstrip-card__thumb" id="filmstrip-thumb-${p}">
+            <span style="font-size:11px; font-weight:700; color:var(--color-text-tertiary)">${p}</span>
+          </div>
+          <span class="filmstrip-card__num">P. ${p}</span>
+          ${pEx ? `<span style="position:absolute; top:2px; right:4px; font-size:9px; color:#ef4444" title="Watermark Excluded">⊘</span>` : ''}
+        </div>
+      `;
+    }).join('');
+
+    track.querySelectorAll('.filmstrip-card').forEach(card => {
+      card.addEventListener('click', () => {
+        setActivePage(parseInt(card.getAttribute('data-page'), 10));
+      });
+    });
+
+    // Lazy load thumbnails for filmstrip items if pdfDoc exists
+    if (pdfDoc) {
+      livePages.forEach(p => {
+        const thumbBox = track.querySelector(`#filmstrip-thumb-${p}`);
+        if (!thumbBox) return;
+        const cacheKey = `${p}_${rotations[p] || 0}`;
+        if (thumbCache.has(cacheKey)) {
+          thumbBox.replaceChildren(thumbCache.get(cacheKey).cloneNode(true));
+        } else {
+          generateThumbnail(pdfDoc, p, 70, rotations[p] || 0).then(thumbCanvas => {
+            thumbCache.set(cacheKey, thumbCanvas);
+            const box = track.querySelector(`#filmstrip-thumb-${p}`);
+            if (box) box.replaceChildren(thumbCanvas.cloneNode(true));
+          }).catch(() => {});
+        }
+      });
+    }
   }
 
   // --- FAST OVERLAY UPDATES ---
@@ -1581,6 +1661,21 @@ export function renderPages(container, options = {}) {
     // Initialize requested active tab
     if (activeTab) {
       switchTab(activeTab);
+    }
+
+    // Filmstrip Full Grid toggle
+    const toggleGridBtn = container.querySelector('#btn-toggle-grid-mode');
+    if (toggleGridBtn) {
+      toggleGridBtn.addEventListener('click', () => {
+        const isOrganize = activeTab === 'organize';
+        switchTab(isOrganize ? 'watermark' : 'organize');
+        const gridLabel = container.querySelector('#toggle-grid-label');
+        if (gridLabel) gridLabel.textContent = isOrganize ? 'Full Page Grid' : 'Hide Grid';
+        const bottomSec = container.querySelector('#worksite-bottom-editor');
+        if (bottomSec) {
+          bottomSec.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+      });
     }
 
     // Preview navigation

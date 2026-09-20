@@ -27,13 +27,39 @@ body {
   color: var(--color-text-primary);
   background-color: var(--color-bg-primary);
   min-height: 100vh;
-  transition: background-color var(--transition-slow), color var(--transition-slow);
+  overflow-x: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ── Prevent any flash of unstyled theme on page refresh or load ── */
+html.no-transitions,
+html.no-transitions *,
+html.no-transitions *::before,
+html.no-transitions *::after {
+  -webkit-transition: none !important;
+  -moz-transition: none !important;
+  -o-transition: none !important;
+  -ms-transition: none !important;
+  transition: none !important;
+}
+
+/* ── Smooth transitions only when user explicitly toggles theme ── */
+html.theme-transitioning,
+html.theme-transitioning body,
+html.theme-transitioning .app-header,
+html.theme-transitioning .tool-card,
+html.theme-transitioning .tool-sidebar__card,
+html.theme-transitioning .search-input-wrap {
+  transition: background-color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              color 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+              border-color 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
 }
 
 #app {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  background-color: var(--color-bg-primary);
 }
 
 /* ── Typography ── */

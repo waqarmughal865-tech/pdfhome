@@ -3,6 +3,8 @@
  */
 
 import { icon } from '../components/icons.js';
+import { escapeHtml } from '../utils/file-utils.js';
+import { renderAdSlot } from '../components/AdSlot.js';
 
 export const TOOL_REGISTRY = [
   {
@@ -268,8 +270,8 @@ export function renderHome(container) {
       <div class="home__hero">
         <h1 class="home__title">All-in-One Local PDF & Document Suite</h1>
         <p class="home__subtitle">
-          Instant, private PDF tools and high-fidelity office conversions with bank-grade security. 
-          Zero server file uploads, zero wait queues, and 100% confidential.
+          Free, fast, and secure PDF tools and document conversions. 
+          Sign, convert, merge, edit, and protect your PDF documents directly in your browser.
         </p>
 
         <!-- Live Instant Search Bar -->
@@ -305,6 +307,11 @@ export function renderHome(container) {
           <span id="home-stats-text"></span>
           <button class="btn btn-ghost btn-sm" id="btn-stats-clear" style="font-size:11px">Reset filter</button>
         </div>
+
+        <!-- AdSense / Engagement Leaderboard Slot -->
+        <div style="margin-top:var(--space-6)">
+          ${renderAdSlot('leaderboard', 'homeBanner')}
+        </div>
       </div>
 
       <!-- Tools Grid -->
@@ -312,12 +319,42 @@ export function renderHome(container) {
         ${renderCardsHtml(TOOL_REGISTRY)}
       </div>
 
-      <!-- Privacy & Performance Banner -->
-      <div class="home__privacy">
-        <span class="home__privacy-lock">${icon('shieldCheck', 20)}</span>
-        <span>
-          <strong>Bank-Grade In-Memory Execution</strong> — All PDF manipulation, digital signatures, OCR text extraction, and Office document generation execute instantaneously within high-speed in-memory sessions. Your confidential documents are never uploaded, stored, or transmitted across servers.
-        </span>
+      <!-- Feature Highlights & User Engagement Cards -->
+      <section class="home-features" style="margin-top:var(--space-12); display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:var(--space-4)">
+        <div class="feature-card" style="background:var(--color-bg-secondary); border:1px solid var(--color-border); border-radius:var(--radius-xl); padding:var(--space-5); display:flex; flex-direction:column; gap:var(--space-2)">
+          <div style="width:38px; height:38px; border-radius:var(--radius-lg); background:rgba(99,102,241,0.1); color:var(--color-primary); display:flex; align-items:center; justify-content:center">
+            ${icon('zap', 20)}
+          </div>
+          <h3 style="font-size:var(--text-md); font-weight:var(--weight-bold); margin:4px 0 0 0">Instant Local Speed</h3>
+          <p style="font-size:var(--text-sm); color:var(--color-text-secondary); margin:0; line-height:1.5">
+            Files never queue on a remote server. Document conversions, OCR character extraction, and digital signatures render instantaneously in memory.
+          </p>
+        </div>
+
+        <div class="feature-card" style="background:var(--color-bg-secondary); border:1px solid var(--color-border); border-radius:var(--radius-xl); padding:var(--space-5); display:flex; flex-direction:column; gap:var(--space-2)">
+          <div style="width:38px; height:38px; border-radius:var(--radius-lg); background:rgba(34,197,94,0.1); color:#16a34a; display:flex; align-items:center; justify-content:center">
+            ${icon('shieldCheck', 20)}
+          </div>
+          <h3 style="font-size:var(--text-md); font-weight:var(--weight-bold); margin:4px 0 0 0">Private By Architecture</h3>
+          <p style="font-size:var(--text-sm); color:var(--color-text-secondary); margin:0; line-height:1.5">
+            Confidential contracts, tax records, and legal forms stay strictly inside your browser. No telemetry or server retention.
+          </p>
+        </div>
+
+        <div class="feature-card" style="background:var(--color-bg-secondary); border:1px solid var(--color-border); border-radius:var(--radius-xl); padding:var(--space-5); display:flex; flex-direction:column; gap:var(--space-2)">
+          <div style="width:38px; height:38px; border-radius:var(--radius-lg); background:rgba(234,179,8,0.1); color:#ca8a04; display:flex; align-items:center; justify-content:center">
+            ${icon('fileSpreadsheet', 20)}
+          </div>
+          <h3 style="font-size:var(--text-md); font-weight:var(--weight-bold); margin:4px 0 0 0">Smart Office Suite</h3>
+          <p style="font-size:var(--text-sm); color:var(--color-text-secondary); margin:0; line-height:1.5">
+            Turn PDF reports into editable Word (.docx), tables into Excel (.xlsx), and decks into PowerPoint (.pptx) with full formatting intact.
+          </p>
+        </div>
+      </section>
+
+      <!-- Bottom Engagement Banner -->
+      <div style="margin-top:var(--space-8)">
+        ${renderAdSlot('banner', 'workspaceBottom')}
       </div>
     </div>
   `;
@@ -344,8 +381,8 @@ export function renderHome(container) {
       if (searchQuery || currentCategory !== 'all') {
         statsBar.style.display = 'flex';
         const parts = [];
-        if (searchQuery) parts.push(`matching "<strong>${searchQuery}</strong>"`);
-        if (currentCategory !== 'all') parts.push(`in category <em>${currentCategory}</em>`);
+        if (searchQuery) parts.push(`matching "<strong>${escapeHtml(searchQuery)}</strong>"`);
+        if (currentCategory !== 'all') parts.push(`in category <em>${escapeHtml(currentCategory)}</em>`);
         statsText.innerHTML = `Showing ${cards.length} tool${cards.length === 1 ? '' : 's'} ${parts.join(' ')}`;
       } else {
         statsBar.style.display = 'none';
