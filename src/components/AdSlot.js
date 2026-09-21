@@ -8,14 +8,15 @@
 
 import { icon } from './icons.js';
 
-// Configuration: Replace caPubId with your Google AdSense Publisher ID (e.g., 'ca-pub-1234567890123456')
+// Configuration: Google AdSense Publisher ID
 export const ADSENSE_CONFIG = {
-  enabled: false, // Set to true once approved by Google AdSense
-  caPubId: '',    // e.g. 'ca-pub-XXXXXXXXXXXXXXXX'
+  enabled: true,
+  caPubId: 'ca-pub-9649951726869483',
   slots: {
     homeBanner: '',       // Responsive Leaderboard
     workspaceBottom: '',  // Workspace Bottom Banner
     sidebarSquare: '',    // 300x250 Sidebar Rectangle
+    toolPageBottom: '',   // Tool Page Bottom Banner
   }
 };
 
@@ -51,20 +52,16 @@ export function renderAdSlot(type = 'banner', slotKey = 'workspaceBottom') {
   const slotId = ADSENSE_CONFIG.slots[slotKey] || '';
 
   // When live AdSense is active and configured
-  if (ADSENSE_CONFIG.enabled && ADSENSE_CONFIG.caPubId && slotId) {
+  if (ADSENSE_CONFIG.enabled && ADSENSE_CONFIG.caPubId) {
     return `
-      <div class="ad-container ad-container--${type}">
+      <div class="ad-container ad-container--${type}" data-slot="${slotKey}">
         <span class="ad-label">Advertisement</span>
         <ins class="adsbygoogle"
              style="display:block; text-align:center"
-             data-ad-layout="in-article"
-             data-ad-format="auto"
              data-ad-client="${ADSENSE_CONFIG.caPubId}"
-             data-ad-slot="${slotId}"
+             ${slotId ? `data-ad-slot="${slotId}"` : ''}
+             data-ad-format="auto"
              data-full-width-responsive="true"></ins>
-        <script>
-          try { (adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
-        </script>
       </div>
     `;
   }
@@ -82,10 +79,27 @@ export function renderAdSlot(type = 'banner', slotKey = 'workspaceBottom') {
           </div>
           <p class="ad-fallback-desc">${randomTip.desc}</p>
         </div>
-        <a href="#/sign-pdf" class="ad-fallback-link" title="Explore Tool">
+        <a href="/sign-pdf" class="ad-fallback-link" title="Explore Tool">
           Try Tool ${icon('arrowRight', 12)}
         </a>
       </div>
     </div>
   `;
+}
+
+/**
+ * Safely push AdSense requests after DOM updates.
+ */
+export function refreshAds() {
+  if (typeof window === 'undefined') return;
+  try {
+    const uninitialized = document.querySelectorAll('ins.adsbygoogle:not([data-adsbygoogle-status])');
+    if (uninitialized.length > 0) {
+      uninitialized.forEach(() => {
+        try {
+          (window.adsbygoogle = window.adsbygoogle || []).push({});
+        } catch (e) {}
+      });
+    }
+  } catch (e) {}
 }

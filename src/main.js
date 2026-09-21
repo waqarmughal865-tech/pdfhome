@@ -5,6 +5,7 @@
 import { renderShell, updateActiveNav } from './components/Shell.js';
 import { renderToolPage } from './components/ToolPageWrapper.js';
 import { resetHomeSeo } from './seo/seo-helper.js';
+import { refreshAds } from './components/AdSlot.js';
 
 // ── Theme initialization ──
 let initialTheme = 'light';
@@ -240,6 +241,7 @@ async function navigate() {
 
   try {
     await handler(contentEl);
+    setTimeout(refreshAds, 80);
   } catch (err) {
     console.error('Route navigation error:', err);
     if (contentEl) {
