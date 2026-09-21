@@ -1,4 +1,17 @@
 User-agent: *
 Allow: /
+Disallow: /assets/
+
+User-agent: Googlebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Yandex
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
 
 Sitemap: https://pdfhome.site/sitemap.xml

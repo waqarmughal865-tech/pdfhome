@@ -309,6 +309,31 @@ function buildHomeContentHtml() {
         </div>
       </section>
 
+      <!-- Semantic SEO Content Section — Visible to all crawlers including JS-rendering bots -->
+      <article class="seo-semantic-content" style="margin-top:var(--space-12); background:var(--color-bg-secondary); border:1px solid var(--color-border); border-radius:var(--radius-xl); padding:var(--space-8)">
+        <h2 style="font-size:var(--text-lg); font-weight:var(--weight-bold); color:var(--color-text-primary); margin-bottom:var(--space-4)">About PDFHome — Free Online PDF Tools</h2>
+        <p style="font-size:var(--text-sm); color:var(--color-text-secondary); line-height:1.7; margin-bottom:var(--space-4)">
+          PDFHome is a free online PDF editor and document converter. Merge PDF files, split PDF pages, compress PDF size, convert PDF to Word, convert PDF to Excel, convert PDF to PowerPoint, convert PDF to JPG images, convert JPG to PDF, add digital signatures to PDF, add watermarks to PDF, password protect PDF, crop PDF margins, add page numbers to PDF, rotate PDF pages, delete PDF pages, and perform OCR on scanned PDFs — all 100% free, private, and directly in your web browser with zero server uploads.
+        </p>
+        <p style="font-size:var(--text-sm); color:var(--color-text-secondary); line-height:1.7; margin-bottom:var(--space-4)">
+          Unlike other online PDF tools that upload your files to remote servers, PDFHome processes everything locally on your device using advanced HTML5, WebAssembly, and JavaScript technologies. Your confidential contracts, tax documents, legal forms, resumes, financial statements, and personal files never leave your computer or mobile device.
+        </p>
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:var(--space-3); margin-top:var(--space-4)">
+          <div style="font-size:var(--text-xs); color:var(--color-text-tertiary); line-height:1.6">
+            <strong style="color:var(--color-text-secondary)">PDF Editor Tools:</strong>
+            Merge PDF, Split PDF, Compress PDF, Rotate PDF, Delete PDF Pages, Crop PDF Margins, Add Page Numbers to PDF
+          </div>
+          <div style="font-size:var(--text-xs); color:var(--color-text-tertiary); line-height:1.6">
+            <strong style="color:var(--color-text-secondary)">PDF Conversion Tools:</strong>
+            PDF to Word DOCX, PDF to Excel XLSX, PDF to PowerPoint PPTX, PDF to JPG PNG, JPG to PDF, Word to PDF, Excel to PDF
+          </div>
+          <div style="font-size:var(--text-xs); color:var(--color-text-tertiary); line-height:1.6">
+            <strong style="color:var(--color-text-secondary)">PDF Security Tools:</strong>
+            Sign PDF Online, E-Sign PDF, Digital Signature PDF, Watermark PDF, Password Protect PDF, Encrypt PDF, OCR PDF Text Recognition
+          </div>
+        </div>
+      </article>
+
       <!-- Bottom Engagement Banner -->
       <div style="margin-top:var(--space-8)">
         ${renderAdSlot('banner', 'workspaceBottom')}
@@ -548,7 +573,7 @@ function buildToolSchemaJson(seoData, canonicalUrl) {
 /**
  * Build Full HTML Page from Base Template
  */
-function createPageHtml({ title, description, canonicalUrl, mainContentHtml, currentPath = '/', customSchemaJson = null }) {
+function createPageHtml({ title, description, canonicalUrl, mainContentHtml, currentPath = '/', customSchemaJson = null, keywords = null }) {
   let html = baseTemplate;
 
   // Title
@@ -557,8 +582,16 @@ function createPageHtml({ title, description, canonicalUrl, mainContentHtml, cur
   // Meta Description
   html = html.replace(/<meta name="description" content="[\s\S]*?" \/>/, `<meta name="description" content="${description}" />`);
 
-  // Canonical
+  // Per-page keywords (replace generic homepage keywords with tool-specific ones)
+  if (keywords) {
+    html = html.replace(/<meta name="keywords" content="[\s\S]*?" \/>/, `<meta name="keywords" content="${keywords}" />`);
+  }
+
+  // Canonical + hreflang
   html = html.replace(/<link rel="canonical" href="[\s\S]*?" \/>/, `<link rel="canonical" href="${canonicalUrl}" />`);
+  // Add hreflang tags after canonical for international SEO
+  const hreflangTags = `\n  <link rel="alternate" hreflang="en" href="${canonicalUrl}" />\n  <link rel="alternate" hreflang="x-default" href="${canonicalUrl}" />`;
+  html = html.replace(/(<link rel="canonical"[^>]*>)/, `$1${hreflangTags}`);
 
   // Open Graph
   html = html.replace(/<meta property="og:title" content="[\s\S]*?" \/>/, `<meta property="og:title" content="${title}" />`);
@@ -617,13 +650,24 @@ for (const [key, seoData] of Object.entries(TOOL_SEO_DATA)) {
   const customSchema = buildToolSchemaJson(seoData, canonicalUrl);
   const toolContentHtml = buildToolPageHtml(seoData);
 
+  // Build tool-specific keywords from SEO data
+  const toolKeywords = [
+    seoData.name.toLowerCase(),
+    `${seoData.name.toLowerCase()} online`,
+    `${seoData.name.toLowerCase()} free`,
+    `free ${seoData.name.toLowerCase()} online`,
+    'pdfhome',
+    ...(seoData.relatedTools || []).map(rt => rt.replace(/-/g, ' '))
+  ].join(', ');
+
   const toolPageHtml = createPageHtml({
     title: seoData.metaTitle,
     description: seoData.metaDescription,
     canonicalUrl,
     mainContentHtml: toolContentHtml,
     currentPath: seoData.slug,
-    customSchemaJson: customSchema
+    customSchemaJson: customSchema,
+    keywords: toolKeywords
   });
 
   const outPath = path.resolve(DIST_DIR, cleanSlug, 'index.html');
