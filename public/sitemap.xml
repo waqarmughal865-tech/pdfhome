@@ -1,140 +1,134 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://pdfhome.pages.dev/</loc>
-    <lastmod>2026-09-21</lastmod>
+    <loc>https://pdfhome.site/</loc>
+    <lastmod>2026-09-22</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://pdfhome.pages.dev/merge-pdf</loc>
-    <lastmod>2026-09-21</lastmod>
+    <loc>https://pdfhome.site/merge-pdf</loc>
+    <lastmod>2026-09-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://pdfhome.pages.dev/split-pdf</loc>
-    <lastmod>2026-09-21</lastmod>
+    <loc>https://pdfhome.site/split-pdf</loc>
+    <lastmod>2026-09-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://pdfhome.pages.dev/compress-pdf</loc>
-    <lastmod>2026-09-21</lastmod>
+    <loc>https://pdfhome.site/compress-pdf</loc>
+    <lastmod>2026-09-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://pdfhome.pages.dev/pdf-to-word</loc>
-    <lastmod>2026-09-21</lastmod>
+    <loc>https://pdfhome.site/pdf-to-word</loc>
+    <lastmod>2026-09-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://pdfhome.pages.dev/pdf-to-excel</loc>
-    <lastmod>2026-09-21</lastmod>
+    <loc>https://pdfhome.site/pdf-to-excel</loc>
+    <lastmod>2026-09-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://pdfhome.pages.dev/pdf-to-powerpoint</loc>
-    <lastmod>2026-09-21</lastmod>
+    <loc>https://pdfhome.site/pdf-to-powerpoint</loc>
+    <lastmod>2026-09-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://pdfhome.pages.dev/pdf-to-jpg</loc>
-    <lastmod>2026-09-21</lastmod>
+    <loc>https://pdfhome.site/pdf-to-jpg</loc>
+    <lastmod>2026-09-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://pdfhome.pages.dev/jpg-to-pdf</loc>
-    <lastmod>2026-09-21</lastmod>
+    <loc>https://pdfhome.site/jpg-to-pdf</loc>
+    <lastmod>2026-09-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://pdfhome.pages.dev/ocr-pdf</loc>
-    <lastmod>2026-09-21</lastmod>
+    <loc>https://pdfhome.site/ocr-pdf</loc>
+    <lastmod>2026-09-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://pdfhome.pages.dev/rotate-pdf</loc>
-    <lastmod>2026-09-21</lastmod>
+    <loc>https://pdfhome.site/rotate-pdf</loc>
+    <lastmod>2026-09-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://pdfhome.pages.dev/delete-pdf-pages</loc>
-    <lastmod>2026-09-21</lastmod>
+    <loc>https://pdfhome.site/delete-pdf-pages</loc>
+    <lastmod>2026-09-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://pdfhome.pages.dev/watermark-pdf</loc>
-    <lastmod>2026-09-21</lastmod>
+    <loc>https://pdfhome.site/watermark-pdf</loc>
+    <lastmod>2026-09-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://pdfhome.pages.dev/sign-pdf</loc>
-    <lastmod>2026-09-21</lastmod>
+    <loc>https://pdfhome.site/sign-pdf</loc>
+    <lastmod>2026-09-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://pdfhome.pages.dev/protect-pdf</loc>
-    <lastmod>2026-09-21</lastmod>
+    <loc>https://pdfhome.site/protect-pdf</loc>
+    <lastmod>2026-09-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pdfhome.pages.dev/crop-pdf</loc>
-    <lastmod>2026-09-21</lastmod>
+    <loc>https://pdfhome.site/crop-pdf</loc>
+    <lastmod>2026-09-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pdfhome.pages.dev/page-numbers</loc>
-    <lastmod>2026-09-21</lastmod>
+    <loc>https://pdfhome.site/page-numbers</loc>
+    <lastmod>2026-09-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pdfhome.pages.dev/organize-pdf</loc>
-    <lastmod>2026-09-21</lastmod>
+    <loc>https://pdfhome.site/word-to-pdf</loc>
+    <lastmod>2026-09-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pdfhome.pages.dev/word-to-pdf</loc>
-    <lastmod>2026-09-21</lastmod>
+    <loc>https://pdfhome.site/excel-to-pdf</loc>
+    <lastmod>2026-09-22</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://pdfhome.pages.dev/excel-to-pdf</loc>
-    <lastmod>2026-09-21</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://pdfhome.pages.dev/privacy</loc>
-    <lastmod>2026-09-21</lastmod>
+    <loc>https://pdfhome.site/privacy</loc>
+    <lastmod>2026-09-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://pdfhome.pages.dev/terms</loc>
-    <lastmod>2026-09-21</lastmod>
+    <loc>https://pdfhome.site/terms</loc>
+    <lastmod>2026-09-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.4</priority>
   </url>
   <url>
-    <loc>https://pdfhome.pages.dev/contact</loc>
-    <lastmod>2026-09-21</lastmod>
+    <loc>https://pdfhome.site/contact</loc>
+    <lastmod>2026-09-22</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>

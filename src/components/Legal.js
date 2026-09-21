@@ -10,7 +10,7 @@ export function renderPrivacy(container) {
   container.innerHTML = `
     <div class="legal-page" style="max-width:860px; margin:0 auto; padding:var(--space-8) var(--space-4)">
       <div class="tool-page__header" style="margin-bottom:var(--space-8)">
-        <a class="tool-page__back" href="#/" title="Back to Home">${icon('chevronLeft')}</a>
+        <a class="tool-page__back" href="/" title="Back to Home">${icon('chevronLeft')}</a>
         <div>
           <h1 class="tool-page__title">Privacy Policy</h1>
           <p style="font-size:var(--text-sm); color:var(--color-text-secondary); margin-top:4px">
@@ -84,7 +84,7 @@ export function renderTerms(container) {
   container.innerHTML = `
     <div class="legal-page" style="max-width:860px; margin:0 auto; padding:var(--space-8) var(--space-4)">
       <div class="tool-page__header" style="margin-bottom:var(--space-8)">
-        <a class="tool-page__back" href="#/" title="Back to Home">${icon('chevronLeft')}</a>
+        <a class="tool-page__back" href="/" title="Back to Home">${icon('chevronLeft')}</a>
         <div>
           <h1 class="tool-page__title">Terms of Service</h1>
           <p style="font-size:var(--text-sm); color:var(--color-text-secondary); margin-top:4px">
@@ -98,7 +98,7 @@ export function renderTerms(container) {
         <section>
           <h2 style="font-size:var(--text-xl); font-weight:var(--weight-bold); color:var(--color-text-primary); margin-bottom:var(--space-3)">1. Acceptance of Terms</h2>
           <p>
-            By using PDF Home (https://pdfhome.pages.dev), you agree to these Terms of Service. If you disagree with any part of these terms, please discontinue using the service.
+            By using PDF Home (https://pdfhome.site), you agree to these Terms of Service. If you disagree with any part of these terms, please discontinue using the service.
           </p>
         </section>
 
@@ -134,7 +134,7 @@ export function renderTerms(container) {
           </p>
           <div style="margin-top:var(--space-3); display:inline-flex; align-items:center; gap:var(--space-3); background:var(--color-bg-primary); padding:var(--space-3) var(--space-5); border-radius:var(--radius-lg); border:1px solid var(--color-border)">
             ${icon('mail', 18)}
-            <a href="#/contact" style="color:var(--color-accent); font-weight:600; text-decoration:none">
+            <a href="/contact" style="color:var(--color-accent); font-weight:600; text-decoration:none">
               Official PDF Home Support Desk
             </a>
           </div>
@@ -148,7 +148,7 @@ export function renderContact(container) {
   container.innerHTML = `
     <div class="legal-page" style="max-width:860px; margin:0 auto; padding:var(--space-8) var(--space-4)">
       <div class="tool-page__header" style="margin-bottom:var(--space-8)">
-        <a class="tool-page__back" href="#/" title="Back to Home">${icon('chevronLeft')}</a>
+        <a class="tool-page__back" href="/" title="Back to Home">${icon('chevronLeft')}</a>
         <div>
           <h1 class="tool-page__title">Contact & Support</h1>
           <p style="font-size:var(--text-sm); color:var(--color-text-secondary); margin-top:4px">

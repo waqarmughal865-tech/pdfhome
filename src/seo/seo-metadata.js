@@ -1,10 +1,10 @@
 /**
- * Comprehensive SEO Metadata Registry for PDFHome (https://pdfhome.pages.dev)
+ * Comprehensive SEO Metadata Registry for PDFHome (https://pdfhome.site)
  * Contains high-intent keywords, titles, meta descriptions, H1 headings,
  * step-by-step How-To instructions, FAQs, and related internal links.
  */
 
-export const DOMAIN = 'https://pdfhome.pages.dev';
+export const DOMAIN = 'https://pdfhome.site';
 
 export const TOOL_SEO_DATA = {
   'merge-pdf': {
@@ -452,7 +452,60 @@ export const TOOL_SEO_DATA = {
       { q: 'Can I skip the first page when adding page numbers?', a: 'Yes, check "Exclude First Page" to leave cover pages unnumbered.' },
       { q: 'Can I change the font size and color of page numbers?', a: 'Yes, you can customize typography, size, and ink color to match your document.' }
     ],
-    relatedTools: ['watermark-pdf', 'organize-pdf', 'merge-pdf', 'sign-pdf']
+    relatedTools: ['watermark-pdf', 'rotate-pdf', 'merge-pdf', 'sign-pdf']
+  },
+
+  'word-to-pdf': {
+    slug: '/word-to-pdf',
+    aliases: ['/docx-to-pdf', '#/word-to-pdf', '#/docx-to-pdf'],
+    name: 'Word to PDF',
+    toolId: 'convert-word',
+    metaTitle: 'Word to PDF Converter Free — Convert DOCX to PDF Online | PDFHome',
+    metaDescription: 'Convert Microsoft Word (.docx) documents to PDF online for free. Fast, accurate, and 100% private in-browser conversion with layout preservation and zero server uploads.',
+    h1: 'Word to PDF Converter Free Online',
+    intro: 'Convert DOCX Word documents into professional, high-resolution PDF files right in your browser. Preserve fonts, formatting, margins, and layouts with zero server uploads and complete privacy.',
+    howTo: [
+      { step: 1, title: 'Upload Word Document', desc: 'Select or drag and drop your .docx file into the converter workbench.' },
+      { step: 2, title: 'Review & Process', desc: 'Our client-side engine parses and renders your document structure in memory.' },
+      { step: 3, title: 'Download PDF', desc: 'Click to export and download your clean, print-ready PDF file instantly.' }
+    ],
+    features: [
+      { title: '100% In-Browser Privacy', desc: 'Confidential business contracts and personal documents never leave your device.' },
+      { title: 'Precise Layout Rendering', desc: 'Preserves tables, headings, lists, font styling, and margin alignment.' },
+      { title: 'No Installation or Sign-Up', desc: 'Free forever with no queues, email registration, or file size limits.' }
+    ],
+    faqs: [
+      { q: 'Can I convert DOCX files without Microsoft Word installed?', a: 'Yes. PDFHome converts Word documents directly inside your web browser without requiring Office.' },
+      { q: 'Are my confidential Word documents uploaded to any server?', a: 'No. All processing happens entirely in your local browser session with zero server retention.' },
+      { q: 'Does converting Word to PDF add any watermark?', a: 'No, PDFHome never adds watermarks or branding to your converted PDF documents.' }
+    ],
+    relatedTools: ['pdf-to-word', 'merge-pdf', 'compress-pdf', 'sign-pdf']
+  },
+
+  'excel-to-pdf': {
+    slug: '/excel-to-pdf',
+    aliases: ['#/excel-to-pdf'],
+    name: 'Excel to PDF',
+    toolId: 'convert-excel',
+    metaTitle: 'Excel to PDF Converter Free — Convert XLSX to PDF Online | PDFHome',
+    metaDescription: 'Convert Microsoft Excel (.xlsx) spreadsheets into formatted PDF tables online for free. Private client-side conversion with zero file uploads.',
+    h1: 'Excel to PDF Converter Free Online',
+    intro: 'Convert Excel workbooks and sheets (.xlsx) into clean, printable PDF tables. Retain column structures, numbers, and grid alignment with instant client-side processing.',
+    howTo: [
+      { step: 1, title: 'Upload Excel Workbook', desc: 'Drop your .xlsx spreadsheet file into the converter area.' },
+      { step: 2, title: 'Table Formatting', desc: 'Our in-browser parser structures spreadsheet cells and rows into paginated tables.' },
+      { step: 3, title: 'Export PDF', desc: 'Download your formatted PDF tables ready for distribution or printing.' }
+    ],
+    features: [
+      { title: 'Instant Local Rendering', desc: 'Fast client-side spreadsheet parsing with no server queues.' },
+      { title: 'Zero Cloud Data Storage', desc: 'Sensitive financial sheets and numbers never leave your local computer.' },
+      { title: 'Clean Table Pagination', desc: 'Structures rows and columns into neatly styled, readable PDF pages.' }
+    ],
+    faqs: [
+      { q: 'Can I convert multi-sheet Excel files to PDF?', a: 'Yes, your spreadsheet sheets are converted into clean, sequential PDF pages.' },
+      { q: 'Are my financial spreadsheets secure?', a: 'Completely. All data processing is client-side in your browser; nothing is uploaded.' }
+    ],
+    relatedTools: ['pdf-to-excel', 'merge-pdf', 'compress-pdf', 'pdf-to-word']
   }
 };
 

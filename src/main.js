@@ -4,7 +4,7 @@
 
 import { renderShell, updateActiveNav } from './components/Shell.js';
 import { renderToolPage } from './components/ToolPageWrapper.js';
-import { resetHomeSeo } from './seo/seo-helper.js';
+import { resetHomeSeo, updateSimpleSeo } from './seo/seo-helper.js';
 import { refreshAds } from './components/AdSlot.js';
 
 // ── Theme initialization ──
@@ -141,44 +141,79 @@ const routes = {
     });
   }),
 
+  '/word-to-pdf': (container) => renderToolPage(container, 'word-to-pdf', async (mount) => {
+    const { renderConvert } = await import('./tools/convert.js');
+    renderConvert(mount, 'docx-to-pdf');
+  }),
+
+  '/excel-to-pdf': (container) => renderToolPage(container, 'excel-to-pdf', async (mount) => {
+    const { renderConvert } = await import('./tools/convert.js');
+    renderConvert(mount, 'excel-to-pdf');
+  }),
+
   // General Workbench & Office Tools
   '/pages': async (container) => {
+    updateSimpleSeo({
+      title: 'PDF Page Editor & Organizer — PDFHome',
+      description: 'Reorder, rotate, delete, watermark, crop, and number PDF pages in a unified workbench.',
+      slug: '/pages'
+    });
     const { renderPages } = await import('./tools/pages.js');
     renderPages(container);
   },
 
   '/convert': async (container) => {
+    updateSimpleSeo({
+      title: 'Online Document Converter — PDFHome',
+      description: 'Convert PDF files to and from Microsoft Word, Excel, and PowerPoint directly in your browser.',
+      slug: '/convert'
+    });
     const { renderConvert } = await import('./tools/convert.js');
     renderConvert(container, 'pdf-to-docx');
   },
 
-  '/docx-to-pdf': async (container) => {
+  '/docx-to-pdf': (container) => renderToolPage(container, 'word-to-pdf', async (mount) => {
     const { renderConvert } = await import('./tools/convert.js');
-    renderConvert(container, 'docx-to-pdf');
-  },
-
-  '/excel-to-pdf': async (container) => {
-    const { renderConvert } = await import('./tools/convert.js');
-    renderConvert(container, 'excel-to-pdf');
-  },
+    renderConvert(mount, 'docx-to-pdf');
+  }),
 
   '/slides-to-pdf': async (container) => {
+    updateSimpleSeo({
+      title: 'PowerPoint (PPTX) to PDF Converter — PDFHome',
+      description: 'Convert Microsoft PowerPoint (.pptx) presentation decks into high-resolution PDF files.',
+      slug: '/slides-to-pdf'
+    });
     const { renderConvert } = await import('./tools/convert.js');
     renderConvert(container, 'slides-to-pdf');
   },
 
   // Legal & Info Pages
   '/privacy': async (container) => {
+    updateSimpleSeo({
+      title: 'Privacy Policy — PDFHome',
+      description: 'Read the PDFHome Privacy Policy. 100% client-side, zero server uploads, and complete document confidentiality.',
+      slug: '/privacy'
+    });
     const { renderPrivacy } = await import('./components/Legal.js');
     renderPrivacy(container);
   },
 
   '/terms': async (container) => {
+    updateSimpleSeo({
+      title: 'Terms of Service — PDFHome',
+      description: 'Review the PDFHome Terms of Service for using our free, in-browser PDF utilities.',
+      slug: '/terms'
+    });
     const { renderTerms } = await import('./components/Legal.js');
     renderTerms(container);
   },
 
   '/contact': async (container) => {
+    updateSimpleSeo({
+      title: 'Contact & Support Desk — PDFHome',
+      description: 'Get in touch with the PDFHome team for support, questions, and feature requests.',
+      slug: '/contact'
+    });
     const { renderContact } = await import('./components/Legal.js');
     renderContact(container);
   }
@@ -190,6 +225,7 @@ const aliases = {
   '/split': '/split-pdf',
   '/compress': '/compress-pdf',
   '/pdf-to-docx': '/pdf-to-word',
+  '/docx-to-pdf': '/word-to-pdf',
   '/pdf-to-slides': '/pdf-to-powerpoint',
   '/pdf-to-image': '/pdf-to-jpg',
   '/image-to-pdf': '/jpg-to-pdf',

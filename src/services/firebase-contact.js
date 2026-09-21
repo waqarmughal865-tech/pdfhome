@@ -157,7 +157,7 @@ export async function submitContactInquiry(data) {
     createdAt: new Date().toISOString(),
     timestamp: Date.now(),
     status: 'unread',
-    source: 'pdfhome.pages.dev',
+    source: 'pdfhome.site',
     locale: navigator.language || 'en'
   };
 

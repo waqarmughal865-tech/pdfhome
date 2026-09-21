@@ -187,3 +187,31 @@ function injectToolSchema(seoData, canonicalUrl) {
     '@graph': graph
   }, null, 2);
 }
+
+/**
+ * Update metadata for static/legal pages (Privacy, Terms, Contact)
+ */
+export function updateSimpleSeo({ title, description, slug }) {
+  document.title = title || 'PDFHome';
+
+  let metaDesc = document.querySelector('meta[name="description"]');
+  if (metaDesc) metaDesc.content = description || '';
+
+  const canonicalUrl = `${DOMAIN}${slug}`;
+  let linkCanonical = document.querySelector('link[rel="canonical"]');
+  if (linkCanonical) linkCanonical.href = canonicalUrl;
+
+  updateMetaProperty('og:title', title);
+  updateMetaProperty('og:description', description || '');
+  updateMetaProperty('og:url', canonicalUrl);
+  updateMetaProperty('og:type', 'website');
+  updateMetaProperty('og:image', `${DOMAIN}/icon.png`);
+
+  updateMetaName('twitter:title', title);
+  updateMetaName('twitter:description', description || '');
+  updateMetaName('twitter:image', `${DOMAIN}/icon.png`);
+
+  const toolSchema = document.getElementById('tool-seo-schema');
+  if (toolSchema) toolSchema.remove();
+}
+

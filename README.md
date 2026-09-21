@@ -1,6 +1,6 @@
 # PDFHome — Privacy-First Client-Side PDF & Document Suite
 
-Live URL: [https://pdfhome.pages.dev/](https://pdfhome.pages.dev/)
+Live URL: [https://pdfhome.site/](https://pdfhome.site/)
 
 PDFHome is a high-performance, 100% client-side document workstation. All PDF operations, digital signing, file conversions, optical character recognition (OCR), and document edits occur entirely in memory within the user's web browser using HTML5 Canvas, WebAssembly, and native modern web APIs. Files are never uploaded or retained on any remote server.
 

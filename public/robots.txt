@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://pdfhome.pages.dev/sitemap.xml
+Sitemap: https://pdfhome.site/sitemap.xml
