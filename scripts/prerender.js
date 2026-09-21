@@ -368,6 +368,25 @@ function buildToolPageHtml(seoData) {
     `)
     .join('');
 
+  // Multilingual & Global Intent Queries
+  const multilingualHtml = (seoData.multilingual && seoData.multilingual.length > 0) ? `
+    <section class="seo-section seo-multilingual" aria-labelledby="global-queries-heading">
+      <h2 id="global-queries-heading" class="seo-section__title">International Search Queries &amp; Global Support</h2>
+      <p class="seo-multilingual-intro">
+        Looking for ${seoData.name} in your native language? PDFHome is accessible worldwide without language barriers. Users across the globe search and access this tool with the following regional queries:
+      </p>
+      <div class="seo-multilingual-grid">
+        ${seoData.multilingual.map(m => `
+          <div class="seo-multilingual-card">
+            <span class="seo-multilingual-lang">${icon('globe', 12)} ${m.lang}</span>
+            <span class="seo-multilingual-term">${m.term}</span>
+            <span class="seo-multilingual-intent">${m.query}</span>
+          </div>
+        `).join('')}
+      </div>
+    </section>
+  ` : '';
+
   // FAQs
   const faqsHtml = (seoData.faqs || [])
     .map((faq, idx) => `
@@ -428,6 +447,9 @@ function buildToolPageHtml(seoData) {
           ${featuresHtml}
         </div>
       </section>
+
+      <!-- Multilingual Global Support Hub -->
+      ${multilingualHtml}
 
       <!-- Frequently Asked Questions (FAQ) -->
       <section class="seo-section seo-faq" aria-labelledby="faq-heading">
@@ -649,6 +671,29 @@ const privacyHtml = createPageHtml({
             <li>No OCR document storage: Scanned text recognition runs locally via in-browser Web Workers.</li>
             <li>No personal tracking: We do not sell, rent, or trade user data to third parties.</li>
           </ul>
+        </section>
+        <section style="border-top:1px solid var(--color-border); padding-top:var(--space-6)">
+          <h2 style="font-size:var(--text-xl); font-weight:var(--weight-bold); color:var(--color-text-primary); margin-bottom:var(--space-3)">3. Local Storage Usage</h2>
+          <p>PDFHome uses browser localStorage strictly for user interface preferences such as Dark Mode or Light Mode theme states. No document content, passwords, or document metadata are saved in permanent browser storage.</p>
+        </section>
+        <section style="border-top:1px solid var(--color-border); padding-top:var(--space-6)">
+          <h2 style="font-size:var(--text-xl); font-weight:var(--weight-bold); color:var(--color-text-primary); margin-bottom:var(--space-3)">4. Third-Party Advertising & Google AdSense Cookie Disclosure</h2>
+          <p>
+            We partner with third-party advertising networks, including <strong>Google AdSense</strong>, to serve advertisements when you visit our website. These advertising partners may use cookies, web beacons, and similar technologies to gather non-personally identifiable information about your visits to this and other websites in order to deliver relevant ads about goods and services of interest to you.
+          </p>
+          <ul style="list-style:disc; margin-left:var(--space-5); margin-top:var(--space-3); display:flex; flex-direction:column; gap:var(--space-2)">
+            <li>Third-party vendors, including Google, use cookies to serve ads based on a user's prior visits to our website or other websites.</li>
+            <li>Google's use of advertising cookies enables it and its partners to serve ads to you based on your visit to PDFHome and/or other sites on the Internet.</li>
+            <li>You can opt out of personalized advertising by visiting <a href="https://adssettings.google.com" target="_blank" rel="noopener noreferrer" style="color:var(--color-accent); text-decoration:underline">Google Ads Settings</a> or <a href="https://www.aboutads.info/choices/" target="_blank" rel="noopener noreferrer" style="color:var(--color-accent); text-decoration:underline">aboutads.info</a>.</li>
+          </ul>
+        </section>
+        <section style="border-top:1px solid var(--color-border); padding-top:var(--space-6)">
+          <h2 style="font-size:var(--text-xl); font-weight:var(--weight-bold); color:var(--color-text-primary); margin-bottom:var(--space-3)">5. GDPR & CCPA Compliance</h2>
+          <p>We respect the privacy rights of all visitors under the European General Data Protection Regulation (GDPR) and California Consumer Privacy Act (CCPA). Because our core document manipulation engine operates strictly client-side within your browser memory with zero file uploads or account profiling, we do not sell or share personal data derived from your files.</p>
+        </section>
+        <section style="border-top:1px solid var(--color-border); padding-top:var(--space-6)">
+          <h2 style="font-size:var(--text-xl); font-weight:var(--weight-bold); color:var(--color-text-primary); margin-bottom:var(--space-3)">6. Contact & Support Desk</h2>
+          <p>Have questions about this Privacy Policy? Contact our core developers via our <a href="/contact" style="color:var(--color-accent); font-weight:600; text-decoration:none">Support Desk</a>.</p>
         </section>
       </div>
     </div>

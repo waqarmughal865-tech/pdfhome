@@ -4,7 +4,10 @@
  * step-by-step How-To instructions, FAQs, and related internal links.
  */
 
+import { MULTILINGUAL_QUERIES } from './multilingual-queries.js';
+
 export const DOMAIN = 'https://pdfhome.site';
+export { MULTILINGUAL_QUERIES };
 
 export const TOOL_SEO_DATA = {
   'merge-pdf': {
@@ -508,6 +511,22 @@ export const TOOL_SEO_DATA = {
     relatedTools: ['pdf-to-excel', 'merge-pdf', 'compress-pdf', 'pdf-to-word']
   }
 };
+
+// Attach multilingual search queries to each tool definition
+for (const [toolKey, group] of Object.entries(MULTILINGUAL_QUERIES)) {
+  if (TOOL_SEO_DATA[toolKey] && group.terms) {
+    TOOL_SEO_DATA[toolKey].multilingual = group.terms;
+    
+    // Add international multilingual query FAQ
+    if (TOOL_SEO_DATA[toolKey].faqs) {
+      const topTerms = group.terms.slice(0, 4).map(t => `"${t.term}" (${t.lang})`).join(', ');
+      TOOL_SEO_DATA[toolKey].faqs.push({
+        q: `Can I use this tool if I am searching in Spanish, French, German, or other languages?`,
+        a: `Yes! PDFHome is designed for international users worldwide. You can search and access this tool via common global queries such as ${topTerms}. All PDF processing runs locally in your browser with complete multi-language document support.`
+      });
+    }
+  }
+}
 
 /**
  * Helper to retrieve SEO metadata by key or slug.

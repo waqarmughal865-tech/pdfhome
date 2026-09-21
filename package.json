@@ -19,6 +19,6 @@
     "tesseract.js": "^7.0.0"
   },
   "devDependencies": {
-    "vite": "6.3.5"
+    "vite": "^8.3.0"
   }
 }

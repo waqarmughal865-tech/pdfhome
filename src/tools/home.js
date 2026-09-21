@@ -5,6 +5,7 @@
 import { icon } from '../components/icons.js';
 import { escapeHtml } from '../utils/file-utils.js';
 import { renderAdSlot } from '../components/AdSlot.js';
+import { MULTILINGUAL_QUERIES } from '../seo/multilingual-queries.js';
 
 export const TOOL_REGISTRY = [
   {
@@ -191,7 +192,7 @@ export const TOOL_REGISTRY = [
     category: 'convert',
     iconClass: 'slides',
     iconName: 'presentation',
-    path: '/slides-to-pdf',
+    path: '/pdf-to-powerpoint',
     keywords: ['pptx to pdf', 'slides to pdf', 'powerpoint to pdf', 'export slides to pdf']
   },
   {
@@ -201,7 +202,7 @@ export const TOOL_REGISTRY = [
     category: 'convert',
     iconClass: 'docx',
     iconName: 'fileText',
-    path: '/docx-to-pdf',
+    path: '/word-to-pdf',
     keywords: ['word to pdf', 'docx to pdf', 'convert word to pdf', 'save as pdf']
   },
   {
@@ -216,6 +217,20 @@ export const TOOL_REGISTRY = [
     keywords: ['page editor', 'editor', 'pdf editor', 'workbench', 'edit pdf']
   }
 ];
+
+// Automatically enrich search keywords with international multilingual queries
+TOOL_REGISTRY.forEach(tool => {
+  const toolSlug = tool.path ? tool.path.replace(/^\//, '') : '';
+  const group = MULTILINGUAL_QUERIES[toolSlug];
+  if (group && group.terms) {
+    group.terms.forEach(t => {
+      const termLower = t.term.toLowerCase();
+      if (!tool.keywords.includes(termLower)) tool.keywords.push(termLower);
+      const queryLower = t.query.toLowerCase();
+      if (!tool.keywords.includes(queryLower)) tool.keywords.push(queryLower);
+    });
+  }
+});
 
 export function renderHome(container) {
   let currentCategory = 'all';

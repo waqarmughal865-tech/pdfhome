@@ -90,7 +90,26 @@ export function renderToolPage(container, seoKey, renderToolCallback) {
     `)
     .join('');
 
-  // 6. Assemble the Complete Semantic Tool Page HTML
+  // 6. Multilingual & Global Queries
+  const multilingualHtml = (seoData.multilingual && seoData.multilingual.length > 0) ? `
+    <section class="seo-section seo-multilingual" aria-labelledby="global-queries-heading">
+      <h2 id="global-queries-heading" class="seo-section__title">International Search Queries &amp; Global Support</h2>
+      <p class="seo-multilingual-intro">
+        Looking for ${seoData.name} in your native language? PDFHome is accessible worldwide without language barriers. Access this utility via common global queries:
+      </p>
+      <div class="seo-multilingual-grid">
+        ${seoData.multilingual.map(m => `
+          <div class="seo-multilingual-card">
+            <span class="seo-multilingual-lang">${icon('globe', 12)} ${m.lang}</span>
+            <span class="seo-multilingual-term">${m.term}</span>
+            <span class="seo-multilingual-intent">${m.query}</span>
+          </div>
+        `).join('')}
+      </div>
+    </section>
+  ` : '';
+
+  // 7. Assemble the Complete Semantic Tool Page HTML
   container.innerHTML = `
     <div class="tool-page-wrapper" data-seo-tool="${seoKey}">
       
@@ -127,6 +146,9 @@ export function renderToolPage(container, seoKey, renderToolCallback) {
           ${featuresHtml}
         </div>
       </section>
+
+      <!-- Multilingual Global Support Hub -->
+      ${multilingualHtml}
 
       <!-- Frequently Asked Questions (FAQ) -->
       <section class="seo-section seo-faq" aria-labelledby="faq-heading">
