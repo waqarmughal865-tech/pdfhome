@@ -275,7 +275,9 @@ export function renderHome(container) {
     `).join('');
   }
 
-  container.innerHTML = `
+  const existingGrid = container.querySelector('#home-tools-grid');
+  if (!existingGrid) {
+    container.innerHTML = `
     <div class="home">
       <div class="home__hero">
         <h1 class="home__title">All-in-One Local PDF & Document Suite</h1>
@@ -408,6 +410,7 @@ export function renderHome(container) {
       </div>
     </div>
   `;
+  }
 
   // Bind Search & Filters
   const searchInput = container.querySelector('#home-search-input');

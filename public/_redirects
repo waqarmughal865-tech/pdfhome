@@ -1,1 +1,13 @@
-/*  /index.html  200
+# Cloudflare Pages 301 Redirects for Legacy and Alias Routes
+/merge          /merge-pdf          301
+/split          /split-pdf          301
+/compress       /compress-pdf       301
+/pdf-to-docx    /pdf-to-word        301
+/docx-to-pdf    /word-to-pdf        301
+/pdf-to-slides  /pdf-to-powerpoint  301
+/pdf-to-image   /pdf-to-jpg         301
+/image-to-pdf   /jpg-to-pdf         301
+/organize-pdf   /rotate-pdf         301
+
+# SPA fallback rewrite
+/*              /index.html         200

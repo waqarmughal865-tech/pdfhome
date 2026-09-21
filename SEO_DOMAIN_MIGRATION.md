@@ -25,17 +25,45 @@ This document details the domain migration of PDFHome to its permanent productio
 | [`src/services/firebase-contact.js`](file:///c:/Users/Waqar/Desktop/pdfweb/src/services/firebase-contact.js) | Updated inquiry origin tracker `source` attribute from `pdfhome.pages.dev` to `pdfhome.site`. |
 | [`public/robots.txt`](file:///c:/Users/Waqar/Desktop/pdfweb/public/robots.txt) | Pointed Sitemap directive directly to `https://pdfhome.site/sitemap.xml`. |
 | [`public/sitemap.xml`](file:///c:/Users/Waqar/Desktop/pdfweb/public/sitemap.xml) | Replaced all URLs with `https://pdfhome.site/*`. Removed non-canonical alias URLs (such as `/organize-pdf` in favor of canonical `/rotate-pdf`). Excluded hash fragments. Refreshed `<lastmod>` timestamps. |
+| [`public/_redirects`](file:///c:/Users/Waqar/Desktop/pdfweb/public/_redirects) | Configured server-level HTTP 301 permanent redirects for all legacy aliases (`/merge`, `/split`, `/compress`, `/organize-pdf`, `/pdf-to-docx`, etc.) directly to their canonical paths. |
+| [`public/_headers`](file:///c:/Users/Waqar/Desktop/pdfweb/public/_headers) | Synchronized Content-Security-Policy HTTP header to prevent any blocking of Googlebot or crawler assets. |
+| [`scripts/prerender.js`](file:///c:/Users/Waqar/Desktop/pdfweb/scripts/prerender.js) | Static Pre-Rendering Engine: Automatically generates complete static HTML for all 22 routes at build time so crawlers detect 100% of the text, H1 tags, How-To guides, and FAQs immediately on initial fetch. |
+| [`package.json`](file:///c:/Users/Waqar/Desktop/pdfweb/package.json) | Integrated prerender engine into `npm run build` pipeline (`vite build && node scripts/prerender.js`). |
 | [`README.md`](file:///c:/Users/Waqar/Desktop/pdfweb/README.md) | Updated live production URL to `https://pdfhome.site/`. |
 
 ---
 
-## 3. Cloudflare Configuration (Exact 301 Redirect Steps)
+## 3. Why Crawlers Were Not Detecting Text & How It Is Solved
+
+### The Problem with Default Client-Side SPAs
+1. **Empty Initial DOM**: In standard Vite SPAs, the server returns an empty `<div id="app"></div>`. All text is inserted later via JavaScript.
+2. **Search Engine Crawler Limitations**:
+   - Crawlers such as Bingbot, Yahoo, DuckDuckGo, Baidu, and social scrapers (Facebook, Twitter/X, WhatsApp) **do not execute complex JavaScript**. They saw a blank page with zero keywords.
+   - Googlebot executes JavaScript, but in a **two-stage process**: it first indexes raw HTML, and queues JavaScript rendering for days or weeks. If a dynamic chunk or timeout occurs, it records a blank page.
+3. **Canonical Conflict**: When every route was rewritten to `/index.html`, every URL returned the homepage canonical (`https://pdfhome.site/`), causing Googlebot to treat all tool pages as duplicate homepage copies.
+
+### The Solution: Static Site Generation (SSG / Pre-Rendering)
+We implemented a build-time pre-renderer (`scripts/prerender.js`) that produces complete, standalone HTML files in `dist/`:
+- `dist/index.html` (Homepage with full hero, search, 20+ tool cards, feature highlights, and FAQs)
+- `dist/merge-pdf/index.html` (Merge PDF with H1, dropzone, How-To steps, features, FAQs, and Schema.org markup)
+- `dist/split-pdf/index.html`, `dist/compress-pdf/index.html`, `dist/pdf-to-word/index.html`, etc. (all 22 routes)
+
+When Googlebot or Bingbot requests `GET https://pdfhome.site/merge-pdf`:
+- Cloudflare Pages serves `dist/merge-pdf/index.html` directly with HTTP 200.
+- The crawler immediately sees the exact `<title>`, `<meta description>`, `<link rel="canonical" href="https://pdfhome.site/merge-pdf" />`, `<h1>Merge PDF Files Online Free</h1>`, introductory text, How-To steps, feature points, and FAQ answers.
+- Zero reliance on JavaScript execution for text detection!
+- Seamless browser hydration: real users still get the lightning-fast client-side SPA experience with zero flicker.
+
+
+---
+
+## 4. Cloudflare Configuration (Exact 301 Redirect Steps)
 
 > [!IMPORTANT]
 > **Do not use client-side JavaScript redirects (e.g. `window.location.replace`) for domain migration.**
 > Search engine crawlers (Googlebot, Bingbot) require an HTTP 301 status code at the network layer to transfer PageRank, link equity, and indexing signals to `https://pdfhome.site/`.
 
-### Step 3.1: Connect Custom Domain to Cloudflare Pages Project
+### Step 4.1: Connect Custom Domain to Cloudflare Pages Project
 1. Log in to your [Cloudflare Dashboard](https://dash.cloudflare.com/).
 2. Navigate to **Workers & Pages** > select your **pdfweb** (or PDFHome) project.
 3. Click the **Custom domains** tab.
@@ -43,7 +71,7 @@ This document details the domain migration of PDFHome to its permanent productio
 5. Enter: `pdfhome.site` (and optionally `www.pdfhome.site`).
 6. Follow the prompts to configure DNS (CNAME pointing to your `*.pages.dev` project). Cloudflare will automatically provision a free universal SSL/TLS certificate for `pdfhome.site`.
 
-### Step 3.2: Configure HTTP 301 Redirect from `pdfhome.pages.dev` to `pdfhome.site`
+### Step 4.2: Configure HTTP 301 Redirect from `pdfhome.pages.dev` to `pdfhome.site`
 
 Cloudflare provides multiple ways to set up permanent redirects. Choose **Method A** (recommended for Cloudflare Pages) or **Method B** (Cloudflare Rules):
 
@@ -87,9 +115,9 @@ If you manage `pdfhome.site` and any secondary domains inside a Cloudflare Zone:
 
 ---
 
-## 4. Google Search Console (GSC) Steps
+## 5. Google Search Console (GSC) Steps & Verification
 
-### Step 4.1: Add & Verify `https://pdfhome.site/`
+### Step 5.1: Add & Verify `https://pdfhome.site/`
 1. Go to the [Google Search Console](https://search.google.com/search-console).
 2. Click **Add Property** in the top-left dropdown.
 3. Select **Domain property** and enter `pdfhome.site`:
@@ -98,13 +126,23 @@ If you manage `pdfhome.site` and any secondary domains inside a Cloudflare Zone:
    - Return to GSC and click **Verify**.
    *(Alternatively, add a **URL prefix** property for `https://pdfhome.site/` and verify via HTML tag or file upload).*
 
-### Step 4.2: Submit the New Sitemap
+### Step 5.2: Submit the New Sitemap
 1. Inside the property for `https://pdfhome.site/`, click **Sitemaps** in the left sidebar.
 2. Under "Add a new sitemap", enter: `sitemap.xml`
 3. Full URL submitted: `https://pdfhome.site/sitemap.xml`
 4. Click **Submit**. Verify status is **Success**.
 
-### Step 4.3: Use the Change of Address Tool (If previous domain had a GSC property)
+### Step 5.3: Verify Crawled Content Using "Test Live URL"
+To verify that Googlebot detects all text and rendered elements:
+1. In GSC, paste any URL into the top search bar (e.g. `https://pdfhome.site/merge-pdf`).
+2. Click **Test Live URL**.
+3. Click **View Tested Page**:
+   - Check the **HTML tab**: You will see all text, H1, FAQs, and structured data in the raw HTML.
+   - Check the **Screenshot tab**: You will see the visual rendered page with no blank sections.
+   - Check the **More Info / Page Resources tab**: Verify HTTP 200 response with zero blocked resources.
+4. Click **Request Indexing**.
+
+### Step 5.4: Use the Change of Address Tool (If previous domain had a GSC property)
 1. Open the property for the old domain in Google Search Console.
 2. Navigate to **Settings** (gear icon) > **Change of address**.
 3. Select the new property: `https://pdfhome.site/`.
@@ -113,7 +151,7 @@ If you manage `pdfhome.site` and any secondary domains inside a Cloudflare Zone:
    - Verification of the new domain is active.
 5. Click **Confirm & Submit**. Google will prioritize updating search index records from the old domain to `pdfhome.site`.
 
-### Step 4.4: Request Indexing for Key Pages
+### Step 5.5: Request Indexing for Key Pages
 Inspect the following core URLs using the URL Inspection tool and click **Request Indexing**:
 - `https://pdfhome.site/`
 - `https://pdfhome.site/merge-pdf`
@@ -137,13 +175,16 @@ Inspect the following core URLs using the URL Inspection tool and click **Reques
 
 ---
 
-## 5. Post-Migration Verification Checklist
+## 6. Post-Migration Verification Checklist
 
+- [x] **Static Pre-Rendering (SSG)**: Complete static HTML generated for all 22 routes in `dist/`.
 - [x] **No references to old domains** (`pdfhome.app`, `pdfhome.pages.dev`) exist in repository source code, meta tags, sitemap, or robots.txt.
-- [x] **Canonical Tag**: `<link rel="canonical" href="https://pdfhome.site/" />` on home and `${DOMAIN}${slug}` on all tool pages.
+- [x] **Canonical Tag**: `<link rel="canonical" href="https://pdfhome.site/" />` on home and `${DOMAIN}${slug}` on each tool page.
 - [x] **Open Graph & Twitter tags**: Use `https://pdfhome.site/` and `https://pdfhome.site/icon.png`.
-- [x] **Structured Data (JSON-LD)**: No fake ratings or misleading claim schema. Valid `WebSite`, `WebApplication`, `Organization`, `HowTo`, `FAQPage`, and `BreadcrumbList`.
+- [x] **Structured Data (JSON-LD)**: Valid `WebSite`, `WebApplication`, `Organization`, `HowTo`, `FAQPage`, and `BreadcrumbList`.
 - [x] **Client-Side Integrity**: All PDF manipulation tools run 100% in-browser with zero remote uploads.
 - [x] **Sitemap Validated**: `https://pdfhome.site/sitemap.xml` contains clean canonical paths only, without hashes.
 - [x] **Robots.txt Validated**: Directs crawlers to `https://pdfhome.site/sitemap.xml`.
-- [x] **Build Verification**: `npm run build` succeeds cleanly without errors or broken imports.
+- [x] **301 Alias Redirects**: `_redirects` permanently redirects legacy URLs (`/merge` -> `/merge-pdf`, etc.).
+- [x] **Build Verification**: `npm run build` succeeds cleanly and pre-renders all 22 routes.
+

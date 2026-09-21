@@ -233,6 +233,7 @@ const aliases = {
 };
 
 let contentEl = null;
+let isInitialNav = true;
 
 /**
  * Resolve current pathname from URL or hash fallback.
@@ -266,8 +267,8 @@ async function navigate() {
 
   updateActiveNav(path);
 
-  if (contentEl) {
-    // Show subtle transition indicator for heavy chunks
+  if (contentEl && !isInitialNav) {
+    // Show subtle transition indicator for heavy chunks on client-side route changes
     contentEl.innerHTML = `
       <div style="display:flex; justify-content:center; align-items:center; min-height:40vh;">
         <div class="spinner" style="width:32px; height:32px; border:3px solid var(--color-border); border-top-color:var(--color-primary); border-radius:50%; animation:spin 0.8s linear infinite;"></div>
@@ -289,6 +290,8 @@ async function navigate() {
         </div>
       `;
     }
+  } finally {
+    isInitialNav = false;
   }
 
   window.scrollTo({ top: 0, behavior: 'instant' });

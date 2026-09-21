@@ -25,6 +25,14 @@ export function renderToolPage(container, seoKey, renderToolCallback) {
   // 1. Update Head Meta Tags, Canonical, & Structured Data
   updatePageSeo(seoData);
 
+  // If container already has the pre-rendered wrapper for this tool, mount directly
+  const existingWrapper = container.querySelector(`.tool-page-wrapper[data-seo-tool="${seoKey}"]`);
+  const existingMount = existingWrapper?.querySelector('#tool-interactive-mount');
+  if (existingMount) {
+    renderToolCallback(existingMount);
+    return;
+  }
+
   // 2. Build Related Tools cards
   const relatedCardsHtml = (seoData.relatedTools || [])
     .map(relKey => {
@@ -84,7 +92,7 @@ export function renderToolPage(container, seoKey, renderToolCallback) {
 
   // 6. Assemble the Complete Semantic Tool Page HTML
   container.innerHTML = `
-    <div class="tool-page-wrapper">
+    <div class="tool-page-wrapper" data-seo-tool="${seoKey}">
       
       <!-- Top Breadcrumbs -->
       <nav class="seo-breadcrumbs" aria-label="Breadcrumb">

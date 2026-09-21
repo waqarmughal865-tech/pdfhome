@@ -21,7 +21,9 @@ const TOOLS = [
 export function renderShell(appEl) {
   const currentPath = window.location.pathname || '/';
 
-  appEl.innerHTML = `
+  let contentEl = appEl.querySelector('#main-content');
+  if (!contentEl) {
+    appEl.innerHTML = `
     <header class="app-header" id="app-header">
       <a class="app-header__logo" href="/" id="logo-link" aria-label="PDF Home">
         <span class="app-header__logo-mark">
@@ -135,6 +137,8 @@ export function renderShell(appEl) {
       </div>
     </footer>
   `;
+    contentEl = document.getElementById('main-content');
+  }
 
   // Initialize Contact Modal
   initContactModal();
