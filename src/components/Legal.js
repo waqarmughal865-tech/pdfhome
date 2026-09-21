@@ -98,7 +98,7 @@ export function renderTerms(container) {
         <section>
           <h2 style="font-size:var(--text-xl); font-weight:var(--weight-bold); color:var(--color-text-primary); margin-bottom:var(--space-3)">1. Acceptance of Terms</h2>
           <p>
-            By using PDF Home (https://pdfhome.app), you agree to these Terms of Service. If you disagree with any part of these terms, please discontinue using the service.
+            By using PDF Home (https://pdfhome.pages.dev), you agree to these Terms of Service. If you disagree with any part of these terms, please discontinue using the service.
           </p>
         </section>
 

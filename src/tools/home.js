@@ -14,31 +14,9 @@ export const TOOL_REGISTRY = [
     category: 'sign',
     iconClass: 'pages',
     iconName: 'penTool',
-    hash: '#/sign-pdf',
+    path: '/sign-pdf',
     badge: 'Popular',
     keywords: ['signature on pdf', 'sign pdf', 'transparent signature', 'digital signature', 'draw signature', 'e-sign', 'sign', 'handwritten signature', 'stamp signature', 'electronic signature', 'online pdf signer']
-  },
-  {
-    id: 'watermark-pdf',
-    name: 'Watermark PDF',
-    desc: 'Add custom text stamps or logo watermarks with opacity, scale, and rotation control',
-    category: 'security',
-    iconClass: 'convert',
-    iconName: 'stamp',
-    hash: '#/watermark-pdf',
-    badge: 'Security',
-    keywords: ['watermark on pdf', 'watermark pdf', 'add watermark', 'confidential stamp', 'logo watermark', 'copyright stamp', 'text watermark']
-  },
-  {
-    id: 'protect-pdf',
-    name: 'Protect PDF (Password Lock)',
-    desc: 'Apply secure password locking and standard 128-bit encryption to confidential files',
-    category: 'security',
-    iconClass: 'compress',
-    iconName: 'lock',
-    hash: '#/protect-pdf',
-    badge: 'Encrypted',
-    keywords: ['protect pdf', 'password protect pdf', 'lock pdf', 'encrypt pdf', 'secure pdf', 'set password', 'restrict pdf']
   },
   {
     id: 'pdf-to-docx',
@@ -47,20 +25,9 @@ export const TOOL_REGISTRY = [
     category: 'convert',
     iconClass: 'docx',
     iconName: 'fileText',
-    hash: '#/pdf-to-docx',
+    path: '/pdf-to-word',
     badge: 'High Demand',
     keywords: ['pdf to word', 'pdf to docx', 'convert pdf to word', 'editable docx', 'word document', 'export word']
-  },
-  {
-    id: 'ocr-pdf',
-    name: 'Picture PDF to Text (OCR)',
-    desc: 'Transform scanned image PDFs into crisp, searchable and selectable text PDFs',
-    category: 'convert',
-    iconClass: 'ocr',
-    iconName: 'scan',
-    hash: '#/ocr-pdf',
-    badge: 'AI Engine',
-    keywords: ['ocr pdf', 'picture pdf to text', 'searchable pdf', 'scanned pdf to text', 'extract text from image pdf', 'optical character recognition', 'tesseract']
   },
   {
     id: 'merge',
@@ -69,7 +36,7 @@ export const TOOL_REGISTRY = [
     category: 'core',
     iconClass: 'merge',
     iconName: 'merge',
-    hash: '#/merge',
+    path: '/merge-pdf',
     badge: 'Essential',
     keywords: ['merge pdf', 'combine pdf', 'join pdf', 'unite pdf', 'merge documents', 'combine files']
   },
@@ -80,7 +47,7 @@ export const TOOL_REGISTRY = [
     category: 'core',
     iconClass: 'split',
     iconName: 'scissors',
-    hash: '#/split',
+    path: '/split-pdf',
     keywords: ['split pdf', 'extract pages', 'separate pdf', 'cut pdf', 'page extractor', 'divide pdf']
   },
   {
@@ -90,9 +57,102 @@ export const TOOL_REGISTRY = [
     category: 'core',
     iconClass: 'compress',
     iconName: 'compress',
-    hash: '#/compress',
+    path: '/compress-pdf',
     badge: 'Smart Size',
     keywords: ['compress pdf', 'reduce pdf size', 'shrink pdf', 'optimize pdf', 'smaller pdf', 'downsize pdf']
+  },
+  {
+    id: 'watermark-pdf',
+    name: 'Watermark PDF',
+    desc: 'Add custom text stamps or logo watermarks with opacity, scale, and rotation control',
+    category: 'security',
+    iconClass: 'convert',
+    iconName: 'stamp',
+    path: '/watermark-pdf',
+    badge: 'Security',
+    keywords: ['watermark on pdf', 'watermark pdf', 'add watermark', 'confidential stamp', 'logo watermark', 'copyright stamp', 'text watermark']
+  },
+  {
+    id: 'protect-pdf',
+    name: 'Protect PDF (Password Lock)',
+    desc: 'Apply secure password locking and standard 128-bit encryption to confidential files',
+    category: 'security',
+    iconClass: 'compress',
+    iconName: 'lock',
+    path: '/protect-pdf',
+    badge: 'Encrypted',
+    keywords: ['protect pdf', 'password protect pdf', 'lock pdf', 'encrypt pdf', 'secure pdf', 'set password', 'restrict pdf']
+  },
+  {
+    id: 'ocr-pdf',
+    name: 'Picture PDF to Text (OCR)',
+    desc: 'Transform scanned image PDFs into crisp, searchable and selectable text PDFs',
+    category: 'convert',
+    iconClass: 'ocr',
+    iconName: 'scan',
+    path: '/ocr-pdf',
+    badge: 'AI Engine',
+    keywords: ['ocr pdf', 'picture pdf to text', 'searchable pdf', 'scanned pdf to text', 'extract text from image pdf', 'optical character recognition', 'tesseract']
+  },
+  {
+    id: 'pdf-to-excel',
+    name: 'PDF to Excel (XLSX)',
+    desc: 'Convert tabular data and rows into structured Microsoft Excel spreadsheets',
+    category: 'convert',
+    iconClass: 'excel',
+    iconName: 'fileSpreadsheet',
+    path: '/pdf-to-excel',
+    keywords: ['pdf to excel', 'pdf to xlsx', 'convert pdf to sheet', 'extract table from pdf', 'spreadsheet']
+  },
+  {
+    id: 'pdf-to-slides',
+    name: 'PDF to PowerPoint (PPTX)',
+    desc: 'Create widescreen PowerPoint presentation decks from your PDF pages',
+    category: 'convert',
+    iconClass: 'slides',
+    iconName: 'presentation',
+    path: '/pdf-to-powerpoint',
+    keywords: ['pdf to slides', 'pdf to pptx', 'pdf to powerpoint', 'convert pdf to presentation']
+  },
+  {
+    id: 'pdf-to-image',
+    name: 'PDF to JPG / Image',
+    desc: 'Render high-resolution JPG or PNG pictures from PDF pages with ZIP download',
+    category: 'core',
+    iconClass: 'pdf-to-image',
+    iconName: 'image',
+    path: '/pdf-to-jpg',
+    keywords: ['pdf to image', 'pdf to jpg', 'pdf to png', 'extract pictures from pdf', 'convert pdf to pictures']
+  },
+  {
+    id: 'image-to-pdf',
+    name: 'JPG / Image to PDF',
+    desc: 'Convert JPG, PNG, and WebP pictures into a clean, uniform PDF document',
+    category: 'core',
+    iconClass: 'image-to-pdf',
+    iconName: 'paperclip',
+    path: '/jpg-to-pdf',
+    keywords: ['image to pdf', 'jpg to pdf', 'png to pdf', 'photos to pdf', 'pictures to pdf']
+  },
+  {
+    id: 'organize-pdf',
+    name: 'Rotate PDF',
+    desc: 'Rotate pages 90° clockwise or counterclockwise, adjust orientation, or sort',
+    category: 'organize',
+    iconClass: 'pages',
+    iconName: 'rotateCw',
+    path: '/rotate-pdf',
+    keywords: ['rotate pdf', 'turn pdf', 'reorient pdf', 'rotate pages', 'clockwise rotate']
+  },
+  {
+    id: 'delete-pdf-pages',
+    name: 'Delete PDF Pages',
+    desc: 'Remove unnecessary pages, cover sheets, or blank pages from your PDF documents',
+    category: 'organize',
+    iconClass: 'split',
+    iconName: 'trash2',
+    path: '/delete-pdf-pages',
+    keywords: ['delete pdf pages', 'remove pages from pdf', 'delete page', 'remove blank pages']
   },
   {
     id: 'crop-pdf',
@@ -101,7 +161,7 @@ export const TOOL_REGISTRY = [
     category: 'organize',
     iconClass: 'pages',
     iconName: 'crop',
-    hash: '#/crop-pdf',
+    path: '/crop-pdf',
     keywords: ['crop pdf', 'trim margins', 'crop pages', 'trim pdf', 'cut borders', 'remove scanner margins']
   },
   {
@@ -111,28 +171,8 @@ export const TOOL_REGISTRY = [
     category: 'organize',
     iconClass: 'pages',
     iconName: 'hash',
-    hash: '#/page-numbers',
+    path: '/page-numbers',
     keywords: ['number pdf pages', 'page numbers', 'header footer', 'bates numbering', 'add page numbers']
-  },
-  {
-    id: 'organize-pdf',
-    name: 'Organize & Rotate Pages',
-    desc: 'Rotate pages 90°, reorder with drag & drop, or delete unwanted pages',
-    category: 'organize',
-    iconClass: 'pages',
-    iconName: 'layers',
-    hash: '#/organize-pdf',
-    keywords: ['organize pdf', 'rotate pdf', 'reorder pages', 'delete page from pdf', 'sort pages', 'turn pdf']
-  },
-  {
-    id: 'pdf-to-excel',
-    name: 'PDF to Excel (XLSX)',
-    desc: 'Convert tabular data and rows into structured Microsoft Excel spreadsheets',
-    category: 'convert',
-    iconClass: 'excel',
-    iconName: 'fileSpreadsheet',
-    hash: '#/pdf-to-excel',
-    keywords: ['pdf to excel', 'pdf to xlsx', 'convert pdf to sheet', 'extract table from pdf', 'spreadsheet']
   },
   {
     id: 'excel-to-pdf',
@@ -141,18 +181,8 @@ export const TOOL_REGISTRY = [
     category: 'convert',
     iconClass: 'excel',
     iconName: 'fileSpreadsheet',
-    hash: '#/excel-to-pdf',
+    path: '/excel-to-pdf',
     keywords: ['excel to pdf', 'xlsx to pdf', 'convert sheet to pdf', 'export excel as pdf']
-  },
-  {
-    id: 'pdf-to-slides',
-    name: 'PDF to Slides (PPTX)',
-    desc: 'Create widescreen PowerPoint presentation decks from your PDF pages',
-    category: 'convert',
-    iconClass: 'slides',
-    iconName: 'presentation',
-    hash: '#/pdf-to-slides',
-    keywords: ['pdf to slides', 'pdf to pptx', 'pdf to powerpoint', 'convert pdf to presentation']
   },
   {
     id: 'slides-to-pdf',
@@ -161,7 +191,7 @@ export const TOOL_REGISTRY = [
     category: 'convert',
     iconClass: 'slides',
     iconName: 'presentation',
-    hash: '#/slides-to-pdf',
+    path: '/slides-to-pdf',
     keywords: ['pptx to pdf', 'slides to pdf', 'powerpoint to pdf', 'export slides to pdf']
   },
   {
@@ -171,28 +201,8 @@ export const TOOL_REGISTRY = [
     category: 'convert',
     iconClass: 'docx',
     iconName: 'fileText',
-    hash: '#/docx-to-pdf',
+    path: '/docx-to-pdf',
     keywords: ['word to pdf', 'docx to pdf', 'convert word to pdf', 'save as pdf']
-  },
-  {
-    id: 'pdf-to-image',
-    name: 'PDF to Image',
-    desc: 'Render high-resolution JPG or PNG pictures from PDF pages with ZIP download',
-    category: 'core',
-    iconClass: 'pdf-to-image',
-    iconName: 'image',
-    hash: '#/pdf-to-image',
-    keywords: ['pdf to image', 'pdf to jpg', 'pdf to png', 'extract pictures from pdf', 'convert pdf to pictures']
-  },
-  {
-    id: 'image-to-pdf',
-    name: 'Image to PDF',
-    desc: 'Convert JPG, PNG, and WebP pictures into a clean, uniform PDF document',
-    category: 'core',
-    iconClass: 'image-to-pdf',
-    iconName: 'paperclip',
-    hash: '#/image-to-pdf',
-    keywords: ['image to pdf', 'jpg to pdf', 'png to pdf', 'photos to pdf', 'pictures to pdf']
   },
   {
     id: 'pages',
@@ -201,7 +211,7 @@ export const TOOL_REGISTRY = [
     category: 'organize',
     iconClass: 'pages',
     iconName: 'layers',
-    hash: '#/pages',
+    path: '/pages',
     badge: 'Suite',
     keywords: ['page editor', 'editor', 'pdf editor', 'workbench', 'edit pdf']
   }
@@ -252,7 +262,7 @@ export function renderHome(container) {
     }
 
     return cards.map(card => `
-      <a class="tool-card" href="${card.hash}" id="tool-${card.id}">
+      <a class="tool-card" href="${card.path || card.hash}" id="tool-${card.id}">
         <div class="tool-card__icon tool-card__icon--${card.iconClass}">
           ${icon(card.iconName, 26)}
         </div>
@@ -349,6 +359,46 @@ export function renderHome(container) {
           <p style="font-size:var(--text-sm); color:var(--color-text-secondary); margin:0; line-height:1.5">
             Turn PDF reports into editable Word (.docx), tables into Excel (.xlsx), and decks into PowerPoint (.pptx) with full formatting intact.
           </p>
+        </div>
+      </section>
+
+      <!-- Homepage FAQ Section for SEO -->
+      <section class="seo-faq-section" style="margin-top:var(--space-12)" aria-labelledby="home-faq-title">
+        <h2 id="home-faq-title" class="seo-section-title" style="text-align:center">Frequently Asked Questions</h2>
+        <p style="text-align:center; color:var(--color-text-secondary); font-size:var(--text-sm); max-width:600px; margin:0 auto var(--space-6)">
+          Everything you need to know about our privacy-first, zero-upload PDF tools.
+        </p>
+        <div class="seo-faq-list">
+          <details class="seo-faq-item" open>
+            <summary class="seo-faq-question">What is PDFHome and how does it process files?</summary>
+            <div class="seo-faq-answer">
+              PDFHome is a comprehensive, client-side PDF utility suite. All operations—including merging, splitting, compressing, e-signing, and converting to Word/Excel—execute directly within your web browser using HTML5 Canvas, WebAssembly, and modern JavaScript engines.
+            </div>
+          </details>
+          <details class="seo-faq-item">
+            <summary class="seo-faq-question">Are my PDF documents uploaded to external servers?</summary>
+            <div class="seo-faq-answer">
+              No. PDFHome has zero server upload infrastructure for document processing. Your files remain 100% on your local machine and never leave your computer or phone memory.
+            </div>
+          </details>
+          <details class="seo-faq-item">
+            <summary class="seo-faq-question">Is PDFHome completely free without watermarks or limits?</summary>
+            <div class="seo-faq-answer">
+              Yes, all PDF tools on PDFHome are completely free to use with no account registration, no subscriptions, and no watermarks added to your downloaded documents.
+            </div>
+          </details>
+          <details class="seo-faq-item">
+            <summary class="seo-faq-question">Which document formats can I convert?</summary>
+            <div class="seo-faq-answer">
+              PDFHome supports bidirectional conversions between PDF and Microsoft Word (.docx), Excel (.xlsx), PowerPoint (.pptx), JPG, PNG, and WebP, plus optical character recognition (OCR) for scanned PDFs.
+            </div>
+          </details>
+          <details class="seo-faq-item">
+            <summary class="seo-faq-question">Does PDFHome work on mobile devices and all browsers?</summary>
+            <div class="seo-faq-answer">
+              Yes. PDFHome is fully responsive and compatible with all modern browsers including Google Chrome, Apple Safari, Mozilla Firefox, and Microsoft Edge across desktop, tablet, and mobile devices.
+            </div>
+          </details>
         </div>
       </section>
 

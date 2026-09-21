@@ -26,29 +26,30 @@
   <meta name="referrer" content="strict-origin-when-cross-origin" />
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob: https://cdn.jsdelivr.net; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self' blob: data: https://cdn.jsdelivr.net https://tessdata.projectnaptha.com https://*.firebaseio.com https://*.firebasedatabase.app https://*.googleapis.com; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';" />
 
-  <title>PDF Home — Free Online PDF Editor, Digital Signature & Document Converter</title>
-  <meta name="description" content="Free online PDF editor and document converter suite. Sign PDF with transparent handwritten signatures, watermark, crop margins, password protect, and convert PDF to Word DOCX, Excel XLSX, PowerPoint PPTX, and OCR searchable text directly in your browser." />
-  <meta name="keywords" content="signature on pdf, sign pdf, transparent signature pdf, electronic signature, digital signature pdf, draw signature, online pdf signer, watermark pdf, protect pdf with password, encrypt pdf, crop pdf margins, number pdf pages, pdf to word, pdf to docx, convert pdf to word, word to pdf, pdf to excel, excel to pdf, pdf to slides, pdf to pptx, picture pdf to text, ocr pdf, searchable pdf, merge pdf, split pdf, compress pdf, reduce pdf size, pdf contact support" />
-  <meta name="author" content="PDF Home" />
+  <title>PDFHome — 100% Free Online PDF Tools &amp; Office Converter (Private &amp; Fast)</title>
+  <meta name="description" content="Free online PDF tools. Merge, split, compress, sign, and convert PDF to Word, Excel, PowerPoint, and JPG directly in your browser. 100% private, no file uploads, and no limits." />
+  <meta name="keywords" content="pdf tools, merge pdf, split pdf, compress pdf, pdf to word, pdf to excel, pdf to powerpoint, pdf to jpg, jpg to pdf, ocr pdf, rotate pdf, delete pdf pages, watermark pdf, sign pdf, protect pdf, free pdf editor" />
+  <meta name="author" content="PDFHome" />
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1" />
-  <link rel="canonical" href="https://pdfhome.app/" />
+  <link rel="canonical" href="https://pdfhome.pages.dev/" />
 
   <!-- Open Graph / Facebook -->
   <meta property="og:type" content="website" />
-  <meta property="og:title" content="PDF Home — Free Online PDF Editor, Digital Signature & Converter" />
-  <meta property="og:description" content="Professional PDF editor and converter. Sign PDF, convert to Word, Excel, Slides, run OCR, and password protect directly in your browser with zero server storage." />
-  <meta property="og:site_name" content="PDF Home" />
-  <meta property="og:url" content="https://pdfhome.app/" />
+  <meta property="og:title" content="PDFHome — Free Online PDF Tools &amp; Office Converter" />
+  <meta property="og:description" content="Merge, split, compress, sign, and convert PDF to Word, Excel, PowerPoint, and JPG directly in your browser. 100% private with zero file uploads." />
+  <meta property="og:site_name" content="PDFHome" />
+  <meta property="og:url" content="https://pdfhome.pages.dev/" />
+  <meta property="og:image" content="https://pdfhome.pages.dev/icon.png" />
 
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="PDF Home — Free Online PDF Editor, Digital Signature & Converter" />
-  <meta name="twitter:description" content="Sign PDF documents with transparent signatures, convert PDF to editable Word, Excel, Slides, and run OCR on scanned picture PDFs with zero server uploads." />
+  <meta name="twitter:title" content="PDFHome — Free Online PDF Tools &amp; Office Converter" />
+  <meta name="twitter:description" content="Merge, split, compress, sign, and convert PDF to Word, Excel, PowerPoint, and JPG in your browser with zero server uploads." />
+  <meta name="twitter:image" content="https://pdfhome.pages.dev/icon.png" />
 
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <link rel="icon" type="image/png" sizes="192x192" href="/icon.png" />
   <link rel="apple-touch-icon" href="/icon.png" />
-  <meta property="og:image" content="https://pdfhome.app/icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -59,17 +60,29 @@
   <link rel="stylesheet" href="/src/styles/components.css" />
   <link rel="stylesheet" href="/src/styles/tools.css" />
 
-  <!-- Schema.org Structured Data for Search Engine Crawlers -->
+  <!-- Schema.org Structured Data -->
   <script type="application/ld+json">
   {
     "@context": "https://schema.org",
     "@graph": [
       {
+        "@type": "WebSite",
+        "@id": "https://pdfhome.pages.dev/#website",
+        "url": "https://pdfhome.pages.dev/",
+        "name": "PDFHome",
+        "description": "Free, private, in-browser PDF suite for converting, signing, merging, compressing, and editing PDF files.",
+        "potentialAction": {
+          "@type": "SearchAction",
+          "target": "https://pdfhome.pages.dev/?q={search_term_string}",
+          "query-input": "required name=search_term_string"
+        }
+      },
+      {
         "@type": "WebApplication",
-        "@id": "https://pdfhome.app/#webapp",
-        "name": "PDF Home",
-        "url": "https://pdfhome.app",
-        "description": "Professional in-memory PDF workspace offering digital signatures, watermarking, margin cropping, password encryption, bidirectional conversion to Word DOCX, Excel XLSX, PowerPoint PPTX, and OCR searchable text PDF generation.",
+        "@id": "https://pdfhome.pages.dev/#webapp",
+        "name": "PDFHome Online PDF Tools",
+        "url": "https://pdfhome.pages.dev/",
+        "description": "Client-side PDF editor and converter offering digital signatures, watermarks, margin cropping, password encryption, bidirectional conversion to Word, Excel, PowerPoint, JPG, and local OCR.",
         "applicationCategory": "UtilitiesApplication",
         "operatingSystem": "All modern browsers (Chrome, Edge, Safari, Firefox)",
         "offers": {
@@ -78,95 +91,33 @@
           "priceCurrency": "USD"
         },
         "featureList": [
-          "Sign PDF: Draw handwritten signatures or overlay transparent stamps with 9-point grid positioning",
-          "Watermark PDF: Custom text and logo stamps with opacity and rotation controls",
-          "Page Numbers: Header and footer Bates numbering (Page X of Y) with cover exclusion",
-          "Visual PDF Crop: Margin trimming and boundary framing",
-          "Password Protect: 128-bit encryption with zero cloud storage",
-          "PDF to Word (DOCX) and Word to PDF conversion",
-          "PDF to Excel (XLSX) and Excel to PDF spreadsheet conversion",
-          "PDF to PowerPoint (PPTX) and Slides to PDF conversion",
-          "Picture Text PDF to Searchable Text PDF with local OCR",
-          "Merge multiple PDF files and images into one document",
-          "Split PDFs by all pages, custom ranges, or selected pages",
-          "Compress PDFs with smart size-guard preventing file inflation",
-          "Image to PDF and PDF to Image extraction"
+          "Merge multiple PDF files into one",
+          "Split PDF by pages or ranges",
+          "Compress PDF with smart size reduction",
+          "Convert PDF to editable Word (.docx)",
+          "Convert PDF to Excel (.xlsx) spreadsheets",
+          "Convert PDF to PowerPoint (.pptx) presentations",
+          "Extract PDF pages to JPG / PNG images",
+          "Convert JPG / PNG images to PDF",
+          "Transform scanned picture PDFs to searchable text via OCR",
+          "Rotate and reorder PDF pages",
+          "Delete unwanted pages from PDF",
+          "Watermark PDF with text and logo stamps",
+          "Sign PDF with transparent handwritten signatures",
+          "Password protect and encrypt PDF documents"
         ]
       },
       {
         "@type": "Organization",
-        "@id": "https://pdfhome.app/#organization",
-        "name": "PDF Home",
-        "url": "https://pdfhome.app",
+        "@id": "https://pdfhome.pages.dev/#organization",
+        "name": "PDFHome",
+        "url": "https://pdfhome.pages.dev/",
+        "logo": "https://pdfhome.pages.dev/icon.png",
         "contactPoint": {
           "@type": "ContactPoint",
-          "url": "https://pdfhome.app/#/contact",
+          "url": "https://pdfhome.pages.dev/contact",
           "contactType": "customer support"
         }
-      },
-      {
-        "@type": "HowTo",
-        "name": "How to Sign a PDF Document Online",
-        "description": "Add a free handwritten digital signature or transparent stamp to any PDF document in seconds.",
-        "step": [
-          {
-            "@type": "HowToStep",
-            "name": "Select or Drop PDF",
-            "text": "Open PDF Home Sign PDF tool and drop your PDF file."
-          },
-          {
-            "@type": "HowToStep",
-            "name": "Draw Your Signature",
-            "text": "Use the smooth signature pad to draw your signature in blue or black ink, or upload a transparent PNG signature."
-          },
-          {
-            "@type": "HowToStep",
-            "name": "Position on Document",
-            "text": "Drag your signature directly onto the preview page or snap to the 9-point anchor grid. Scale and rotate as desired."
-          },
-          {
-            "@type": "HowToStep",
-            "name": "Save & Download",
-            "text": "Click Save & Export PDF to immediately download your signed PDF without server uploads."
-          }
-        ]
-      },
-      {
-        "@type": "FAQPage",
-        "mainEntity": [
-          {
-            "@type": "Question",
-            "name": "How do I add a signature to a PDF online for free?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "With PDF Home, open the Sign PDF tool, draw your signature or upload a transparent signature image, position it anywhere on the page, and click Save & Export. It is free and works directly in your browser."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "Are my confidential files uploaded or saved to any server?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "No. All PDF editing, conversion, signing, and OCR processing runs in-memory. Documents never leave your device and are never uploaded to any remote server."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "How do I convert a scanned picture PDF into searchable, selectable text?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "Use the Picture PDF to Text (OCR) tool on PDF Home. The AI OCR engine extracts text and creates a pristine searchable PDF where you can search, copy, and select words."
-            }
-          },
-          {
-            "@type": "Question",
-            "name": "How can I contact support or request custom features?",
-            "acceptedAnswer": {
-              "@type": "Answer",
-              "text": "You can contact support directly via our official Contact & Support desk on PDF Home at https://pdfhome.app/#/contact."
-            }
-          }
-        ]
       }
     ]
   }
@@ -178,49 +129,41 @@
   <!-- Semantic Content for Search Engine Crawlers & Non-JS Clients -->
   <noscript>
     <main style="max-width:960px;margin:40px auto;padding:24px;font-family:sans-serif;line-height:1.6">
-      <h1>PDF Home — Online PDF Editor, Digital Signature & Document Converter</h1>
+      <h1>PDFHome — Free Online PDF Tools &amp; Document Converter</h1>
       <p>
-        PDF Home is a professional in-browser document suite allowing you to sign, edit, convert, organize, and protect PDF files securely.
-        Zero server file retention, zero queues, and instant client-side execution.
+        PDFHome is a fast, 100% private in-browser document suite. Convert, merge, split, compress, edit, sign, and protect PDF files securely with zero server file retention and instant client-side processing.
       </p>
       
-      <section id="seo-sign-pdf">
-        <h2>Sign PDF Online — Draw & Add Transparent Signatures</h2>
-        <p>
-          Need to add a signature to a PDF document? PDF Home allows you to draw your handwritten signature on an interactive digital pad or upload a transparent PNG stamp. You can position your signature with precision using the 9-anchor alignment grid, adjust opacity, scale, and exclude specific cover pages.
-        </p>
-      </section>
-
-      <section id="seo-convert-office">
-        <h2>Office Document Conversion Suite</h2>
+      <section id="seo-core-tools">
+        <h2>Essential PDF Utilities</h2>
         <ul>
-          <li><strong>PDF to Word (DOCX):</strong> Convert PDF files into fully editable Microsoft Word documents preserving formatting and tables.</li>
-          <li><strong>Word (DOCX) to PDF:</strong> Transform Microsoft Word documents into clean, standard PDF files.</li>
-          <li><strong>PDF to Excel (XLSX):</strong> Extract tables and data columns from PDF into structured Microsoft Excel spreadsheets.</li>
-          <li><strong>Excel (XLSX) to PDF:</strong> Render Excel sheets into formatted, print-ready PDF tables.</li>
-          <li><strong>PDF to Slides (PPTX):</strong> Convert PDF pages into widescreen PowerPoint presentation slides.</li>
-          <li><strong>Slides (PPTX) to PDF:</strong> Save PowerPoint decks into high-resolution PDF presentations.</li>
-          <li><strong>Picture PDF to Text (OCR):</strong> Automatically process scanned picture PDFs with an optical character recognition engine to output searchable, selectable text PDFs.</li>
+          <li><a href="/merge-pdf"><strong>Merge PDF:</strong></a> Combine multiple PDF documents and images into a single file with custom page order.</li>
+          <li><a href="/split-pdf"><strong>Split PDF:</strong></a> Extract specific page ranges or separate multi-page documents into individual PDF files.</li>
+          <li><a href="/compress-pdf"><strong>Compress PDF:</strong></a> Reduce PDF file size with smart compression while preserving visual document quality.</li>
+          <li><a href="/rotate-pdf"><strong>Rotate PDF:</strong></a> Rotate PDF pages clockwise or counter-clockwise 90°, 180°, or 270°.</li>
+          <li><a href="/delete-pdf-pages"><strong>Delete PDF Pages:</strong></a> Remove unwanted pages from your PDF documents easily.</li>
+          <li><a href="/watermark-pdf"><strong>Watermark PDF:</strong></a> Add customized text stamps or company logo watermarks to PDF pages.</li>
+          <li><a href="/sign-pdf"><strong>Sign PDF:</strong></a> Add digital handwritten signatures or transparent signature stamps to contracts.</li>
+          <li><a href="/protect-pdf"><strong>Protect PDF:</strong></a> Secure confidential PDFs with standard 128-bit password encryption.</li>
         </ul>
       </section>
 
-      <section id="seo-core-tools">
-        <h2>Core PDF Utilities & Security</h2>
+      <section id="seo-convert-office">
+        <h2>Office Document &amp; Image Conversions</h2>
         <ul>
-          <li><strong>Merge PDF:</strong> Combine multiple PDF files and images into a single document with drag-and-drop ordering.</li>
-          <li><strong>Split PDF:</strong> Extract specific page ranges or split into individual single-page documents.</li>
-          <li><strong>Compress PDF:</strong> Reduce file size with smart structural optimization and size-guard protection.</li>
-          <li><strong>Protect PDF:</strong> Encrypt PDF files with 128-bit standard security and password lock.</li>
-          <li><strong>Watermark PDF:</strong> Add custom text or image stamps across all pages with opacity control.</li>
-          <li><strong>Crop PDF:</strong> Visually trim scanner borders and adjust page margins.</li>
-          <li><strong>Page Numbering:</strong> Insert clean headers and footers with custom formats.</li>
+          <li><a href="/pdf-to-word"><strong>PDF to Word (DOCX):</strong></a> Convert PDF files into fully editable Microsoft Word documents with tables and layout intact.</li>
+          <li><a href="/pdf-to-excel"><strong>PDF to Excel (XLSX):</strong></a> Extract data tables and rows from PDF into structured Microsoft Excel spreadsheets.</li>
+          <li><a href="/pdf-to-powerpoint"><strong>PDF to PowerPoint (PPTX):</strong></a> Convert PDF presentation decks into widescreen editable PowerPoint slides.</li>
+          <li><a href="/pdf-to-jpg"><strong>PDF to JPG:</strong></a> Extract and convert PDF pages into high-resolution JPG / PNG pictures.</li>
+          <li><a href="/jpg-to-pdf"><strong>JPG to PDF:</strong></a> Combine JPG, PNG, and WebP images into a single uniform PDF document.</li>
+          <li><a href="/ocr-pdf"><strong>OCR PDF (Picture to Text):</strong></a> Extract text from scanned picture PDFs and create searchable, selectable text PDFs.</li>
         </ul>
       </section>
 
       <section id="seo-contact">
-        <h2>Developer & Support Contact</h2>
+        <h2>Support &amp; Contact</h2>
         <p>
-          For inquiries, enterprise integration, feedback, or support, please submit your message via our secure <a href="/#/contact">Online Contact Desk</a>.
+          Need assistance or want to report an issue? Reach out via our <a href="/contact">Contact Desk</a>.
         </p>
       </section>
     </main>
