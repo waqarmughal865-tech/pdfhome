@@ -2,8 +2,6 @@ import JSZip from 'jszip';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import * as pdfjsLib from 'pdfjs-dist';
 import { loadPDFDocument } from './renderer.js';
-import { extractOcrTextFromPage } from './ocr-engine.js';
-import { createWorker } from 'tesseract.js';
 
 // Matrix helpers for tracking CTM in PDF operator stream
 function multMatrix(m1, m2) {
@@ -21,77 +19,210 @@ function transformPoint(m, x, y) {
   return [m[0] * x + m[2] * y + m[4], m[1] * x + m[3] * y + m[5]];
 }
 
-// Convert PDF.js image object to PNG Uint8Array via offscreen canvas
+// CRC32 table for pure-JS PNG encoding
+const pngCrcTable = new Uint32Array(256);
+for (let n = 0; n < 256; n++) {
+  let c = n;
+  for (let k = 0; k < 8; k++) {
+    c = (c & 1) ? (0xedb88320 ^ (c >>> 1)) : (c >>> 1);
+  }
+  pngCrcTable[n] = c;
+}
+function pngCrc32(buf, start = 0, len = buf.length - start) {
+  let c = 0xffffffff;
+  for (let i = start; i < start + len; i++) {
+    c = pngCrcTable[(c ^ buf[i]) & 0xff] ^ (c >>> 8);
+  }
+  return (c ^ 0xffffffff) >>> 0;
+}
+function pngAdler32(buf) {
+  let a = 1, b = 0;
+  for (let i = 0; i < buf.length; i++) {
+    a = (a + buf[i]) % 65521;
+    b = (b + a) % 65521;
+  }
+  return ((b << 16) | a) >>> 0;
+}
+
+// Pure-JS PNG encoder that never fails even without canvas/DOM
+async function encodeRawRgbaToPng(width, height, rawData, kind) {
+  if (!rawData || width <= 0 || height <= 0) return null;
+  const rowLen = width * 4;
+  const uncompressed = new Uint8Array(height * (1 + rowLen));
+  let src = 0;
+  let dst = 0;
+
+  for (let y = 0; y < height; y++) {
+    uncompressed[dst++] = 0; // Filter: None
+    if (kind === 2 || (rawData && rawData.length === width * height * 3)) {
+      // RGB -> RGBA
+      for (let x = 0; x < width; x++) {
+        uncompressed[dst++] = rawData[src++];
+        uncompressed[dst++] = rawData[src++];
+        uncompressed[dst++] = rawData[src++];
+        uncompressed[dst++] = 255;
+      }
+    } else if (kind === 3 || (rawData && rawData.length === width * height * 4)) {
+      // RGBA
+      for (let x = 0; x < rowLen; x++) {
+        uncompressed[dst++] = rawData[src++];
+      }
+    } else {
+      // Grayscale -> RGBA
+      for (let x = 0; x < width; x++) {
+        const v = rawData[src++];
+        uncompressed[dst++] = v;
+        uncompressed[dst++] = v;
+        uncompressed[dst++] = v;
+        uncompressed[dst++] = 255;
+      }
+    }
+  }
+
+  // Deflate compressed scanlines using bundled JSZip
+  const zip = new JSZip();
+  zip.file('d', uncompressed, { compression: 'DEFLATE', compressionOptions: { level: 6 } });
+  const zipBytes = await zip.generateAsync({ type: 'uint8array' });
+
+  const view = new DataView(zipBytes.buffer, zipBytes.byteOffset, zipBytes.byteLength);
+  const fnLen = view.getUint16(26, true);
+  const extraLen = view.getUint16(28, true);
+  const compSize = view.getUint32(18, true);
+  const compOffset = 30 + fnLen + extraLen;
+  const deflatedStream = zipBytes.subarray(compOffset, compOffset + compSize);
+
+  // Zlib stream: header [0x78, 0x9c], deflated payload, Adler-32 checksum
+  const zlibData = new Uint8Array(2 + deflatedStream.length + 4);
+  zlibData[0] = 0x78;
+  zlibData[1] = 0x9c;
+  zlibData.set(deflatedStream, 2);
+  const adler = pngAdler32(uncompressed);
+  const zView = new DataView(zlibData.buffer, zlibData.byteOffset, zlibData.byteLength);
+  zView.setUint32(2 + deflatedStream.length, adler, false);
+
+  // Assemble full PNG: Signature + IHDR + IDAT + IEND
+  const idatLen = zlibData.length;
+  const totalPngLen = 8 + 25 + (12 + idatLen) + 12;
+  const png = new Uint8Array(totalPngLen);
+  let p = 0;
+
+  // PNG Signature
+  png.set([137, 80, 78, 71, 13, 10, 26, 10], p);
+  p += 8;
+
+  const pView = new DataView(png.buffer, png.byteOffset, png.byteLength);
+
+  // IHDR chunk
+  pView.setUint32(p, 13, false); p += 4;
+  const ihdrStart = p;
+  png.set([0x49, 0x48, 0x44, 0x52], p); p += 4; // "IHDR"
+  pView.setUint32(p, width, false); p += 4;
+  pView.setUint32(p, height, false); p += 4;
+  png[p++] = 8; // 8 bits per channel
+  png[p++] = 6; // RGBA color type
+  png[p++] = 0; // Compression (deflate)
+  png[p++] = 0; // Filter (standard)
+  png[p++] = 0; // Interlace (none)
+  const ihdrCrc = pngCrc32(png, ihdrStart, 17);
+  pView.setUint32(p, ihdrCrc, false); p += 4;
+
+  // IDAT chunk
+  pView.setUint32(p, idatLen, false); p += 4;
+  const idatStart = p;
+  png.set([0x49, 0x44, 0x41, 0x54], p); p += 4; // "IDAT"
+  png.set(zlibData, p); p += idatLen;
+  const idatCrc = pngCrc32(png, idatStart, 4 + idatLen);
+  pView.setUint32(p, idatCrc, false); p += 4;
+
+  // IEND chunk
+  pView.setUint32(p, 0, false); p += 4;
+  const iendStart = p;
+  png.set([0x49, 0x45, 0x4e, 0x44], p); p += 4; // "IEND"
+  const iendCrc = pngCrc32(png, iendStart, 4);
+  pView.setUint32(p, iendCrc, false); p += 4;
+
+  return png;
+}
+
+// Convert PDF.js image object to PNG Uint8Array via offscreen canvas or pure-JS PNG encoder
 async function imageObjToPngUint8(imgObj) {
   if (!imgObj || !imgObj.width || !imgObj.height) return null;
   const { width, height, data, kind } = imgObj;
 
+  // Try browser canvas if available
   if (typeof document !== 'undefined' && document.createElement) {
     try {
       const canvas = document.createElement('canvas');
       canvas.width = width;
       canvas.height = height;
       const ctx = canvas.getContext('2d');
-      if (!ctx) return null;
+      if (ctx) {
+        if (typeof ImageBitmap !== 'undefined' && imgObj instanceof ImageBitmap) {
+          ctx.drawImage(imgObj, 0, 0);
+        } else if (imgObj.bitmap && typeof ImageBitmap !== 'undefined' && imgObj.bitmap instanceof ImageBitmap) {
+          ctx.drawImage(imgObj.bitmap, 0, 0);
+        } else if (typeof HTMLImageElement !== 'undefined' && imgObj instanceof HTMLImageElement) {
+          ctx.drawImage(imgObj, 0, 0);
+        } else if (data) {
+          const imgData = ctx.createImageData(width, height);
+          const out = imgData.data;
 
-      if (typeof ImageBitmap !== 'undefined' && imgObj instanceof ImageBitmap) {
-        ctx.drawImage(imgObj, 0, 0);
-      } else if (imgObj.bitmap && typeof ImageBitmap !== 'undefined' && imgObj.bitmap instanceof ImageBitmap) {
-        ctx.drawImage(imgObj.bitmap, 0, 0);
-      } else if (typeof HTMLImageElement !== 'undefined' && imgObj instanceof HTMLImageElement) {
-        ctx.drawImage(imgObj, 0, 0);
-      } else if (data) {
-        const imgData = ctx.createImageData(width, height);
-        const out = imgData.data;
-
-        if (kind === 3 || data.length === width * height * 4) {
-          // RGBA
-          out.set(data);
-        } else if (kind === 2 || data.length === width * height * 3) {
-          // RGB -> RGBA
-          let s = 0, d = 0;
-          const len = width * height;
-          for (let i = 0; i < len; i++) {
-            out[d++] = data[s++];
-            out[d++] = data[s++];
-            out[d++] = data[s++];
-            out[d++] = 255;
+          if (kind === 3 || data.length === width * height * 4) {
+            out.set(data);
+          } else if (kind === 2 || data.length === width * height * 3) {
+            let s = 0, d = 0;
+            const len = width * height;
+            for (let i = 0; i < len; i++) {
+              out[d++] = data[s++];
+              out[d++] = data[s++];
+              out[d++] = data[s++];
+              out[d++] = 255;
+            }
+          } else if (kind === 1 || data.length === width * height) {
+            let s = 0, d = 0;
+            const len = width * height;
+            for (let i = 0; i < len; i++) {
+              const v = data[s++];
+              out[d++] = v;
+              out[d++] = v;
+              out[d++] = v;
+              out[d++] = 255;
+            }
+          } else {
+            const limit = Math.min(data.length, out.length);
+            for (let i = 0; i < limit; i++) out[i] = data[i];
           }
-        } else if (kind === 1 || data.length === width * height) {
-          // Grayscale -> RGBA
-          let s = 0, d = 0;
-          const len = width * height;
-          for (let i = 0; i < len; i++) {
-            const v = data[s++];
-            out[d++] = v;
-            out[d++] = v;
-            out[d++] = v;
-            out[d++] = 255;
-          }
-        } else {
-          const limit = Math.min(data.length, out.length);
-          for (let i = 0; i < limit; i++) out[i] = data[i];
+          ctx.putImageData(imgData, 0, 0);
         }
-        ctx.putImageData(imgData, 0, 0);
-      } else {
-        return null;
-      }
 
-      return await new Promise((resolve) => {
-        canvas.toBlob(async (blob) => {
-          if (!blob) {
-            resolve(null);
-            return;
-          }
-          const buf = await blob.arrayBuffer();
-          resolve(new Uint8Array(buf));
-        }, 'image/png');
-      });
+        const pngBytes = await new Promise((resolve) => {
+          canvas.toBlob(async (blob) => {
+            if (!blob) {
+              resolve(null);
+              return;
+            }
+            const buf = await blob.arrayBuffer();
+            resolve(new Uint8Array(buf));
+          }, 'image/png');
+        });
+
+        if (pngBytes && pngBytes.length > 50) return pngBytes;
+      }
     } catch (err) {
-      console.warn('Could not convert imageObj to PNG:', err);
-      return null;
+      console.warn('Canvas toBlob fallback to pure-JS PNG encoder:', err);
     }
   }
+
+  // Pure-JS PNG encoding fallback (guaranteed to succeed for raw image pixel data)
+  if (data) {
+    try {
+      const purePng = await encodeRawRgbaToPng(width, height, data, kind);
+      if (purePng && purePng.length > 50) return purePng;
+    } catch (err) {
+      console.warn('Pure-JS PNG encoder failed:', err);
+    }
+  }
+
   return null;
 }
 
@@ -144,6 +275,408 @@ function escapeXml(str) {
     .replace(/'/g, '&apos;');
 }
 
+// Parse raw PDF text items into structured visual lines with cluster separation
+function parseItemsIntoLines(items, pageHeight, linkAnnotations = []) {
+  const sortedItems = [...items].sort((a, b) => {
+    const yDiff = b.transform[5] - a.transform[5];
+    if (Math.abs(yDiff) > 3.5) return yDiff;
+    return a.transform[4] - b.transform[4];
+  });
+
+  const rawLines = [];
+  let currentLineItems = [];
+  let currentBaselineY = null;
+
+  for (const item of sortedItems) {
+    const str = item.str || '';
+    if (!str.trim()) continue;
+
+    const y = item.transform[5];
+    if (currentBaselineY === null || Math.abs(currentBaselineY - y) <= 3.5) {
+      currentLineItems.push(item);
+      currentBaselineY = y;
+    } else {
+      if (currentLineItems.length > 0) {
+        rawLines.push({ y: currentBaselineY, items: currentLineItems });
+      }
+      currentLineItems = [item];
+      currentBaselineY = y;
+    }
+  }
+  if (currentLineItems.length > 0) {
+    rawLines.push({ y: currentBaselineY, items: currentLineItems });
+  }
+
+  const parsedLines = [];
+  for (const line of rawLines) {
+    const lineY = line.y;
+    const topDist = Math.max(0, pageHeight - lineY);
+    const lineItems = [...line.items].sort((a, b) => a.transform[4] - b.transform[4]);
+
+    const clusters = [];
+    let currentCluster = null;
+
+    for (const item of lineItems) {
+      const str = item.str || '';
+      const itemX = item.transform[4];
+      const itemWidth = item.width || (str.length * 6);
+      const itemEndX = itemX + itemWidth;
+      const fontSize = Math.round(Math.hypot(item.transform[0], item.transform[1])) || 11;
+      const isBold = (item.fontName || '').toLowerCase().includes('bold') || (item.fontName || '').toLowerCase().includes('f1');
+
+      let itemLinkUrl = null;
+      for (const annot of linkAnnotations) {
+        if (annot.rect && annot.rect.length >= 4) {
+          const [lx1, ly1, lx2, ly2] = annot.rect;
+          if (itemX >= lx1 - 5 && itemX <= lx2 + 5 && lineY >= ly1 - 5 && lineY <= ly2 + 5) {
+            itemLinkUrl = annot.url || annot.unsafeUrl;
+            break;
+          }
+        }
+      }
+
+      if (!currentCluster) {
+        currentCluster = {
+          text: str,
+          startX: itemX,
+          endX: itemEndX,
+          fontSize,
+          isBold,
+          linkUrl: itemLinkUrl
+        };
+      } else if ((itemX - currentCluster.endX) > 28) {
+        clusters.push(currentCluster);
+        currentCluster = {
+          text: str,
+          startX: itemX,
+          endX: itemEndX,
+          fontSize,
+          isBold,
+          linkUrl: itemLinkUrl
+        };
+      } else {
+        const gap = itemX - currentCluster.endX;
+        if (gap > 1.2) {
+          currentCluster.text += ' ' + str;
+        } else {
+          currentCluster.text += str;
+        }
+        currentCluster.endX = Math.max(currentCluster.endX, itemEndX);
+        currentCluster.fontSize = Math.max(currentCluster.fontSize, fontSize);
+        if (isBold) currentCluster.isBold = true;
+        if (itemLinkUrl) currentCluster.linkUrl = itemLinkUrl;
+      }
+    }
+    if (currentCluster) clusters.push(currentCluster);
+    if (clusters.length === 0) continue;
+
+    const joinedText = clusters.map(c => c.text).join(' ').trim();
+    if (!joinedText) continue;
+
+    parsedLines.push({
+      y: lineY,
+      topDist,
+      startX: clusters[0].startX,
+      endX: clusters[clusters.length - 1].endX,
+      fontSize: clusters[0].fontSize || 11,
+      clusters,
+      fullText: joinedText
+    });
+  }
+
+  return parsedLines;
+}
+
+// Build structured blocks (headings, tables, tabbed metadata, lists, paragraphs) from parsed lines
+function buildBlocksFromLines(parsedLines, pageWidth, minContentX, deduplicatedLines = []) {
+  const processedBlocks = [];
+  let i = 0;
+
+  while (i < parsedLines.length) {
+    const currentLine = parsedLines[i];
+
+    // Check multi-row table pattern
+    if (currentLine.clusters.length >= 2) {
+      const potentialTableRows = [currentLine];
+      let nextIdx = i + 1;
+
+      while (nextIdx < parsedLines.length) {
+        const nextLine = parsedLines[nextIdx];
+        const prevLine = potentialTableRows[potentialTableRows.length - 1];
+        const rowGap = prevLine.y - nextLine.y;
+
+        if (
+          nextLine.clusters.length >= 2 &&
+          rowGap > 0 &&
+          rowGap <= 32 &&
+          Math.abs(nextLine.clusters.length - prevLine.clusters.length) <= 1
+        ) {
+          const colMatch = potentialTableRows[0].clusters.every((c, cIdx) => {
+            const nc = nextLine.clusters[cIdx];
+            return !nc || Math.abs(c.startX - nc.startX) < 30;
+          });
+
+          if (colMatch) {
+            potentialTableRows.push(nextLine);
+            nextIdx++;
+            continue;
+          }
+        }
+        break;
+      }
+
+      if (potentialTableRows.length >= 2) {
+        const numCols = Math.max(...potentialTableRows.map(r => r.clusters.length));
+        const colBoundaries = [];
+
+        for (let c = 0; c < numCols; c++) {
+          let colMinX = Infinity;
+          let colMaxX = -Infinity;
+          for (const r of potentialTableRows) {
+            const cell = r.clusters[c];
+            if (cell) {
+              colMinX = Math.min(colMinX, cell.startX);
+              colMaxX = Math.max(colMaxX, cell.endX);
+            }
+          }
+          colBoundaries.push({ minX: colMinX, maxX: colMaxX });
+        }
+
+        processedBlocks.push({
+          type: 'table',
+          topDist: potentialTableRows[0].topDist,
+          rows: potentialTableRows.map(r => r.clusters),
+          numCols,
+          colBoundaries
+        });
+
+        i = nextIdx;
+        continue;
+      }
+    }
+
+    // Check ASCII divider line
+    if (currentLine.fullText.length >= 4 && /^[-—_=_*]{4,}$/.test(currentLine.fullText)) {
+      if (deduplicatedLines) {
+        deduplicatedLines.push({
+          type: 'line',
+          y: currentLine.y,
+          topDist: currentLine.topDist,
+          width: pageWidth - 100,
+          left: minContentX,
+          right: pageWidth - minContentX
+        });
+      }
+      i++;
+      continue;
+    }
+
+    processedBlocks.push({
+      type: 'singleLine',
+      line: currentLine
+    });
+    i++;
+  }
+
+  // Format single lines into headings, tabbed lines, bullet lists, and paragraphs
+  const finalBlocks = [];
+  let pIdx = 0;
+
+  while (pIdx < processedBlocks.length) {
+    const blk = processedBlocks[pIdx];
+
+    if (blk.type === 'table') {
+      finalBlocks.push(blk);
+      pIdx++;
+      continue;
+    }
+
+    const cur = blk.line;
+    const text = cur.fullText;
+    const fontSize = cur.fontSize || 11;
+
+    // Check if line is a Heading
+    const isMainHeading = fontSize >= 16;
+    const isSubHeading = (fontSize >= 12 && fontSize < 16) || (fontSize >= 11 && text.length < 40 && text === text.toUpperCase());
+
+    if (isMainHeading || isSubHeading) {
+      finalBlocks.push({
+        type: 'heading',
+        topDist: cur.topDist,
+        text,
+        fontSize,
+        level: isMainHeading ? 1 : 2,
+        align: (Math.abs((cur.startX + cur.endX) / 2 - pageWidth / 2) < 25) ? 'center' : 'left',
+        indentPt: Math.max(0, cur.startX - minContentX)
+      });
+      pIdx++;
+      continue;
+    }
+
+    // Check if single line has 2 distinct clusters (e.g. Date on left, Title on right)
+    if (cur.clusters.length === 2 && (cur.clusters[1].startX - cur.clusters[0].endX) > 28) {
+      finalBlocks.push({
+        type: 'tabbedLine',
+        topDist: cur.topDist,
+        leftCluster: cur.clusters[0],
+        rightCluster: cur.clusters[1],
+        fontSize
+      });
+      pIdx++;
+      continue;
+    }
+
+    // Check bullet list item
+    const bulletMatch = text.match(/^([•●▪▫–—-]|(?:\d+|[a-zA-Z])[\.\)])\s+(.*)$/);
+    if (bulletMatch) {
+      let bulletBody = bulletMatch[2];
+      let nextLineIdx = pIdx + 1;
+
+      while (nextLineIdx < processedBlocks.length) {
+        const nextBlk = processedBlocks[nextLineIdx];
+        if (nextBlk.type !== 'singleLine') break;
+        const nextL = nextBlk.line;
+        const yGap = cur.y - nextL.y;
+        const isNextHeading = nextL.fontSize >= 12;
+        const isNextBullet = Boolean(nextL.fullText.match(/^([•●▪▫–—-]|(?:\d+|[a-zA-Z])[\.\)])\s+/));
+
+        if (
+          yGap > 0 &&
+          yGap <= fontSize * 1.65 &&
+          !isNextHeading &&
+          !isNextBullet &&
+          Math.abs(nextL.startX - cur.startX) < 18
+        ) {
+          bulletBody += ' ' + nextL.fullText;
+          nextLineIdx++;
+        } else {
+          break;
+        }
+      }
+
+      finalBlocks.push({
+        type: 'list',
+        topDist: cur.topDist,
+        bullet: bulletMatch[1],
+        text: bulletBody,
+        fontSize,
+        indentPt: Math.max(0, cur.startX - minContentX)
+      });
+
+      pIdx = nextLineIdx;
+      continue;
+    }
+
+    // Normal paragraph: merge consecutive wrapped lines belonging to same paragraph
+    let mergedText = cur.fullText;
+    let lastLine = cur;
+    let nextPIdx = pIdx + 1;
+
+    while (nextPIdx < processedBlocks.length) {
+      const nextBlk = processedBlocks[nextPIdx];
+      if (nextBlk.type !== 'singleLine') break;
+
+      const nextL = nextBlk.line;
+      const yGap = lastLine.y - nextL.y;
+      const isNextHeading = nextL.fontSize >= 12;
+      const isNextBullet = Boolean(nextL.fullText.match(/^([•●▪▫–—-]|(?:\d+|[a-zA-Z])[\.\)])\s+/));
+      const isNextTabbed = nextL.clusters.length === 2 && (nextL.clusters[1].startX - nextL.clusters[0].endX) > 28;
+
+      if (
+        yGap > 0 &&
+        yGap <= fontSize * 1.65 &&
+        !isNextHeading &&
+        !isNextBullet &&
+        !isNextTabbed &&
+        Math.abs(lastLine.startX - nextL.startX) < 14 &&
+        Math.abs((lastLine.fontSize || 11) - (nextL.fontSize || 11)) <= 1.5 &&
+        Boolean(lastLine.clusters[0]?.isBold) === Boolean(nextL.clusters[0]?.isBold)
+      ) {
+        mergedText += ' ' + nextL.fullText;
+        lastLine = nextL;
+        nextPIdx++;
+      } else {
+        break;
+      }
+    }
+
+    let align = 'left';
+    const midX = (cur.startX + cur.endX) / 2;
+    if (Math.abs(midX - pageWidth / 2) < 25 && (cur.endX - cur.startX) < pageWidth * 0.6) {
+      align = 'center';
+    } else if (cur.startX > pageWidth * 0.55 && (cur.endX - cur.startX) < pageWidth * 0.4) {
+      align = 'right';
+    }
+
+    finalBlocks.push({
+      type: 'paragraph',
+      topDist: cur.topDist,
+      text: mergedText,
+      fontSize,
+      align,
+      indentPt: Math.max(0, cur.startX - minContentX)
+    });
+
+    pIdx = nextPIdx;
+  }
+
+  return finalBlocks;
+}
+
+// Multi-column detector: identifies if items split into distinct columns with clean vertical gutters
+function detectColumns(items, pageWidth) {
+  if (!items || items.length < 16) return { isMultiColumn: false };
+
+  const bucketSize = 5;
+  const numBuckets = Math.ceil(pageWidth / bucketSize);
+  const density = new Array(numBuckets).fill(0);
+
+  items.forEach(it => {
+    const x1 = Math.max(0, Math.floor(it.transform[4]));
+    const w = it.width || (it.str.length * 6);
+    const x2 = Math.min(pageWidth - 1, Math.ceil(it.transform[4] + w));
+    const b1 = Math.floor(x1 / bucketSize);
+    const b2 = Math.floor(x2 / bucketSize);
+    for (let b = b1; b <= b2 && b < numBuckets; b++) density[b]++;
+  });
+
+  let inGutter = false;
+  let gutterStart = 0;
+  const gutters = [];
+
+  for (let b = 0; b < numBuckets; b++) {
+    const x = b * bucketSize;
+    const count = density[b];
+    if (count === 0 && !inGutter) {
+      inGutter = true;
+      gutterStart = x;
+    } else if (count > 0 && inGutter) {
+      inGutter = false;
+      const gutterWidth = x - gutterStart;
+      if (gutterStart > 35 && x < pageWidth - 35 && gutterWidth >= 20) {
+        gutters.push({ start: gutterStart, end: x, width: gutterWidth });
+      }
+    }
+  }
+
+  if (gutters.length === 1) {
+    const g = gutters[0];
+    const leftItems = items.filter(it => it.transform[4] < g.start + 5);
+    const rightItems = items.filter(it => it.transform[4] > g.end - 5);
+
+    if (leftItems.length >= 8 && rightItems.length >= 8) {
+      return {
+        isMultiColumn: true,
+        gutter: g,
+        leftItems,
+        rightItems
+      };
+    }
+  }
+
+  return { isMultiColumn: false };
+}
+
 /**
  * Convert PDF to formatted, 100% editable Microsoft Word (.docx) document
  * with precise layout reconstruction, flow fidelity, divider lines,
@@ -155,37 +688,17 @@ function escapeXml(str) {
  * @returns {Promise<Uint8Array>}
  */
 export async function pdfToDocx(pdfBuffer, optionsOrProgress = {}, maybeProgress = null) {
-  let options = {};
   let onProgress = null;
 
   if (typeof optionsOrProgress === 'function') {
     onProgress = optionsOrProgress;
-    options = {};
   } else {
-    options = optionsOrProgress || {};
     onProgress = maybeProgress;
   }
-
-  const useOcr = Boolean(options.useOcr);
-  const ocrLang = options.ocrLang || 'eng';
-  const forceOcr = Boolean(options.forceOcr);
 
   onProgress?.(1, 10, 'Loading PDF document');
   const pdfDoc = await loadPDFDocument(pdfBuffer);
   const total = pdfDoc.numPages;
-
-  let ocrWorker = null;
-  const getWorker = async () => {
-    if (!ocrWorker) {
-      onProgress?.(2, 10, `Initializing OCR Engine (${ocrLang.toUpperCase()})...`);
-      try {
-        ocrWorker = await createWorker(ocrLang);
-      } catch (err) {
-        console.warn('Could not initialize OCR worker:', err);
-      }
-    }
-    return ocrWorker;
-  };
 
   const images = []; // { id, relId, filename, bytes, widthPt, heightPt }
   const hyperlinks = []; // { relId, url }
@@ -382,8 +895,6 @@ export async function pdfToDocx(pdfBuffer, optionsOrProgress = {}, maybeProgress
       // 3. Extract Text Content & Group by Coordinates
       const textContent = await page.getTextContent();
       const items = textContent.items || [];
-      const needsOcr = forceOcr || (useOcr && items.length < 5) || items.length === 0;
-
       const pageBlocks = [];
 
       // Calculate content bounding box to determine page margins
@@ -412,375 +923,122 @@ export async function pdfToDocx(pdfBuffer, optionsOrProgress = {}, maybeProgress
         }
       }
 
-      if (needsOcr) {
-        onProgress?.(pageNum, total, `Running OCR text recognition on page ${pageNum}...`);
-        const worker = await getWorker();
-        const ocrText = await extractOcrTextFromPage(page, {
-          language: ocrLang,
-          enhanceImage: true,
-          worker
+      const validItems = items.filter(it => it.str && it.str.trim());
+      const colAnalysis = detectColumns(validItems, pageWidth);
+
+      if (colAnalysis.isMultiColumn) {
+        const g = colAnalysis.gutter;
+
+        // Determine if there is an actual header spanning across both columns
+        // (Only text items that bridge across the gutter)
+        const crossColumnTopY = [];
+        for (const it of validItems) {
+          const x1 = it.transform[4];
+          const w = it.width || (it.str.length * 6);
+          const x2 = x1 + w;
+          if (x1 < g.start + 15 && x2 > g.end - 15) {
+            crossColumnTopY.push(it.transform[5]);
+          }
+        }
+
+        let splitTopY = 0;
+        if (crossColumnTopY.length > 0) {
+          splitTopY = Math.min(...crossColumnTopY) - 5;
+        }
+
+        const headerItems = [];
+        const col1Items = [];
+        const col2Items = [];
+
+        for (const it of validItems) {
+          if (splitTopY > 0 && it.transform[5] > splitTopY) {
+            headerItems.push(it);
+          } else {
+            const midX = it.transform[4] + ((it.width || it.str.length * 6) / 2);
+            if (midX < (g.start + g.end) / 2) {
+              col1Items.push(it);
+            } else {
+              col2Items.push(it);
+            }
+          }
+        }
+
+        let headerBlocks = [];
+        if (headerItems.length > 0) {
+          const headerLines = parseItemsIntoLines(headerItems, pageHeight, linkAnnotations);
+          headerBlocks = buildBlocksFromLines(headerLines, pageWidth, minContentX, deduplicatedLines);
+        }
+
+        const col1Lines = parseItemsIntoLines(col1Items, pageHeight, linkAnnotations);
+        const col1Blocks = buildBlocksFromLines(col1Lines, g.start, minContentX, deduplicatedLines);
+
+        const col2Lines = parseItemsIntoLines(col2Items, pageHeight, linkAnnotations);
+        const col2Blocks = buildBlocksFromLines(col2Lines, pageWidth - g.end, g.end, deduplicatedLines);
+
+        // Distribute images into columns or header
+        for (const img of pageImages) {
+          if (splitTopY > 0 && img.y > splitTopY) {
+            headerBlocks.push(img);
+          } else {
+            const midX = img.x + (img.imgItem.widthPt / 2);
+            if (midX < (g.start + g.end) / 2) {
+              col1Blocks.push(img);
+            } else {
+              col2Blocks.push(img);
+            }
+          }
+        }
+
+        // Distribute vector divider lines into columns or header
+        const pageLines_vec = [];
+        for (const dl of deduplicatedLines) {
+          if (splitTopY > 0 && dl.y > splitTopY) {
+            headerBlocks.push(dl);
+          } else {
+            const midX = (dl.left + dl.right) / 2;
+            if (midX < (g.start + g.end) / 2 && dl.width < (g.start + 60)) {
+              col1Blocks.push({ ...dl, inColumn: true });
+            } else if (midX >= (g.start + g.end) / 2 && dl.left >= g.start - 25) {
+              col2Blocks.push({ ...dl, inColumn: true });
+            } else {
+              pageLines_vec.push(dl);
+            }
+          }
+        }
+
+        if (headerBlocks.length > 0) {
+          headerBlocks.sort((a, b) => a.topDist - b.topDist);
+          pageBlocks.push(...headerBlocks);
+        }
+
+        col1Blocks.sort((a, b) => a.topDist - b.topDist);
+        col2Blocks.sort((a, b) => a.topDist - b.topDist);
+
+        const col1WidthDxa = Math.max(2000, Math.round((g.start - minContentX + 15) * 20));
+        const col2WidthDxa = Math.max(3000, Math.round((maxContentX - g.end + 15) * 20));
+
+        pageBlocks.push({
+          type: 'columnLayout',
+          topDist: headerBlocks.length > 0 ? (headerBlocks[headerBlocks.length - 1].topDist + 20) : 0,
+          columns: [
+            { widthDxa: col1WidthDxa, blocks: col1Blocks },
+            { widthDxa: col2WidthDxa, blocks: col2Blocks }
+          ]
         });
 
-        const lines = (ocrText || '')
-          .split('\n')
-          .map(l => l.trim())
-          .filter(Boolean);
-
-        let yOffset = 40;
-        for (const line of lines) {
-          const isHead = line.length < 60 && (line === line.toUpperCase() || line.startsWith('#'));
-          pageBlocks.push({
-            type: 'paragraph',
-            topDist: yOffset,
-            text: line.replace(/^#+\s*/, ''),
-            isHeading: isHead,
-            fontSize: isHead ? 15 : 11,
-            align: 'left',
-            indentPt: 0
-          });
-          yOffset += isHead ? 28 : 16;
+        // Add any remaining full-page lines
+        if (pageLines_vec.length > 0) {
+          pageBlocks.push(...pageLines_vec);
         }
       } else {
-        // Digital PDF: Group items into physical visual lines
-        const sortedItems = [...items].sort((a, b) => {
-          const yDiff = b.transform[5] - a.transform[5];
-          if (Math.abs(yDiff) > 3.5) return yDiff;
-          return a.transform[4] - b.transform[4];
-        });
-
-        const rawLines = [];
-        let currentLineItems = [];
-        let currentBaselineY = null;
-
-        for (const item of sortedItems) {
-          const str = item.str || '';
-          if (!str.trim()) continue;
-
-          const y = item.transform[5];
-          if (currentBaselineY === null || Math.abs(currentBaselineY - y) <= 3.5) {
-            currentLineItems.push(item);
-            currentBaselineY = y;
-          } else {
-            if (currentLineItems.length > 0) {
-              rawLines.push({ y: currentBaselineY, items: currentLineItems });
-            }
-            currentLineItems = [item];
-            currentBaselineY = y;
-          }
-        }
-        if (currentLineItems.length > 0) {
-          rawLines.push({ y: currentBaselineY, items: currentLineItems });
-        }
-
-        // Parse each visual line into structured clusters
-        const parsedLines = [];
-        for (const line of rawLines) {
-          const lineY = line.y;
-          const topDist = Math.max(0, pageHeight - lineY);
-          const lineItems = [...line.items].sort((a, b) => a.transform[4] - b.transform[4]);
-
-          const clusters = [];
-          let currentCluster = null;
-
-          for (const item of lineItems) {
-            const str = item.str || '';
-            const itemX = item.transform[4];
-            const itemWidth = item.width || (str.length * 6);
-            const itemEndX = itemX + itemWidth;
-            const fontSize = Math.round(Math.hypot(item.transform[0], item.transform[1])) || 11;
-
-            let itemLinkUrl = null;
-            for (const annot of linkAnnotations) {
-              if (annot.rect && annot.rect.length >= 4) {
-                const [lx1, ly1, lx2, ly2] = annot.rect;
-                if (itemX >= lx1 - 5 && itemX <= lx2 + 5 && lineY >= ly1 - 5 && lineY <= ly2 + 5) {
-                  itemLinkUrl = annot.url || annot.unsafeUrl;
-                  break;
-                }
-              }
-            }
-
-            if (!currentCluster) {
-              currentCluster = {
-                text: str,
-                startX: itemX,
-                endX: itemEndX,
-                fontSize,
-                linkUrl: itemLinkUrl
-              };
-            } else if ((itemX - currentCluster.endX) > 36) {
-              // Large gap (> 36 pt) -> distinct column cluster
-              clusters.push(currentCluster);
-              currentCluster = {
-                text: str,
-                startX: itemX,
-                endX: itemEndX,
-                fontSize,
-                linkUrl: itemLinkUrl
-              };
-            } else {
-              currentCluster.text += (currentCluster.text ? ' ' : '') + str;
-              currentCluster.endX = Math.max(currentCluster.endClusterX || currentCluster.endX, itemEndX);
-              currentCluster.fontSize = Math.max(currentCluster.fontSize, fontSize);
-              if (itemLinkUrl) currentCluster.linkUrl = itemLinkUrl;
-            }
-          }
-          if (currentCluster) clusters.push(currentCluster);
-
-          if (clusters.length === 0) continue;
-
-          const joinedText = clusters.map(c => c.text).join(' ').trim();
-          if (!joinedText) continue;
-
-          // ASCII divider line check
-          if (joinedText.length >= 4 && /^[-—_=_*]{4,}$/.test(joinedText)) {
-            deduplicatedLines.push({
-              type: 'line',
-              y: lineY,
-              topDist,
-              width: pageWidth - 100,
-              left: minContentX,
-              right: maxContentX
-            });
-            continue;
-          }
-
-          parsedLines.push({
-            y: lineY,
-            topDist,
-            startX: clusters[0].startX,
-            endX: clusters[clusters.length - 1].endX,
-            fontSize: clusters[0].fontSize || 11,
-            clusters,
-            fullText: joinedText
-          });
-        }
-
-        // STEP A: Multi-Row Table Detection
-        // Only form a table if 2 or more consecutive lines have >= 2 aligned columns!
-        const processedBlocks = [];
-        let i = 0;
-
-        while (i < parsedLines.length) {
-          const currentLine = parsedLines[i];
-
-          // Check if this line starts a multi-column table (must have 2+ rows sharing column alignments)
-          if (currentLine.clusters.length >= 2) {
-            const potentialTableRows = [currentLine];
-            let nextIdx = i + 1;
-
-            while (nextIdx < parsedLines.length) {
-              const nextLine = parsedLines[nextIdx];
-              const prevLine = potentialTableRows[potentialTableRows.length - 1];
-              const rowGap = prevLine.y - nextLine.y;
-
-              // Check if next row aligns with this table
-              if (
-                nextLine.clusters.length >= 2 &&
-                rowGap > 0 &&
-                rowGap <= 32 &&
-                Math.abs(nextLine.clusters.length - prevLine.clusters.length) <= 1
-              ) {
-                // Verify column positions align within 24 pt
-                const colMatch = potentialTableRows[0].clusters.every((c, cIdx) => {
-                  const nc = nextLine.clusters[cIdx];
-                  return !nc || Math.abs(c.startX - nc.startX) < 30;
-                });
-
-                if (colMatch) {
-                  potentialTableRows.push(nextLine);
-                  nextIdx++;
-                  continue;
-                }
-              }
-              break;
-            }
-
-            // Real table confirmed (2+ rows)
-            if (potentialTableRows.length >= 2) {
-              // Calculate actual column widths from coordinates
-              const numCols = Math.max(...potentialTableRows.map(r => r.clusters.length));
-              const colBoundaries = [];
-
-              for (let c = 0; c < numCols; c++) {
-                let colMinX = Infinity;
-                let colMaxX = -Infinity;
-                for (const r of potentialTableRows) {
-                  const cell = r.clusters[c];
-                  if (cell) {
-                    colMinX = Math.min(colMinX, cell.startX);
-                    colMaxX = Math.max(colMaxX, cell.endX);
-                  }
-                }
-                colBoundaries.push({ minX: colMinX, maxX: colMaxX });
-              }
-
-              processedBlocks.push({
-                type: 'table',
-                topDist: potentialTableRows[0].topDist,
-                rows: potentialTableRows.map(r => r.clusters),
-                numCols,
-                colBoundaries
-              });
-
-              i = nextIdx;
-              continue;
-            }
-          }
-
-          // Not a multi-row table: Single line
-          processedBlocks.push({
-            type: 'singleLine',
-            line: currentLine
-          });
-          i++;
-        }
-
-        // STEP B: Paragraph Merging & Line Formatting
-        // Reconstruct wrapped paragraphs so text flows smoothly without artificial line breaks
-        let pIdx = 0;
-        while (pIdx < processedBlocks.length) {
-          const blk = processedBlocks[pIdx];
-
-          if (blk.type === 'table') {
-            pageBlocks.push(blk);
-            pIdx++;
-            continue;
-          }
-
-          const cur = blk.line;
-          const text = cur.fullText;
-          const fontSize = cur.fontSize || 11;
-
-          // Check if single line with 2 clusters (e.g. Title on left, Date on right)
-          if (cur.clusters.length === 2 && (cur.clusters[1].startX - cur.clusters[0].endX) > 60) {
-            pageBlocks.push({
-              type: 'tabbedLine',
-              topDist: cur.topDist,
-              leftCluster: cur.clusters[0],
-              rightCluster: cur.clusters[1],
-              fontSize
-            });
-            pIdx++;
-            continue;
-          }
-
-          // Bullet list item check
-          const bulletMatch = text.match(/^([•●▪▫–—-]|(?:\d+|[a-zA-Z])[\.\)])\s+(.*)$/);
-          if (bulletMatch) {
-            let bulletBody = bulletMatch[2];
-            let nextLineIdx = pIdx + 1;
-
-            // Merge any continuation lines of this bullet item
-            while (nextLineIdx < processedBlocks.length) {
-              const nextBlk = processedBlocks[nextLineIdx];
-              if (nextBlk.type !== 'singleLine') break;
-              const nextL = nextBlk.line;
-              const yGap = cur.y - nextL.y;
-
-              // Continuation line of bullet: same indent, normal line gap, no new bullet
-              if (
-                yGap > 0 &&
-                yGap <= fontSize * 1.65 &&
-                !nextL.fullText.match(/^([•●▪▫–—-]|(?:\d+|[a-zA-Z])[\.\)])\s+/) &&
-                Math.abs(nextL.startX - cur.startX) < 24
-              ) {
-                bulletBody += ' ' + nextL.fullText;
-                nextLineIdx++;
-              } else {
-                break;
-              }
-            }
-
-            pageBlocks.push({
-              type: 'list',
-              topDist: cur.topDist,
-              bullet: bulletMatch[1],
-              text: bulletBody,
-              fontSize,
-              indentPt: Math.max(0, cur.startX - minContentX)
-            });
-
-            pIdx = nextLineIdx;
-            continue;
-          }
-
-          // Heading check
-          const isHeading = fontSize >= 14 || (fontSize >= 13 && text.length < 60 && text === text.toUpperCase());
-          if (isHeading) {
-            pageBlocks.push({
-              type: 'heading',
-              topDist: cur.topDist,
-              text,
-              fontSize,
-              level: fontSize >= 16 ? 1 : 2,
-              align: (Math.abs((cur.startX + cur.endX) / 2 - pageWidth / 2) < 25) ? 'center' : 'left',
-              indentPt: Math.max(0, cur.startX - minContentX)
-            });
-            pIdx++;
-            continue;
-          }
-
-          // Normal Paragraph: Merge consecutive wrapped lines belonging to the same paragraph
-          let mergedText = cur.fullText;
-          let lastLine = cur;
-          let nextPIdx = pIdx + 1;
-
-          while (nextPIdx < processedBlocks.length) {
-            const nextBlk = processedBlocks[nextPIdx];
-            if (nextBlk.type !== 'singleLine') break;
-
-            const nextL = nextBlk.line;
-            const yGap = lastLine.y - nextL.y;
-            const isNextHeading = nextL.fontSize >= 14 || (nextL.fontSize >= 13 && nextL.fullText.length < 50 && nextL.fullText === nextL.fullText.toUpperCase());
-            const isNextBullet = Boolean(nextL.fullText.match(/^([•●▪▫–—-]|(?:\d+|[a-zA-Z])[\.\)])\s+/));
-
-            // Merge condition: close line pitch, similar left margin, not heading or bullet
-            if (
-              yGap > 0 &&
-              yGap <= fontSize * 1.65 &&
-              !isNextHeading &&
-              !isNextBullet &&
-              Math.abs(lastLine.startX - nextL.startX) < 14
-            ) {
-              mergedText += ' ' + nextL.fullText;
-              lastLine = nextL;
-              nextPIdx++;
-            } else {
-              break;
-            }
-          }
-
-          // Detect alignment
-          let align = 'left';
-          const midX = (cur.startX + cur.endX) / 2;
-          if (Math.abs(midX - pageWidth / 2) < 25 && (cur.endX - cur.startX) < pageWidth * 0.6) {
-            align = 'center';
-          } else if (cur.startX > pageWidth * 0.55 && (cur.endX - cur.startX) < pageWidth * 0.4) {
-            align = 'right';
-          }
-
-          pageBlocks.push({
-            type: 'paragraph',
-            topDist: cur.topDist,
-            text: mergedText,
-            fontSize,
-            align,
-            indentPt: Math.max(0, cur.startX - minContentX)
-          });
-
-          pIdx = nextPIdx;
-        }
+        const parsedLines = parseItemsIntoLines(validItems, pageHeight, linkAnnotations);
+        const blocks = buildBlocksFromLines(parsedLines, pageWidth, minContentX, deduplicatedLines);
+        pageBlocks.push(...deduplicatedLines);
+        pageBlocks.push(...blocks);
+        pageBlocks.push(...pageImages);
       }
 
-      // Combine all page components: lines, images, blocks
-      const allPageElements = [
-        ...deduplicatedLines,
-        ...pageImages,
-        ...pageBlocks
-      ];
-
-      allPageElements.sort((a, b) => a.topDist - b.topDist);
+      pageBlocks.sort((a, b) => a.topDist - b.topDist);
 
       docPages.push({
         pageNum,
@@ -790,26 +1048,26 @@ export async function pdfToDocx(pdfBuffer, optionsOrProgress = {}, maybeProgress
         maxContentX,
         minContentY,
         maxContentY,
-        elements: allPageElements
+        elements: pageBlocks
       });
     }
-  } finally {
-    if (ocrWorker) {
-      try { await ocrWorker.terminate(); } catch (err) {}
-      ocrWorker = null;
-    }
+  } catch (err) {
+    console.error('Error processing PDF to DOCX:', err);
+    throw err;
   }
 
   onProgress?.(total, total, 'Compiling layout-faithful Microsoft Word (.docx)...');
 
   // Helper to render text runs with hyperlinks
-  function renderRuns(text, fontSize, isBold = false) {
+  function renderRuns(text, fontSize, isBold = false, isItalic = false, color = null) {
     const szVal = fontSize
       ? `<w:sz w:val="${Math.round(fontSize * 2)}"/><w:szCs w:val="${Math.round(fontSize * 2)}"/>`
       : '<w:sz w:val="22"/><w:szCs w:val="22"/>';
     const bVal = isBold ? '<w:b/><w:bCs/>' : '';
+    const iVal = isItalic ? '<w:i/><w:iCs/>' : '';
+    const cVal = color ? `<w:color w:val="${color}"/>` : '';
 
-    const urlRegex = /(https?:\/\/[^\s]+|mailto:[^\s]+)/g;
+    const urlRegex = /(https?:\/\/[^\s]+|mailto:[^\s]+|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
     let lastIdx = 0;
     let match;
     let resultXml = '';
@@ -817,11 +1075,14 @@ export async function pdfToDocx(pdfBuffer, optionsOrProgress = {}, maybeProgress
     while ((match = urlRegex.exec(text)) !== null) {
       const preceding = text.slice(lastIdx, match.index);
       if (preceding) {
-        resultXml += `<w:r><w:rPr>${szVal}${bVal}</w:rPr><w:t xml:space="preserve">${escapeXml(preceding)}</w:t></w:r>`;
+        resultXml += `<w:r><w:rPr>${szVal}${bVal}${iVal}${cVal}</w:rPr><w:t xml:space="preserve">${escapeXml(preceding)}</w:t></w:r>`;
       }
 
       const foundUrl = match[0];
-      const relId = getOrCreateHyperlinkRel(foundUrl);
+      const targetUrl = (foundUrl.includes('@') && !foundUrl.startsWith('mailto:') && !foundUrl.startsWith('http'))
+        ? `mailto:${foundUrl}`
+        : foundUrl;
+      const relId = getOrCreateHyperlinkRel(targetUrl);
       resultXml += `
         <w:hyperlink r:id="${relId}">
           <w:r>
@@ -840,10 +1101,301 @@ export async function pdfToDocx(pdfBuffer, optionsOrProgress = {}, maybeProgress
 
     const remaining = text.slice(lastIdx);
     if (remaining) {
-      resultXml += `<w:r><w:rPr>${szVal}${bVal}</w:rPr><w:t xml:space="preserve">${escapeXml(remaining)}</w:t></w:r>`;
+      resultXml += `<w:r><w:rPr>${szVal}${bVal}${iVal}${cVal}</w:rPr><w:t xml:space="preserve">${escapeXml(remaining)}</w:t></w:r>`;
     }
 
-    return resultXml || `<w:r><w:rPr>${szVal}${bVal}</w:rPr><w:t xml:space="preserve">${escapeXml(text)}</w:t></w:r>`;
+    return resultXml || `<w:r><w:rPr>${szVal}${bVal}${iVal}${cVal}</w:rPr><w:t xml:space="preserve">${escapeXml(text)}</w:t></w:r>`;
+  }
+
+  // Helper to render an element (block) into WordprocessingML XML
+  function renderBlockToXml(elem, pg, availableWidthDxa = 8000) {
+    if (elem.type === 'columnLayout') {
+      let cellsXml = '';
+      let gridXml = '';
+      let totalW = 0;
+      for (const col of elem.columns) {
+        totalW += col.widthDxa;
+        gridXml += `<w:gridCol w:w="${col.widthDxa}"/>`;
+        let colContentXml = '';
+        for (const subElem of col.blocks) {
+          colContentXml += renderBlockToXml(subElem, pg, col.widthDxa);
+        }
+        if (!colContentXml.trim()) {
+          colContentXml = '<w:p><w:pPr><w:spacing w:after="60"/></w:pPr></w:p>';
+        } else if (!colContentXml.trim().endsWith('</w:p>')) {
+          colContentXml += '<w:p><w:pPr><w:spacing w:after="40"/></w:pPr></w:p>';
+        }
+        cellsXml += `
+          <w:tc>
+            <w:tcPr>
+              <w:tcW w:w="${col.widthDxa}" w:type="dxa"/>
+              <w:vAlign w:val="top"/>
+            </w:tcPr>
+            ${colContentXml}
+          </w:tc>
+        `;
+      }
+      return `
+        <w:tbl>
+          <w:tblPr>
+            <w:tblW w:w="${totalW}" w:type="dxa"/>
+            <w:tblLayout w:type="fixed"/>
+            <w:tblBorders>
+              <w:top w:val="none"/>
+              <w:left w:val="none"/>
+              <w:bottom w:val="none"/>
+              <w:right w:val="none"/>
+              <w:insideH w:val="none"/>
+              <w:insideV w:val="none"/>
+            </w:tblBorders>
+            <w:tblCellMar>
+              <w:top w:w="0" w:type="dxa"/>
+              <w:left w:w="80" w:type="dxa"/>
+              <w:bottom w:w="0" w:type="dxa"/>
+              <w:right w:w="80" w:type="dxa"/>
+            </w:tblCellMar>
+          </w:tblPr>
+          <w:tblGrid>
+            ${gridXml}
+          </w:tblGrid>
+          <w:tr>
+            <w:trPr><w:cantSplit/></w:trPr>
+            ${cellsXml}
+          </w:tr>
+        </w:tbl>
+        <w:p><w:pPr><w:spacing w:after="60"/></w:pPr></w:p>
+      `;
+    }
+
+    if (elem.type === 'line') {
+      if (elem.inColumn) {
+        return `
+          <w:p>
+            <w:pPr>
+              <w:pBdr>
+                <w:bottom w:val="single" w:sz="12" w:space="1" w:color="CCCCCC"/>
+              </w:pBdr>
+              <w:spacing w:before="40" w:after="60"/>
+            </w:pPr>
+            <w:r><w:t xml:space="preserve"></w:t></w:r>
+          </w:p>
+        `;
+      }
+      const leftIndentDxa = Math.max(0, Math.round((elem.left - pg.minContentX) * 20));
+      const rightIndentDxa = Math.max(0, Math.round((pg.maxContentX - elem.right) * 20));
+      return `
+        <w:p>
+          <w:pPr>
+            <w:ind w:left="${leftIndentDxa}" w:right="${rightIndentDxa}"/>
+            <w:pBdr>
+              <w:bottom w:val="single" w:sz="12" w:space="1" w:color="CCCCCC"/>
+            </w:pBdr>
+            <w:spacing w:before="60" w:after="80"/>
+          </w:pPr>
+          <w:r><w:t xml:space="preserve"></w:t></w:r>
+        </w:p>
+      `;
+    }
+
+    if (elem.type === 'image') {
+      const img = elem.imgItem;
+      let emuWidth = Math.round(img.widthPt * 12700);
+      let emuHeight = Math.round(img.heightPt * 12700);
+      const maxColEmu = Math.max(800000, Math.round((availableWidthDxa - 160) * 635));
+      if (emuWidth > maxColEmu) {
+        const ratio = maxColEmu / emuWidth;
+        emuWidth = maxColEmu;
+        emuHeight = Math.round(emuHeight * ratio);
+      }
+      const jcVal = elem.align || 'center';
+      return `
+        <w:p>
+          <w:pPr>
+            <w:jc w:val="${jcVal}"/>
+            <w:spacing w:before="60" w:after="80" w:line="240" w:lineRule="auto"/>
+          </w:pPr>
+          <w:r>
+            <w:drawing>
+              <wp:inline distT="0" distB="0" distL="0" distR="0">
+                <wp:extent cx="${emuWidth}" cy="${emuHeight}"/>
+                <wp:effectExtent l="0" t="0" r="0" b="0"/>
+                <wp:docPr id="${img.id}" name="Picture ${img.id}"/>
+                <wp:cNvGraphicFramePr>
+                  <a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/>
+                </wp:cNvGraphicFramePr>
+                <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
+                  <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                    <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
+                      <pic:nvPicPr>
+                        <pic:cNvPr id="${img.id}" name="Picture ${img.id}"/>
+                        <pic:cNvPicPr/>
+                      </pic:nvPicPr>
+                      <pic:blipFill>
+                        <a:blip r:embed="${img.relId}"/>
+                        <a:stretch><a:fillRect/></a:stretch>
+                      </pic:blipFill>
+                      <pic:spPr>
+                        <a:xfrm>
+                          <a:off x="0" y="0"/>
+                          <a:ext cx="${emuWidth}" cy="${emuHeight}"/>
+                        </a:xfrm>
+                        <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
+                      </pic:spPr>
+                    </pic:pic>
+                  </a:graphicData>
+                </a:graphic>
+              </wp:inline>
+            </w:drawing>
+          </w:r>
+        </w:p>
+      `;
+    }
+
+    if (elem.type === 'tabbedLine') {
+      const leftText = elem.leftCluster.text;
+      const rightText = elem.rightCluster.text;
+      const tabPosDxa = Math.max(1200, Math.round((elem.rightCluster.startX - elem.leftCluster.startX) * 20));
+      return `
+        <w:p>
+          <w:pPr>
+            <w:tabs>
+              <w:tab w:val="left" w:pos="${tabPosDxa}"/>
+            </w:tabs>
+            <w:spacing w:before="30" w:after="40" w:line="240" w:lineRule="auto"/>
+          </w:pPr>
+          ${renderRuns(leftText, elem.fontSize, elem.leftCluster.isBold || false, false, '64748B')}
+          <w:r><w:tab/></w:r>
+          ${renderRuns(rightText, elem.fontSize, elem.rightCluster.isBold || false, false, '0F172A')}
+        </w:p>
+      `;
+    }
+
+    if (elem.type === 'table') {
+      const numCols = elem.numCols || 2;
+      let tableRowsXml = '';
+      elem.rows.forEach((row, rIdx) => {
+        const isHead = (rIdx === 0 && elem.rows.length > 1);
+        let cellsXml = '';
+        for (let c = 0; c < numCols; c++) {
+          const cell = row[c] || { text: '' };
+          const safeText = escapeXml(cell.text || '');
+          let colWidthDxa = 2400;
+          if (elem.colBoundaries && elem.colBoundaries[c]) {
+            const b = elem.colBoundaries[c];
+            colWidthDxa = Math.max(1200, Math.round((b.maxX - b.minX + 15) * 20));
+          }
+          const bgShd = isHead ? '<w:shd w:val="clear" w:color="auto" w:fill="F1F5F9"/>' : '';
+          cellsXml += `
+            <w:tc>
+              <w:tcPr>
+                <w:tcW w:w="${colWidthDxa}" w:type="dxa"/>
+                ${bgShd}
+              </w:tcPr>
+              <w:p>
+                <w:pPr>
+                  <w:spacing w:before="40" w:after="40" w:line="240" w:lineRule="auto"/>
+                </w:pPr>
+                <w:r>
+                  <w:rPr>
+                    ${isHead ? '<w:b/><w:bCs/>' : ''}
+                    <w:sz w:val="20"/><w:szCs w:val="20"/>
+                    <w:color w:val="${isHead ? '0F172A' : '334155'}"/>
+                  </w:rPr>
+                  <w:t xml:space="preserve">${safeText}</w:t>
+                </w:r>
+              </w:p>
+            </w:tc>
+          `;
+        }
+        tableRowsXml += `
+          <w:tr>
+            <w:trPr>
+              <w:cantSplit/>
+              ${isHead ? '<w:tblHeader/>' : ''}
+            </w:trPr>
+            ${cellsXml}
+          </w:tr>
+        `;
+      });
+      return `
+        <w:tbl>
+          <w:tblPr>
+            <w:tblW w:w="0" w:type="auto"/>
+            <w:tblBorders>
+              <w:top w:val="single" w:sz="6" w:space="0" w:color="CBD5E1"/>
+              <w:left w:val="none"/>
+              <w:bottom w:val="single" w:sz="6" w:space="0" w:color="CBD5E1"/>
+              <w:right w:val="none"/>
+              <w:insideH w:val="single" w:sz="4" w:space="0" w:color="E2E8F0"/>
+              <w:insideV w:val="none"/>
+            </w:tblBorders>
+            <w:tblCellMar>
+              <w:top w:w="100" w:type="dxa"/>
+              <w:left w:w="140" w:type="dxa"/>
+              <w:bottom w:w="100" w:type="dxa"/>
+              <w:right w:w="140" w:type="dxa"/>
+            </w:tblCellMar>
+          </w:tblPr>
+          ${tableRowsXml}
+        </w:tbl>
+        <w:p><w:pPr><w:spacing w:after="80"/></w:pPr></w:p>
+      `;
+    }
+
+    if (elem.type === 'heading') {
+      const hStyle = elem.level === 1 ? 'Heading1' : 'Heading2';
+      const jcVal = elem.align && elem.align !== 'left' ? `<w:jc w:val="${elem.align}"/>` : '';
+      return `
+        <w:p>
+          <w:pPr>
+            <w:pStyle w:val="${hStyle}"/>
+            <w:spacing w:before="160" w:after="60" w:line="240" w:lineRule="auto"/>
+            ${jcVal}
+          </w:pPr>
+          ${renderRuns(elem.text, elem.fontSize, true, false, elem.level === 1 ? '0F172A' : '334155')}
+        </w:p>
+      `;
+    }
+
+    if (elem.type === 'list') {
+      return `
+        <w:p>
+          <w:pPr>
+            <w:ind w:left="360" w:hanging="200"/>
+            <w:spacing w:before="20" w:after="40" w:line="240" w:lineRule="auto"/>
+          </w:pPr>
+          <w:r>
+            <w:rPr>
+              <w:b/><w:bCs/>
+              <w:sz w:val="${Math.round(elem.fontSize * 2)}"/><w:szCs w:val="${Math.round(elem.fontSize * 2)}"/>
+              <w:color w:val="475569"/>
+            </w:rPr>
+            <w:t xml:space="preserve">${escapeXml(elem.bullet)} </w:t>
+          </w:r>
+          ${renderRuns(elem.text, elem.fontSize, false, false, '334155')}
+        </w:p>
+      `;
+    }
+
+    if (elem.type === 'paragraph') {
+      const jcVal = elem.align && elem.align !== 'left' ? `<w:jc w:val="${elem.align}"/>` : '';
+      const indVal = (elem.indentPt && elem.indentPt > 18)
+        ? `<w:ind w:left="${Math.round(elem.indentPt * 20)}"/>`
+        : '';
+      return `
+        <w:p>
+          <w:pPr>
+            <w:pStyle w:val="Normal"/>
+            <w:spacing w:before="20" w:after="60" w:line="240" w:lineRule="auto"/>
+            ${indVal}
+            ${jcVal}
+          </w:pPr>
+          ${renderRuns(elem.text, elem.fontSize || 11, false, false, '334155')}
+        </w:p>
+      `;
+    }
+
+    return '';
   }
 
   // Construct WordprocessingML XML body
@@ -853,220 +1405,7 @@ export async function pdfToDocx(pdfBuffer, optionsOrProgress = {}, maybeProgress
     const pg = docPages[pIdx];
 
     for (const elem of pg.elements) {
-      if (elem.type === 'line') {
-        // Divider line with accurate left and right indentation matching PDF
-        const leftIndentDxa = Math.max(0, Math.round((elem.left - pg.minContentX) * 20));
-        const rightIndentDxa = Math.max(0, Math.round((pg.maxContentX - elem.right) * 20));
-
-        bodyXml += `
-          <w:p>
-            <w:pPr>
-              <w:ind w:left="${leftIndentDxa}" w:right="${rightIndentDxa}"/>
-              <w:pBdr>
-                <w:bottom w:val="single" w:sz="12" w:space="1" w:color="CCCCCC"/>
-              </w:pBdr>
-              <w:spacing w:before="60" w:after="80"/>
-            </w:pPr>
-            <w:r><w:t xml:space="preserve"></w:t></w:r>
-          </w:p>
-        `;
-      } else if (elem.type === 'image') {
-        // DrawingML Image
-        const img = elem.imgItem;
-        const emuWidth = Math.round(img.widthPt * 12700);
-        const emuHeight = Math.round(img.heightPt * 12700);
-        const jcVal = elem.align || 'center';
-
-        bodyXml += `
-          <w:p>
-            <w:pPr>
-              <w:jc w:val="${jcVal}"/>
-              <w:spacing w:before="80" w:after="100" w:line="240" w:lineRule="auto"/>
-            </w:pPr>
-            <w:r>
-              <w:drawing>
-                <wp:inline distT="0" distB="0" distL="0" distR="0">
-                  <wp:extent cx="${emuWidth}" cy="${emuHeight}"/>
-                  <wp:effectExtent l="0" t="0" r="0" b="0"/>
-                  <wp:docPr id="${img.id}" name="Picture ${img.id}"/>
-                  <wp:cNvGraphicFramePr>
-                    <a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/>
-                  </wp:cNvGraphicFramePr>
-                  <a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main">
-                    <a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture">
-                      <pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture">
-                        <pic:nvPicPr>
-                          <pic:cNvPr id="${img.id}" name="Picture ${img.id}"/>
-                          <pic:cNvPicPr/>
-                        </pic:nvPicPr>
-                        <pic:blipFill>
-                          <a:blip r:embed="${img.relId}"/>
-                          <a:stretch><a:fillRect/></a:stretch>
-                        </pic:blipFill>
-                        <pic:spPr>
-                          <a:xfrm>
-                            <a:off x="0" y="0"/>
-                            <a:ext cx="${emuWidth}" cy="${emuHeight}"/>
-                          </a:xfrm>
-                          <a:prstGeom prst="rect"><a:avLst/></a:prstGeom>
-                        </pic:spPr>
-                      </pic:pic>
-                    </a:graphicData>
-                  </a:graphic>
-                </wp:inline>
-              </w:drawing>
-            </w:r>
-          </w:p>
-        `;
-      } else if (elem.type === 'tabbedLine') {
-        // Two-column metadata line (e.g. Header Left & Date Right) on the EXACT same line
-        const leftText = elem.leftCluster.text;
-        const rightText = elem.rightCluster.text;
-        const rightTabPosDxa = Math.round((elem.rightCluster.startX - pg.minContentX) * 20);
-
-        bodyXml += `
-          <w:p>
-            <w:pPr>
-              <w:tabs>
-                <w:tab w:val="right" w:pos="${rightTabPosDxa}"/>
-              </w:tabs>
-              <w:spacing w:before="40" w:after="60" w:line="240" w:lineRule="auto"/>
-            </w:pPr>
-            ${renderRuns(leftText, elem.fontSize, false)}
-            <w:r><w:tab/></w:r>
-            ${renderRuns(rightText, elem.fontSize, false)}
-          </w:p>
-        `;
-      } else if (elem.type === 'table') {
-        // Real multi-row table with actual column widths from PDF coordinates
-        const numCols = elem.numCols || 2;
-        let tableRowsXml = '';
-
-        elem.rows.forEach((row, rIdx) => {
-          const isHead = (rIdx === 0 && elem.rows.length > 1);
-          let cellsXml = '';
-
-          for (let c = 0; c < numCols; c++) {
-            const cell = row[c] || { text: '' };
-            const safeText = escapeXml(cell.text || '');
-
-            // Calculate precise column width in dxa
-            let colWidthDxa = 2400;
-            if (elem.colBoundaries && elem.colBoundaries[c]) {
-              const b = elem.colBoundaries[c];
-              colWidthDxa = Math.max(1200, Math.round((b.maxX - b.minX + 15) * 20));
-            }
-
-            const bgShd = isHead ? '<w:shd w:val="clear" w:color="auto" w:fill="F1F5F9"/>' : '';
-
-            cellsXml += `
-              <w:tc>
-                <w:tcPr>
-                  <w:tcW w:w="${colWidthDxa}" w:type="dxa"/>
-                  ${bgShd}
-                </w:tcPr>
-                <w:p>
-                  <w:pPr>
-                    <w:spacing w:before="40" w:after="40" w:line="240" w:lineRule="auto"/>
-                  </w:pPr>
-                  <w:r>
-                    <w:rPr>
-                      ${isHead ? '<w:b/><w:bCs/>' : ''}
-                      <w:sz w:val="20"/><w:szCs w:val="20"/>
-                      <w:color w:val="${isHead ? '0F172A' : '334155'}"/>
-                    </w:rPr>
-                    <w:t xml:space="preserve">${safeText}</w:t>
-                  </w:r>
-                </w:p>
-              </w:tc>
-            `;
-          }
-
-          tableRowsXml += `
-            <w:tr>
-              <w:trPr>
-                <w:cantSplit/>
-                ${isHead ? '<w:tblHeader/>' : ''}
-              </w:trPr>
-              ${cellsXml}
-            </w:tr>
-          `;
-        });
-
-        bodyXml += `
-          <w:tbl>
-            <w:tblPr>
-              <w:tblW w:w="0" w:type="auto"/>
-              <w:tblBorders>
-                <w:top w:val="single" w:sz="6" w:space="0" w:color="CBD5E1"/>
-                <w:left w:val="none"/>
-                <w:bottom w:val="single" w:sz="6" w:space="0" w:color="CBD5E1"/>
-                <w:right w:val="none"/>
-                <w:insideH w:val="single" w:sz="4" w:space="0" w:color="E2E8F0"/>
-                <w:insideV w:val="none"/>
-              </w:tblBorders>
-              <w:tblCellMar>
-                <w:top w:w="100" w:type="dxa"/>
-                <w:left w:w="140" w:type="dxa"/>
-                <w:bottom w:w="100" w:type="dxa"/>
-                <w:right w:w="140" w:type="dxa"/>
-              </w:tblCellMar>
-            </w:tblPr>
-            ${tableRowsXml}
-          </w:tbl>
-          <w:p><w:pPr><w:spacing w:after="80"/></w:pPr></w:p>
-        `;
-      } else if (elem.type === 'heading') {
-        const hStyle = elem.level === 1 ? 'Heading1' : 'Heading2';
-        const jcVal = elem.align !== 'left' ? `<w:jc w:val="${elem.align}"/>` : '';
-
-        bodyXml += `
-          <w:p>
-            <w:pPr>
-              <w:pStyle w:val="${hStyle}"/>
-              <w:spacing w:before="180" w:after="80" w:line="240" w:lineRule="auto"/>
-              ${jcVal}
-            </w:pPr>
-            ${renderRuns(elem.text, elem.fontSize, true)}
-          </w:p>
-        `;
-      } else if (elem.type === 'list') {
-        bodyXml += `
-          <w:p>
-            <w:pPr>
-              <w:ind w:left="480" w:hanging="240"/>
-              <w:spacing w:before="30" w:after="50" w:line="240" w:lineRule="auto"/>
-            </w:pPr>
-            <w:r>
-              <w:rPr>
-                <w:b/><w:bCs/>
-                <w:sz w:val="${Math.round(elem.fontSize * 2)}"/>
-                <w:color w:val="475569"/>
-              </w:rPr>
-              <w:t xml:space="preserve">${escapeXml(elem.bullet)} </w:t>
-            </w:r>
-            ${renderRuns(elem.text, elem.fontSize, false)}
-          </w:p>
-        `;
-      } else if (elem.type === 'paragraph') {
-        // Smooth continuous paragraph with natural wrapping and accurate indentation
-        const jcVal = elem.align !== 'left' ? `<w:jc w:val="${elem.align}"/>` : '';
-        const indVal = (elem.indentPt && elem.indentPt > 18)
-          ? `<w:ind w:left="${Math.round(elem.indentPt * 20)}"/>`
-          : '';
-
-        bodyXml += `
-          <w:p>
-            <w:pPr>
-              <w:pStyle w:val="Normal"/>
-              <w:spacing w:after="80" w:line="240" w:lineRule="auto"/>
-              ${indVal}
-              ${jcVal}
-            </w:pPr>
-            ${renderRuns(elem.text, elem.fontSize || 11, false)}
-          </w:p>
-        `;
-      }
+      bodyXml += renderBlockToXml(elem, pg);
     }
 
     // Page break between pages

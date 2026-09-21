@@ -89,8 +89,6 @@ export function renderConvert(container, initialMode = 'pdf-to-docx') {
   // Determine initial category and direction
   let activeCategoryKey = 'word';
   let direction = 'to-office'; // 'to-office' | 'to-pdf'
-  let wordUseOcr = true; // Enabled by default for full scanned document recognition in Word
-  let wordOcrLang = 'eng';
   let ocrMode = 'searchable'; // 'searchable' | 'digital'
   let ocrEnhance = true;
   let ocrLang = 'eng';
@@ -227,41 +225,7 @@ export function renderConvert(container, initialMode = 'pdf-to-docx') {
                   </div>
                 </div>
 
-                <!-- 3. Integrated OCR Option Box for PDF to Word -->
-                ${(activeCategoryKey === 'word' && direction === 'to-office') ? `
-                  <div class="tool-sidebar__card" style="padding:var(--space-3); display:flex; flex-direction:column; gap:8px">
-                    <div style="display:flex; justify-content:space-between; align-items:center">
-                      <span style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--color-text-secondary)">
-                        OCR & Scanned PDF Mode
-                      </span>
-                      <span style="font-size:10px; color:#16a34a; font-weight:600; background:rgba(34,197,94,0.1); padding:2px 6px; border-radius:4px">
-                        Editable Word Output
-                      </span>
-                    </div>
 
-                    <label style="display:flex; align-items:flex-start; gap:8px; font-size:11px; cursor:pointer">
-                      <input type="checkbox" id="word-ocr-toggle" ${wordUseOcr ? 'checked' : ''} style="margin-top:2px; cursor:pointer" />
-                      <span>
-                        <strong>Enable OCR for Scanned Documents</strong>
-                        <span style="display:block; font-size:10px; color:var(--color-text-tertiary); margin-top:1px">
-                          Automatically extracts picture text & handwriting from scanned pages into fully editable text inside Microsoft Word.
-                        </span>
-                      </span>
-                    </label>
-
-                    <div id="word-ocr-lang-wrap" style="display:${wordUseOcr ? 'flex' : 'none'}; flex-direction:column; gap:4px; margin-top:2px">
-                      <label style="font-size:10px; font-weight:600; color:var(--color-text-secondary)">Document Language:</label>
-                      <select id="word-ocr-lang-select" class="form-input" style="font-size:11px; padding:4px 6px">
-                        <option value="eng" ${wordOcrLang === 'eng' ? 'selected' : ''}>English</option>
-                        <option value="spa" ${wordOcrLang === 'spa' ? 'selected' : ''}>Spanish</option>
-                        <option value="fra" ${wordOcrLang === 'fra' ? 'selected' : ''}>French</option>
-                        <option value="deu" ${wordOcrLang === 'deu' ? 'selected' : ''}>German</option>
-                        <option value="ita" ${wordOcrLang === 'ita' ? 'selected' : ''}>Italian</option>
-                        <option value="por" ${wordOcrLang === 'por' ? 'selected' : ''}>Portuguese</option>
-                      </select>
-                    </div>
-                  </div>
-                ` : ''}
 
                 <!-- 4. Dedicated Settings Card for OCR Category -->
                 ${activeCategoryKey === 'ocr' ? `
@@ -481,22 +445,6 @@ export function renderConvert(container, initialMode = 'pdf-to-docx') {
       });
     }
 
-    // Word OCR controls
-    const wordOcrToggle = container.querySelector('#word-ocr-toggle');
-    if (wordOcrToggle) {
-      wordOcrToggle.addEventListener('change', (e) => {
-        wordUseOcr = e.target.checked;
-        const wrap = container.querySelector('#word-ocr-lang-wrap');
-        if (wrap) wrap.style.display = wordUseOcr ? 'flex' : 'none';
-      });
-    }
-
-    const wordOcrLangSelect = container.querySelector('#word-ocr-lang-select');
-    if (wordOcrLangSelect) {
-      wordOcrLangSelect.addEventListener('change', (e) => {
-        wordOcrLang = e.target.value;
-      });
-    }
 
     // OCR Category controls
     const ocrLangSelect = container.querySelector('#ocr-lang-select');
@@ -597,11 +545,7 @@ export function renderConvert(container, initialMode = 'pdf-to-docx') {
 
       switch (cfg.modeKey) {
         case 'pdf-to-docx':
-          outBytes = await pdfToDocx(fileBuffer, {
-            useOcr: wordUseOcr,
-            ocrLang: wordOcrLang,
-            forceOcr: false
-          }, onProg);
+          outBytes = await pdfToDocx(fileBuffer, onProg);
           resultFilename = `${baseName}.docx`;
           break;
 

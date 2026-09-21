@@ -7,8 +7,9 @@
  * - Page Reordering, Rotation & Deletion
  */
 
-import { PDFDocument, rgb, degrees, StandardFonts } from 'pdf-lib';
-import { encryptPDF } from '@pdfsmaller/pdf-encrypt-lite';
+import { PDFDocument, rgb, degrees, StandardFonts, PDFName, PDFRawStream, PDFHexString, PDFString, PDFDict, PDFArray } from 'pdf-lib';
+import { encryptPDF, RC4, md5, hexToBytes, bytesToHex } from '@pdfsmaller/pdf-encrypt-lite';
+import { loadPDFDocument, renderPageToCanvas } from './renderer.js';
 
 /**
  * Ensure independent Uint8Array copy.
@@ -374,4 +375,194 @@ export async function lockPDF(pdfBuffer, password) {
   });
 
   return new Uint8Array(encrypted);
+}
+
+// ==========================================
+// UNLOCK & DECRYPT PDF OPERATIONS
+// ==========================================
+
+const PADDING_BYTES = new Uint8Array([
+  0x28, 0xBF, 0x4E, 0x5E, 0x4E, 0x75, 0x8A, 0x41,
+  0x64, 0x00, 0x4E, 0x56, 0xFF, 0xFA, 0x01, 0x08,
+  0x2E, 0x2E, 0x00, 0xB6, 0xD0, 0x68, 0x3E, 0x80,
+  0x2F, 0x0C, 0xA9, 0xFE, 0x64, 0x53, 0x69, 0x7A
+]);
+
+function padPasswordBytes(password) {
+  const enc = new TextEncoder().encode(password);
+  const padded = new Uint8Array(32);
+  if (enc.length >= 32) {
+    padded.set(enc.slice(0, 32));
+  } else {
+    padded.set(enc);
+    padded.set(PADDING_BYTES.slice(0, 32 - enc.length), enc.length);
+  }
+  return padded;
+}
+
+function computeDecryptionKey(userPassword, ownerKey, permissions, fileId) {
+  const paddedPwd = padPasswordBytes(userPassword);
+  const hashInput = new Uint8Array(paddedPwd.length + ownerKey.length + 4 + fileId.length);
+  let offset = 0;
+  hashInput.set(paddedPwd, offset);
+  offset += paddedPwd.length;
+  hashInput.set(ownerKey, offset);
+  offset += ownerKey.length;
+  hashInput[offset++] = permissions & 0xFF;
+  hashInput[offset++] = (permissions >> 8) & 0xFF;
+  hashInput[offset++] = (permissions >> 16) & 0xFF;
+  hashInput[offset++] = (permissions >> 24) & 0xFF;
+  hashInput.set(fileId, offset);
+
+  let hash = md5(hashInput);
+  for (let i = 0; i < 50; i++) {
+    hash = md5(hash.slice(0, 16));
+  }
+  return hash.slice(0, 16);
+}
+
+function decryptCipherData(data, objectNum, generationNum, encryptionKey) {
+  const keyInput = new Uint8Array(encryptionKey.length + 5);
+  keyInput.set(encryptionKey);
+  keyInput[encryptionKey.length] = objectNum & 0xFF;
+  keyInput[encryptionKey.length + 1] = (objectNum >> 8) & 0xFF;
+  keyInput[encryptionKey.length + 2] = (objectNum >> 16) & 0xFF;
+  keyInput[encryptionKey.length + 3] = generationNum & 0xFF;
+  keyInput[encryptionKey.length + 4] = (generationNum >> 8) & 0xFF;
+
+  const objectKey = md5(keyInput);
+  const rc4 = new RC4(objectKey.slice(0, Math.min(encryptionKey.length + 5, 16)));
+  return rc4.process(data);
+}
+
+/**
+ * Check whether a PDF buffer has encryption protection.
+ * @param {ArrayBuffer|Uint8Array} pdfBuffer
+ * @returns {Promise<boolean>}
+ */
+export async function isPDFEncrypted(pdfBuffer) {
+  try {
+    const bytes = getSafeBuffer(pdfBuffer);
+    const doc = await PDFDocument.load(bytes.slice(), { ignoreEncryption: true });
+    return Boolean(doc.isEncrypted || doc.context?.trailerInfo?.Encrypt);
+  } catch (e) {
+    const msg = (e.message || '').toLowerCase();
+    return msg.includes('encrypt') || msg.includes('password');
+  }
+}
+
+/**
+ * Unlock and decrypt a password-protected PDF.
+ * Strips all encryption restrictions and returns a clean, unencrypted PDF.
+ * @param {ArrayBuffer|Uint8Array} pdfBuffer
+ * @param {string} password - User or owner password
+ * @returns {Promise<Uint8Array>}
+ */
+export async function unlockPDF(pdfBuffer, password = '') {
+  const bytes = getSafeBuffer(pdfBuffer);
+  const trimmedPassword = (password || '').trim();
+
+  // 1. Authenticate password using PDF.js
+  let pdfDocProxy = null;
+  try {
+    pdfDocProxy = await loadPDFDocument(bytes.slice(), { password: trimmedPassword });
+  } catch (err) {
+    const msg = (err.message || '').toLowerCase();
+    if (msg.includes('password') || err.name === 'PasswordException' || err.code === 1) {
+      throw new Error('Incorrect password. Please verify the document password and try again.');
+    }
+    throw new Error(err.message || 'Failed to open protected PDF.');
+  }
+
+  // 2. Primary: Lossless in-place RC4 stream decryption
+  try {
+    const doc = await PDFDocument.load(bytes.slice(), { ignoreEncryption: true });
+    const trailer = doc.context?.trailerInfo;
+    const encryptRef = trailer?.Encrypt;
+
+    if (!encryptRef) {
+      // Document does not have an Encrypt trailer
+      return doc.save({ useObjectStreams: true });
+    }
+
+    const encryptDict = doc.context.lookup(encryptRef);
+    if (encryptDict && encryptDict instanceof PDFDict) {
+      const filter = encryptDict.get(PDFName.of('Filter'));
+      const filterName = filter && typeof filter.asString === 'function' ? filter.asString() : '';
+      const v = encryptDict.get(PDFName.of('V'))?.asNumber?.() || 0;
+
+      // Standard revision 2/3 (RC4 40/128-bit)
+      if (filterName === '/Standard' && (v === 1 || v === 2)) {
+        const oObj = encryptDict.get(PDFName.of('O'));
+        const pObj = encryptDict.get(PDFName.of('P'));
+        if (oObj && pObj) {
+          const O = oObj instanceof PDFHexString ? hexToBytes(oObj.value) : oObj.asBytes();
+          const P = pObj.asNumber();
+          const idArray = trailer.ID;
+          const firstId = idArray ? (idArray.get ? idArray.get(0) : idArray[0]) : null;
+          const fileId = firstId ? (firstId instanceof PDFHexString ? hexToBytes(firstId.value) : firstId.asBytes()) : new Uint8Array(16);
+
+          const encKey = computeDecryptionKey(trimmedPassword, O, P, fileId);
+
+          // Decrypt object streams
+          const indirectObjects = doc.context.enumerateIndirectObjects();
+          for (const [ref, obj] of indirectObjects) {
+            if (ref.objectNumber === encryptRef.objectNumber) continue;
+            if (obj instanceof PDFRawStream && obj.contents) {
+              obj.contents = decryptCipherData(obj.contents, ref.objectNumber, ref.generationNumber || 0, encKey);
+            }
+          }
+
+          // Strip encryption dictionary from trailer
+          delete trailer.Encrypt;
+
+          const decryptedBytes = await doc.save({ useObjectStreams: true });
+
+          // Validate that the decrypted file opens without password
+          const testTask = await loadPDFDocument(decryptedBytes.slice());
+          if (testTask && testTask.numPages > 0) {
+            return decryptedBytes;
+          }
+        }
+      }
+    }
+  } catch (inPlaceErr) {
+    console.warn('In-place RC4 decryption fell back to universal reconstruction:', inPlaceErr);
+  }
+
+  // 3. Fallback: Universal High-Definition Reconstruction (for AES-256 / complex encryption)
+  try {
+    const numPages = pdfDocProxy.numPages;
+    const cleanDoc = await PDFDocument.create();
+
+    for (let i = 1; i <= numPages; i++) {
+      const page = await pdfDocProxy.getPage(i);
+      const viewport = page.getViewport({ scale: 1 });
+      const renderScale = 2.0; // High-DPI for crisp text and graphics
+
+      const canvas = document.createElement('canvas');
+      await renderPageToCanvas(pdfDocProxy, i, { scale: renderScale }, canvas);
+
+      const dataUrl = canvas.toDataURL('image/png');
+      const base64 = dataUrl.split(',')[1];
+      const binary = atob(base64);
+      const pngBytes = new Uint8Array(binary.length);
+      for (let k = 0; k < binary.length; k++) {
+        pngBytes[k] = binary.charCodeAt(k);
+      }
+
+      const embeddedImg = await cleanDoc.embedPng(pngBytes);
+      const newPage = cleanDoc.addPage([viewport.width, viewport.height]);
+      newPage.drawImage(embeddedImg, {
+        x: 0,
+        y: 0,
+        width: viewport.width,
+        height: viewport.height,
+      });
+    }
+
+    return cleanDoc.save({ useObjectStreams: true });
+  } catch (reconstructErr) {
+    throw new Error('Failed to decrypt document: ' + (reconstructErr.message || 'Unknown decryption error.'));
+  }
 }

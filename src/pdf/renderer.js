@@ -6,12 +6,14 @@
 import * as pdfjsLib from 'pdfjs-dist';
 
 // Configure the PDF.js worker
-pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
-  'pdfjs-dist/build/pdf.worker.mjs',
-  import.meta.url
-).toString();
+if (typeof window !== 'undefined') {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = new URL(
+    'pdfjs-dist/build/pdf.worker.mjs',
+    import.meta.url
+  ).toString();
+}
 
-export async function loadPDFDocument(buffer) {
+export async function loadPDFDocument(buffer, options = {}) {
   // CRITICAL: Clone the buffer data before passing to PDF.js!
   // PDF.js transfers the underlying ArrayBuffer to its Web Worker, which detaches
   // the original buffer in the main thread and makes its byteLength = 0.
@@ -25,11 +27,17 @@ export async function loadPDFDocument(buffer) {
     data = new Uint8Array(buffer);
   }
 
-  const loadingTask = pdfjsLib.getDocument({
+  const docParams = {
     data,
     cMapUrl: 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.9.155/cmaps/',
     cMapPacked: true,
-  });
+  };
+
+  if (options && options.password) {
+    docParams.password = options.password;
+  }
+
+  const loadingTask = pdfjsLib.getDocument(docParams);
   return loadingTask.promise;
 }
 
@@ -46,15 +54,18 @@ export async function loadPDFDocument(buffer) {
 export async function renderPageToCanvas(pdfDoc, pageNum, optionsOrScale = 1, targetCanvas = null) {
   let scale = 1;
   let rotation = 0;
+  let dpr = 1;
   if (typeof optionsOrScale === 'number') {
     scale = optionsOrScale;
   } else if (optionsOrScale && typeof optionsOrScale === 'object') {
     scale = optionsOrScale.scale || 1;
     rotation = optionsOrScale.rotation || 0;
+    dpr = optionsOrScale.dpr || 1;
   }
 
   const page = await pdfDoc.getPage(pageNum);
-  const viewport = page.getViewport({ scale, rotation });
+  const cssViewport = page.getViewport({ scale, rotation });
+  const renderViewport = page.getViewport({ scale: scale * dpr, rotation });
 
   const canvas = targetCanvas || document.createElement('canvas');
   const ctx = canvas.getContext('2d');
@@ -67,10 +78,12 @@ export async function renderPageToCanvas(pdfDoc, pageNum, optionsOrScale = 1, ta
     canvas._renderTask = null;
   }
 
-  canvas.width = Math.floor(viewport.width);
-  canvas.height = Math.floor(viewport.height);
+  canvas.width = Math.floor(renderViewport.width);
+  canvas.height = Math.floor(renderViewport.height);
+  canvas.style.width = `${Math.floor(cssViewport.width)}px`;
+  canvas.style.height = `${Math.floor(cssViewport.height)}px`;
 
-  const renderTask = page.render({ canvasContext: ctx, viewport });
+  const renderTask = page.render({ canvasContext: ctx, viewport: renderViewport });
   canvas._renderTask = renderTask;
 
   try {

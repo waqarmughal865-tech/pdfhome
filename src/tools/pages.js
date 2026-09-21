@@ -11,8 +11,9 @@ import { icon } from '../components/icons.js';
 import { renderAdSlot } from '../components/AdSlot.js';
 import { validateFileType, checkFileSize, sanitizeFilename, formatFileSize, readFileAsArrayBuffer, PDF_MIME, getBasename } from '../utils/file-utils.js';
 import { downloadArrayBuffer } from '../utils/download.js';
-import { applyWatermark, applyPageNumbers, applyCrop, lockPDF } from '../pdf/editor-engine.js';
+import { applyWatermark, applyPageNumbers, applyCrop, lockPDF, unlockPDF, isPDFEncrypted } from '../pdf/editor-engine.js';
 import { loadPDFDocument, generateThumbnail, renderPageToCanvas } from '../pdf/renderer.js';
+import { openSignatureModal } from '../components/SignatureModal.js';
 import { PDFDocument, degrees } from 'pdf-lib';
 import Sortable from 'sortablejs';
 
@@ -63,11 +64,20 @@ export function renderPages(container, options = {}) {
   let pageCrops = {}; // pageNum -> { top, bottom, left, right }
 
   // Protect state
+  let protectSubMode = 'lock'; // 'lock' | 'unlock'
   let protectPassword = '';
   let protectConfirm = '';
+  let unlockPassword = '';
+  let isDocEncrypted = false;
 
-  // Inspector zoom
+  // Inspector zoom & layout mode (strictly default to 'bottom' layout)
   let previewZoom = 1.0;
+  let editorLayoutMode = 'bottom';
+  try {
+    localStorage.removeItem('pdf_editor_layout_mode'); // remove any legacy stale setting
+    const saved = localStorage.getItem('pdf_editor_layout_mode_v2');
+    if (saved === 'side') editorLayoutMode = 'side';
+  } catch (e) {}
 
   // Helper: get active crop insets for current page
   function getCurrentCrop() {
@@ -180,6 +190,30 @@ export function renderPages(container, options = {}) {
         </div>
 
         <div class="tool-page__body">
+          <!-- 1. Workbench Category Tabs at the Top (like in Convert) -->
+          <div class="workbench-category-bar" id="workbench-top-tabs">
+            <button class="workbench-cat-btn ${activeTab === 'watermark' ? 'active' : ''}" data-tab="watermark" type="button">
+              ${icon('stamp', 16)}
+              <span>Watermark & Signature</span>
+            </button>
+            <button class="workbench-cat-btn ${activeTab === 'crop' ? 'active' : ''}" data-tab="crop" type="button">
+              ${icon('crop', 16)}
+              <span>Crop Margins</span>
+            </button>
+            <button class="workbench-cat-btn ${activeTab === 'organize' ? 'active' : ''}" data-tab="organize" type="button">
+              ${icon('layers', 16)}
+              <span>Organize & Rotate</span>
+            </button>
+            <button class="workbench-cat-btn ${activeTab === 'numbers' ? 'active' : ''}" data-tab="numbers" type="button">
+              ${icon('hash', 16)}
+              <span>Page Numbers</span>
+            </button>
+            <button class="workbench-cat-btn ${activeTab === 'protect' ? 'active' : ''}" data-tab="protect" type="button">
+              ${icon('lock', 16)}
+              <span>Password Lock</span>
+            </button>
+          </div>
+
           <div class="tool-layout">
 
             <!-- LEFT SIDEBAR: File Upload & Document Summary -->
@@ -241,155 +275,156 @@ export function renderPages(container, options = {}) {
               <div id="pages-error" style="display:none"></div>
             </aside>
 
-            <!-- RIGHT WORK SITE: TWO DISTINCT SECTIONS -->
+            <!-- RIGHT WORK SITE -->
             <main class="tool-worksite" id="pages-worksite" style="display:flex; flex-direction:column; gap:var(--space-4)">
               ${!file ? `
                 <div class="worksite-empty">
                   <div class="worksite-empty__icon">${icon('layers', 48)}</div>
                   <h3 class="worksite-empty__title">PDF Page Editor Workspace</h3>
                   <p class="worksite-empty__desc">
-                    Upload a PDF document to begin. The workspace provides a <strong>Live Preview</strong> in the top box and an <strong>Editing Workbench</strong> in the bottom box.
+                    Upload a PDF document to begin. The workspace provides an <strong>Editing Workbench</strong> at the top and a high-resolution <strong>Live Preview</strong> below.
                   </p>
                 </div>
               ` : `
-                <!-- ============================================== -->
-                <!-- SECTION 1: TOP BOX — LIVE PREVIEW SECTION     -->
-                <!-- ============================================== -->
-                <section class="worksite-box worksite-box--top-preview" style="display:flex; flex-direction:column; min-height:440px; flex:1">
-                  <div class="worksite-box__header" style="border-bottom:1px solid var(--color-border); padding:var(--space-3) var(--space-4); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px">
-                    <div class="worksite-box__header-left" style="display:flex; align-items:center; gap:var(--space-2)">
-                      <span class="worksite-box__badge" style="background:var(--color-primary); color:#fff; font-weight:600; padding:2px 8px; border-radius:4px; font-size:11px">
-                        Live Preview
-                      </span>
-                      <span style="font-weight:600; font-size:var(--text-sm)" id="header-page-title">
-                        Page ${activePage} of ${pageCount}
-                      </span>
-                      
-                      <!-- Watermark Exclusion Status Toggle on Header -->
-                      <button class="btn btn-sm btn-ghost" id="btn-toggle-exclude-active" style="padding:2px 8px; font-size:11px">
-                        ✓ Watermark Active
-                      </button>
+                <!-- ======================================================== -->
+                <!-- SPLIT WORKSPACE: PREVIEW FIRST + SETTINGS AT BOTTOM/SIDE   -->
+                <!-- ======================================================== -->
+                <div class="editor-workspace-split ${editorLayoutMode === 'side' ? 'editor-workspace-split--side' : 'editor-workspace-split--bottom'}" id="editor-workspace-split">
 
-                      <span id="header-rot-badge" style="font-size:11px; color:var(--color-accent); background:rgba(99,102,241,0.08); padding:1px 6px; border-radius:4px; display:none"></span>
-                      <span id="preview-loading-indicator" style="font-size:11px; color:var(--color-text-tertiary); display:none">
-                        Rendering...
-                      </span>
-                    </div>
+                  <!-- 1. LIVE PREVIEW FIRST (At the top in bottom mode, or on the left in side mode) -->
+                  <section class="worksite-box worksite-box--top-preview" id="worksite-preview-box" style="display:flex; flex-direction:column; min-height:460px; border:1px solid var(--color-border); background:var(--color-bg-secondary); border-radius:var(--radius-lg); overflow:hidden">
+                    <div class="worksite-box__header" style="border-bottom:1px solid var(--color-border); padding:var(--space-3) var(--space-4); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px">
+                      <div class="worksite-box__header-left" style="display:flex; align-items:center; gap:var(--space-2)">
+                        <span class="worksite-box__badge" style="background:#22c55e; color:#fff; font-weight:600; padding:2px 8px; border-radius:4px; font-size:11px">
+                          Live Preview
+                        </span>
+                        <span style="font-weight:600; font-size:var(--text-sm)" id="header-page-title">
+                          Page ${activePage} of ${pageCount}
+                        </span>
+                        
+                        <!-- Watermark Exclusion Status Toggle on Header -->
+                        <button class="btn btn-sm btn-ghost" id="btn-toggle-exclude-active" style="padding:2px 8px; font-size:11px">
+                          ✓ Watermark Active
+                        </button>
 
-                    <div class="worksite-box__header-right" style="display:flex; align-items:center; gap:var(--space-2)">
-                      <button class="btn btn-ghost btn-sm" id="prev-page-btn" ${activePage <= 1 ? 'disabled' : ''} title="Previous Page">
-                        ${icon('chevronLeft', 14)} Prev
-                      </button>
-                      <button class="btn btn-ghost btn-sm" id="next-page-btn" ${activePage >= pageCount ? 'disabled' : ''} title="Next Page">
-                        Next ${icon('chevronRight', 14)}
-                      </button>
-
-                      <div style="width:1px; height:18px; background:var(--color-border); margin:0 4px"></div>
-
-                      <button class="btn btn-ghost btn-sm" id="zoom-out-btn" title="Zoom Out" style="padding:4px 8px">
-                        ${icon('minus', 14)}
-                      </button>
-                      <span style="font-size:11px; color:var(--color-text-secondary); min-width:38px; text-align:center" id="zoom-label">
-                        ${Math.round(previewZoom * 100)}%
-                      </span>
-                      <button class="btn btn-ghost btn-sm" id="zoom-in-btn" title="Zoom In" style="padding:4px 8px">
-                        ${icon('plus', 14)}
-                      </button>
-                    </div>
-                  </div>
-
-                  <!-- Canvas Preview Viewport -->
-                  <div class="preview-viewport" id="preview-viewport" style="display:flex; align-items:center; justify-content:center; padding:var(--space-3); background:var(--color-bg-tertiary); overflow:auto; position:relative; height:clamp(260px, 40vh, 440px); min-height:240px">
-                    <div class="canvas-container" id="canvas-container" style="position:relative; display:inline-block; box-shadow:0 8px 24px rgba(0,0,0,0.12); border-radius:4px; line-height:0">
-                      <canvas id="main-preview-canvas" style="display:block; border-radius:4px; background:#fff"></canvas>
-                      
-                      <!-- Overlay Host Containers -->
-                      <div id="live-watermark-overlay"></div>
-                      <div id="live-number-overlay"></div>
-                      <div id="live-crop-overlay"></div>
-                    </div>
-                  </div>
-
-                  <!-- Horizontal Page Filmstrip Dock (Zero-Scroll Page Jumper) -->
-                  <div class="page-filmstrip-bar" id="page-filmstrip-bar">
-                    <div class="page-filmstrip-header">
-                      <div style="display:flex; align-items:center; gap:6px">
-                        <span>${icon('layers', 12)} Quick Page Filmstrip</span>
-                        <span style="font-size:10px; color:var(--color-text-tertiary); font-weight:normal" id="filmstrip-page-count">(${livePages.length} active pages)</span>
+                        <span id="header-rot-badge" style="font-size:11px; color:var(--color-accent); background:rgba(99,102,241,0.08); padding:1px 6px; border-radius:4px; display:none"></span>
+                        <span id="preview-loading-indicator" style="font-size:11px; color:var(--color-text-tertiary); display:none">
+                          Rendering...
+                        </span>
                       </div>
-                      <div style="display:flex; align-items:center; gap:8px">
-                        <span style="font-size:10px; color:var(--color-text-tertiary)">Click page to jump</span>
-                        <button class="btn btn-ghost btn-sm" id="btn-toggle-grid-mode" style="font-size:11px; padding:2px 8px; height:24px" title="Toggle Full Page Grid View">
-                          ${icon('grid', 12)} <span id="toggle-grid-label">Full Page Grid</span>
+
+                      <div class="worksite-box__header-right" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap">
+                        <!-- Adjustable Layout Toggle: Side vs Bottom -->
+                        <button class="zoom-pill-btn ${editorLayoutMode === 'side' ? 'active' : ''}" id="btn-toggle-layout" title="Adjust Signature & Settings Panel: Bottom vs Side" style="font-weight:600">
+                          ${icon('split', 13)}
+                          <span id="layout-toggle-label">${editorLayoutMode === 'side' ? 'Move to Bottom' : 'Move to Side'}</span>
+                        </button>
+
+                        <div style="width:1px; height:18px; background:var(--color-border); margin:0 2px"></div>
+
+                        <button class="btn btn-ghost btn-sm" id="prev-page-btn" ${activePage <= 1 ? 'disabled' : ''} title="Previous Page">
+                          ${icon('chevronLeft', 14)} Prev
+                        </button>
+                        <button class="btn btn-ghost btn-sm" id="next-page-btn" ${activePage >= pageCount ? 'disabled' : ''} title="Next Page">
+                          Next ${icon('chevronRight', 14)}
+                        </button>
+
+                        <div style="width:1px; height:18px; background:var(--color-border); margin:0 2px"></div>
+
+                        <!-- Natural Sizing & Zoom Presets -->
+                        <button class="zoom-pill-btn active" id="btn-fit-width" title="Fit Page to Width (Natural PDF Size)">
+                          Fit Width
+                        </button>
+                        <button class="zoom-pill-btn" id="btn-fit-page" title="Fit Entire Page in Viewport">
+                          Fit Page
+                        </button>
+                        <button class="zoom-pill-btn" id="btn-zoom-100" title="Actual 100% Real-World Scale">
+                          100%
+                        </button>
+
+                        <button class="btn btn-ghost btn-sm" id="zoom-out-btn" title="Zoom Out" style="padding:4px 6px">
+                          ${icon('minus', 14)}
+                        </button>
+                        <span style="font-size:11px; font-weight:600; color:var(--color-text-secondary); min-width:38px; text-align:center" id="zoom-label">
+                          ${Math.round(previewZoom * 100)}%
+                        </span>
+                        <button class="btn btn-ghost btn-sm" id="zoom-in-btn" title="Zoom In" style="padding:4px 6px">
+                          ${icon('plus', 14)}
                         </button>
                       </div>
                     </div>
-                    <div class="page-filmstrip-track" id="page-filmstrip-track">
-                      <!-- Rendered by updateFilmstrip() -->
-                    </div>
-                  </div>
-                </section>
 
-                <!-- ============================================== -->
-                <!-- SECTION 2: BOTTOM BOX — EDIT THE PAGE SECTION -->
-                <!-- ============================================== -->
-                <section class="worksite-box worksite-box--bottom-editor" id="worksite-bottom-editor" style="border:1px solid var(--color-border); background:var(--color-bg-secondary)">
-                  <div style="padding:var(--space-3) var(--space-4); border-bottom:1px solid var(--color-border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:var(--space-2)">
-                    <div style="display:flex; align-items:center; gap:var(--space-2)">
-                      <span class="worksite-box__badge" style="background:#22c55e; color:#fff; font-weight:600; padding:2px 8px; border-radius:4px; font-size:11px">
-                        Edit
-                      </span>
-                      <span style="font-weight:var(--weight-bold); font-size:var(--text-sm)">
-                        Editing Workbench
-                      </span>
+                    <!-- Canvas Preview Viewport (Natural Document Display) -->
+                    <div class="preview-viewport" id="preview-viewport">
+                      <div class="canvas-container" id="canvas-container">
+                        <canvas id="main-preview-canvas"></canvas>
+                        
+                        <!-- Overlay Host Containers -->
+                        <div id="live-watermark-overlay"></div>
+                        <div id="live-number-overlay"></div>
+                        <div id="live-crop-overlay"></div>
+                      </div>
                     </div>
 
-                    <!-- 5 Main Editing Feature Tabs -->
-                    <div class="editor-tabs-bar" style="display:flex; gap:4px; background:var(--color-bg-tertiary); padding:3px; border-radius:var(--radius-md); border:1px solid var(--color-border)">
-                      <button class="editor-tab-pill ${activeTab === 'watermark' ? 'editor-tab-pill--active' : ''}" data-tab="watermark">
-                        ${icon('stamp', 14)}
-                        <span>Watermark & Signature</span>
-                      </button>
-                      <button class="editor-tab-pill ${activeTab === 'crop' ? 'editor-tab-pill--active' : ''}" data-tab="crop">
-                        ${icon('crop', 14)}
-                        <span>Crop Margins</span>
-                      </button>
-                      <button class="editor-tab-pill ${activeTab === 'organize' ? 'editor-tab-pill--active' : ''}" data-tab="organize">
-                        ${icon('layers', 14)}
-                        <span>Organize Pages</span>
-                      </button>
-                      <button class="editor-tab-pill ${activeTab === 'numbers' ? 'editor-tab-pill--active' : ''}" data-tab="numbers">
-                        ${icon('hash', 14)}
-                        <span>Page Numbers</span>
-                      </button>
-                      <button class="editor-tab-pill ${activeTab === 'protect' ? 'editor-tab-pill--active' : ''}" data-tab="protect">
-                        ${icon('lock', 14)}
-                        <span>Password Lock</span>
-                      </button>
+                    <!-- Horizontal Page Filmstrip Dock -->
+                    <div class="page-filmstrip-bar" id="page-filmstrip-bar">
+                      <div class="page-filmstrip-header">
+                        <div style="display:flex; align-items:center; gap:6px">
+                          <span>${icon('layers', 12)} Quick Page Filmstrip</span>
+                          <span style="font-size:10px; color:var(--color-text-tertiary); font-weight:normal" id="filmstrip-page-count">(${livePages.length} active pages)</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:8px">
+                          <span style="font-size:10px; color:var(--color-text-tertiary)">Click page to jump</span>
+                          <button class="btn btn-ghost btn-sm" id="btn-toggle-grid-mode" style="font-size:11px; padding:2px 8px; height:24px" title="Toggle Full Page Grid View">
+                            ${icon('grid', 12)} <span id="toggle-grid-label">Full Page Grid</span>
+                          </button>
+                        </div>
+                      </div>
+                      <div class="page-filmstrip-track" id="page-filmstrip-track">
+                        <!-- Rendered by updateFilmstrip() -->
+                      </div>
                     </div>
-                  </div>
+                  </section>
 
-                  <!-- Tab Panels (Kept in DOM, toggled via display for 0 lag) -->
-                  <div id="tab-panel-watermark" class="tab-panel" style="padding:var(--space-4); display:${activeTab === 'watermark' ? 'block' : 'none'}">
-                    ${getWatermarkPanelHtml()}
-                  </div>
+                  <!-- 2. EDITING WORKBENCH CARD (at bottom of preview in bottom mode, or on the side in side mode) -->
+                  <section class="worksite-box worksite-box--bottom-editor" id="worksite-editor-box" style="border:1px solid var(--color-border); background:var(--color-bg-secondary); border-radius:var(--radius-lg); overflow:hidden">
+                    <div style="padding:var(--space-3) var(--space-4); border-bottom:1px solid var(--color-border); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:var(--space-2); background:var(--color-bg-tertiary)">
+                      <div style="display:flex; align-items:center; gap:var(--space-2)">
+                        <span class="worksite-box__badge" style="background:var(--color-primary); color:#fff; font-weight:600; padding:2px 8px; border-radius:4px; font-size:11px">
+                          Settings
+                        </span>
+                        <span style="font-weight:var(--weight-bold); font-size:var(--text-sm)" id="workbench-active-title">
+                          ${activeTab === 'watermark' ? 'Watermark & Signature Settings' :
+                            activeTab === 'crop' ? 'Page Margins & Visual Crop Box' :
+                            activeTab === 'organize' ? 'Organize, Rotate & Reorder Pages' :
+                            activeTab === 'numbers' ? 'Header & Footer Bates Page Numbers' : 'Password Encryption & Security'}
+                        </span>
+                      </div>
+                    </div>
 
-                  <div id="tab-panel-crop" class="tab-panel" style="padding:var(--space-4); display:${activeTab === 'crop' ? 'block' : 'none'}">
-                    ${getCropPanelHtml()}
-                  </div>
+                    <!-- Tab Panels (Kept in DOM, toggled via display for 0 lag) -->
+                    <div id="tab-panel-watermark" class="tab-panel" style="padding:var(--space-4); display:${activeTab === 'watermark' ? 'block' : 'none'}">
+                      ${getWatermarkPanelHtml()}
+                    </div>
 
-                  <div id="tab-panel-organize" class="tab-panel" style="padding:var(--space-4); display:${activeTab === 'organize' ? 'block' : 'none'}">
-                    ${getOrganizePanelHtml()}
-                  </div>
+                    <div id="tab-panel-crop" class="tab-panel" style="padding:var(--space-4); display:${activeTab === 'crop' ? 'block' : 'none'}">
+                      ${getCropPanelHtml()}
+                    </div>
 
-                  <div id="tab-panel-numbers" class="tab-panel" style="padding:var(--space-4); display:${activeTab === 'numbers' ? 'block' : 'none'}">
-                    ${getNumbersPanelHtml()}
-                  </div>
+                    <div id="tab-panel-organize" class="tab-panel" style="padding:var(--space-4); display:${activeTab === 'organize' ? 'block' : 'none'}">
+                      ${getOrganizePanelHtml()}
+                    </div>
 
-                  <div id="tab-panel-protect" class="tab-panel" style="padding:var(--space-4); display:${activeTab === 'protect' ? 'block' : 'none'}">
-                    ${getProtectPanelHtml()}
-                  </div>
-                </section>
+                    <div id="tab-panel-numbers" class="tab-panel" style="padding:var(--space-4); display:${activeTab === 'numbers' ? 'block' : 'none'}">
+                      ${getNumbersPanelHtml()}
+                    </div>
+
+                    <div id="tab-panel-protect" class="tab-panel" style="padding:var(--space-4); display:${activeTab === 'protect' ? 'block' : 'none'}">
+                      ${getProtectPanelHtml()}
+                    </div>
+                  </section>
+
+                </div>
               `}
             </main>
 
@@ -404,9 +439,10 @@ export function renderPages(container, options = {}) {
       updateSidebarPages();
       updateFilmstrip();
       updateHeaderInfo();
-      renderPreviewCanvas();
+      requestAnimationFrame(() => {
+        fitPageToViewport('fit-width');
+      });
       updateOverlays();
-      if (wmType === 'draw') initSignaturePad();
     }
   }
 
@@ -414,7 +450,7 @@ export function renderPages(container, options = {}) {
 
   function getWatermarkPanelHtml() {
     return `
-      <div style="display:grid; grid-template-columns:1.2fr 1fr; gap:var(--space-4)">
+      <div class="editor-grid-2col">
         <div style="display:flex; flex-direction:column; gap:10px">
           <div style="display:flex; align-items:center; justify-content:space-between">
             <span style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--color-text-secondary)">
@@ -440,24 +476,40 @@ export function renderPages(container, options = {}) {
 
           <!-- DRAW SIGNATURE SECTION -->
           <div id="wm-mode-draw" style="display:${wmType === 'draw' ? 'block' : 'none'}">
-            <div style="border:1px solid var(--color-border); border-radius:var(--radius-md); padding:var(--space-3); background:var(--color-bg-primary); display:flex; flex-direction:column; gap:8px">
-              <div style="display:flex; justify-content:space-between; align-items:center">
-                <span style="font-size:11px; font-weight:600; color:var(--color-text-secondary)">
-                  Draw signature below (Mouse / Touch / Stylus):
-                </span>
-                <div style="display:flex; align-items:center; gap:6px">
-                  <button class="ink-btn ${wmInkColor === '#1d4ed8' ? 'active' : ''}" data-color="#1d4ed8" style="width:16px; height:16px; border-radius:50%; background:#1d4ed8; border:2px solid ${wmInkColor === '#1d4ed8' ? '#000' : 'transparent'}; cursor:pointer" title="Blue Ink"></button>
-                  <button class="ink-btn ${wmInkColor === '#111827' ? 'active' : ''}" data-color="#111827" style="width:16px; height:16px; border-radius:50%; background:#111827; border:2px solid ${wmInkColor === '#111827' ? '#6366f1' : 'transparent'}; cursor:pointer" title="Black Ink"></button>
-                  <button class="btn btn-ghost btn-sm" id="btn-clear-sig" style="padding:2px 6px; font-size:10px">
-                    Clear
-                  </button>
+            <div style="border:1px solid var(--color-border); border-radius:var(--radius-md); padding:var(--space-3); background:var(--color-bg-primary); display:flex; flex-direction:column; gap:10px">
+              <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:6px">
+                <div>
+                  <span style="font-size:12px; font-weight:700; color:var(--color-text-primary); display:block">
+                    ✍️ Signature Studio
+                  </span>
+                  <span style="font-size:11px; color:var(--color-text-tertiary)">
+                    Draw signature with fountain, ballpoint, gel or marker pens
+                  </span>
                 </div>
+                <button type="button" class="btn btn-primary btn-sm" id="btn-open-sig-modal" style="padding:5px 12px; font-size:12px; gap:6px">
+                  ${icon('penTool', 14)} Open Signature Studio
+                </button>
               </div>
 
-              <div style="position:relative; width:100%; height:110px; background:#fff; border:1px dashed #cbd5e1; border-radius:4px; overflow:hidden">
-                <canvas id="sig-pad" style="width:100%; height:100%; display:block; cursor:crosshair"></canvas>
-                <div style="position:absolute; bottom:18px; left:12px; right:12px; height:1px; border-bottom:1px dashed #e2e8f0; pointer-events:none"></div>
-                <span style="position:absolute; bottom:4px; right:12px; font-size:9px; color:#94a3b8; pointer-events:none">Sign on line</span>
+              <!-- Interactive Signature Preview Box -->
+              <div id="wm-sig-preview-card" style="position:relative; width:100%; min-height:95px; background:#fff; border:1.5px dashed var(--color-border); border-radius:var(--radius-md); display:flex; align-items:center; justify-content:center; padding:var(--space-3); cursor:pointer; transition:all var(--transition-fast)" title="Click to draw or modify signature in full window">
+                ${wmImagePreviewUrl ? `
+                  <img id="wm-drawn-sig-thumb" src="${wmImagePreviewUrl}" style="max-height:80px; max-width:85%; object-fit:contain" alt="Drawn Signature" />
+                  <div style="position:absolute; top:6px; right:6px; display:flex; gap:4px">
+                    <button type="button" class="btn btn-ghost btn-sm" id="btn-reopen-sig" style="padding:2px 8px; font-size:11px; background:rgba(255,255,255,0.9); box-shadow:var(--shadow-xs)">
+                      ${icon('edit', 12)} Edit
+                    </button>
+                    <button type="button" class="btn btn-ghost btn-sm" id="btn-clear-sig-preview" style="padding:2px 8px; font-size:11px; color:var(--color-danger); background:rgba(255,255,255,0.9); box-shadow:var(--shadow-xs)">
+                      Clear
+                    </button>
+                  </div>
+                ` : `
+                  <div style="display:flex; flex-direction:column; align-items:center; text-align:center; gap:4px; padding:10px 0">
+                    <span style="font-size:24px">✍️</span>
+                    <span style="font-size:12px; font-weight:600; color:var(--color-accent)">Click here to draw signature in full window</span>
+                    <span style="font-size:11px; color:var(--color-text-tertiary)">Pen styles, ink colors, undo/redo & high-definition smoothing</span>
+                  </div>
+                `}
               </div>
             </div>
           </div>
@@ -608,7 +660,7 @@ export function renderPages(container, options = {}) {
           </div>
         </div>
 
-        <div style="display:grid; grid-template-columns:repeat(4, 1fr); gap:var(--space-3)">
+        <div class="editor-grid-4col">
           <div>
             <label style="font-size:10px; font-weight:600; color:var(--color-text-secondary)">Top Margin (pt):</label>
             <input type="number" id="crop-in-top" min="0" max="250" value="${cur.top}" class="form-input" style="font-size:11px; padding:4px 6px" />
@@ -630,7 +682,7 @@ export function renderPages(container, options = {}) {
         <div style="background:rgba(59,130,246,0.06); padding:8px 12px; border-radius:6px; font-size:11px; color:var(--color-text-secondary); display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px">
           <div style="display:flex; align-items:center; gap:6px">
             ${icon('crop', 14)}
-            <span><strong>Live Canvas Crop:</strong> Drag the box to move it or drag any of the 8 blue handles on the <strong>Top Preview</strong> to resize in real-time.</span>
+            <span><strong>Live Canvas Crop:</strong> Drag the box to move it or drag any of the 8 blue handles on the <strong>Live Preview</strong> to resize in real-time.</span>
           </div>
           ${cropScope === 'single' ? `
             <button class="btn btn-secondary btn-sm" id="crop-btn-copy-all" style="font-size:10px; padding:2px 8px">
@@ -688,7 +740,7 @@ export function renderPages(container, options = {}) {
 
   function getNumbersPanelHtml() {
     return `
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-4)">
+      <div class="editor-grid-2col">
         <div style="display:flex; flex-direction:column; gap:10px">
           <div style="display:flex; align-items:center; justify-content:space-between">
             <span style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--color-text-secondary)">
@@ -757,28 +809,77 @@ export function renderPages(container, options = {}) {
 
   function getProtectPanelHtml() {
     return `
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:var(--space-4); align-items:center">
-        <div style="display:flex; flex-direction:column; gap:10px">
-          <span style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--color-text-secondary)">
-            Set Document Password
-          </span>
-          <div>
-            <label style="font-size:11px; font-weight:600; color:var(--color-text-secondary)">Password:</label>
-            <input type="password" id="protect-pass-val" value="${protectPassword}" placeholder="Enter strong password" class="form-input" style="font-size:12px; padding:6px 8px" />
+      <div style="display:flex; flex-direction:column; gap:var(--space-3)">
+        <!-- Mode Switcher: Lock PDF vs Unlock PDF -->
+        <div style="display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px; border-bottom:1px solid var(--color-border); padding-bottom:8px">
+          <div class="segmented-control" style="display:inline-flex; background:var(--color-bg-tertiary); border:1px solid var(--color-border); border-radius:var(--radius-sm); padding:2px">
+            <button class="seg-btn ${protectSubMode === 'lock' ? 'active' : ''}" id="protect-submode-lock" style="border:none; padding:5px 12px; font-size:11px; border-radius:4px; cursor:pointer; display:flex; align-items:center; gap:6px">
+              ${icon('lock', 14)} Lock PDF (Add Password)
+            </button>
+            <button class="seg-btn ${protectSubMode === 'unlock' ? 'active' : ''}" id="protect-submode-unlock" style="border:none; padding:5px 12px; font-size:11px; border-radius:4px; cursor:pointer; display:flex; align-items:center; gap:6px">
+              ${icon('unlock', 14)} Unlock PDF (Remove Password)
+            </button>
           </div>
-          <div>
-            <label style="font-size:11px; font-weight:600; color:var(--color-text-secondary)">Confirm Password:</label>
-            <input type="password" id="protect-confirm-val" value="${protectConfirm}" placeholder="Repeat password" class="form-input" style="font-size:12px; padding:6px 8px" />
+
+          <span id="protect-doc-status-badge" style="font-size:11px; font-weight:600; padding:3px 8px; border-radius:4px; ${isDocEncrypted ? 'background:rgba(239,68,68,0.1); color:var(--color-danger)' : 'background:rgba(16,185,129,0.1); color:#10b981'}">
+            ${isDocEncrypted ? '🔒 Password Protected' : '🔓 Document Currently Unlocked'}
+          </span>
+        </div>
+
+        <!-- 1. LOCK PDF SUB-PANEL -->
+        <div id="protect-box-lock" style="display:${protectSubMode === 'lock' ? 'grid' : 'none'}; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:var(--space-4); align-items:center">
+          <div style="display:flex; flex-direction:column; gap:10px">
+            <span style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--color-text-secondary)">
+              Set Document Encryption Password
+            </span>
+            <div>
+              <label style="font-size:11px; font-weight:600; color:var(--color-text-secondary)">Password:</label>
+              <input type="password" id="protect-pass-val" value="${protectPassword}" placeholder="Enter strong password" class="form-input" style="font-size:12px; padding:6px 8px" />
+            </div>
+            <div>
+              <label style="font-size:11px; font-weight:600; color:var(--color-text-secondary)">Confirm Password:</label>
+              <input type="password" id="protect-confirm-val" value="${protectConfirm}" placeholder="Repeat password" class="form-input" style="font-size:12px; padding:6px 8px" />
+            </div>
+          </div>
+
+          <div style="background:var(--color-bg-primary); padding:var(--space-3); border-radius:var(--radius-md); border:1px solid var(--color-border); font-size:11px; color:var(--color-text-secondary); display:flex; flex-direction:column; gap:6px">
+            <div style="display:flex; align-items:center; gap:6px; color:var(--color-primary); font-weight:600">
+              ${icon('lock', 16)} 128-bit Standard Encryption
+            </div>
+            <p style="margin:0">
+              Protects the exported document. When you click <strong>Save & Export PDF</strong> in the sidebar, the resulting file will be encrypted and will require this password to view, edit, or print.
+            </p>
           </div>
         </div>
 
-        <div style="background:var(--color-bg-primary); padding:var(--space-3); border-radius:var(--radius-md); border:1px solid var(--color-border); font-size:11px; color:var(--color-text-secondary); display:flex; flex-direction:column; gap:6px">
-          <div style="display:flex; align-items:center; gap:6px; color:var(--color-primary); font-weight:600">
-            ${icon('lock', 16)} 128-bit Standard Encryption
+        <!-- 2. UNLOCK PDF SUB-PANEL -->
+        <div id="protect-box-unlock" style="display:${protectSubMode === 'unlock' ? 'grid' : 'none'}; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:var(--space-4); align-items:center">
+          <div style="display:flex; flex-direction:column; gap:10px">
+            <span style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--color-text-secondary)">
+              Decrypt & Strip Password Protection
+            </span>
+            <div>
+              <label style="font-size:11px; font-weight:600; color:var(--color-text-secondary)">Current Document Password:</label>
+              <div style="position:relative; display:flex; align-items:center">
+                <input type="password" id="unlock-pass-val" value="${unlockPassword}" placeholder="Enter password to decrypt" class="form-input" style="font-size:12px; padding:6px 8px; width:100%" />
+              </div>
+            </div>
+            <div style="display:flex; gap:8px; align-items:center">
+              <button class="btn btn-primary btn-sm" id="btn-unlock-pdf" style="font-size:12px; padding:6px 14px">
+                ${icon('unlock', 14)} Decrypt & Remove Password
+              </button>
+            </div>
+            <div id="unlock-status-feedback" style="display:none; font-size:11px; padding:8px 12px; border-radius:6px; border:1px solid var(--color-border)"></div>
           </div>
-          <p style="margin:0">
-            Protects the exported document. Anyone opening or printing the PDF will be required to provide this password.
-          </p>
+
+          <div style="background:var(--color-bg-primary); padding:var(--space-3); border-radius:var(--radius-md); border:1px solid var(--color-border); font-size:11px; color:var(--color-text-secondary); display:flex; flex-direction:column; gap:6px">
+            <div style="display:flex; align-items:center; gap:6px; color:#10b981; font-weight:600">
+              ${icon('unlock', 16)} Permanent Decryption Engine
+            </div>
+            <p style="margin:0">
+              Removes password restrictions and decrypts all streams client-side in your browser. The exported PDF can be opened by anyone without prompting for a password.
+            </p>
+          </div>
         </div>
       </div>
     `;
@@ -787,12 +888,28 @@ export function renderPages(container, options = {}) {
   // --- FAST LIGHTWEIGHT DOM UPDATES (NO INNERHTML WIPING) ---
 
   function switchTab(newTab) {
+    if (!newTab) return;
     activeTab = newTab;
 
-    // Update pill buttons
+    // Update top workbench category bar buttons
+    container.querySelectorAll('.workbench-cat-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.getAttribute('data-tab') === newTab);
+    });
+
+    // Update pill buttons if present
     container.querySelectorAll('.editor-tab-pill').forEach(btn => {
       btn.classList.toggle('editor-tab-pill--active', btn.getAttribute('data-tab') === newTab);
     });
+
+    // Update workbench header title
+    const activeTitle = container.querySelector('#workbench-active-title');
+    if (activeTitle) {
+      activeTitle.textContent = 
+        newTab === 'watermark' ? 'Watermark & Signature Settings' :
+        newTab === 'crop' ? 'Page Margins & Visual Crop Box' :
+        newTab === 'organize' ? 'Organize, Rotate & Reorder Pages' :
+        newTab === 'numbers' ? 'Header & Footer Bates Page Numbers' : 'Password Encryption & Security';
+    }
 
     // Toggle panels
     ['watermark', 'crop', 'organize', 'numbers', 'protect'].forEach(t => {
@@ -801,7 +918,6 @@ export function renderPages(container, options = {}) {
     });
 
     if (newTab === 'organize') renderOrganizeThumbnails();
-    if (newTab === 'watermark' && wmType === 'draw') initSignaturePad();
     if (newTab === 'crop') syncCropInputValues();
 
     updateOverlays();
@@ -1411,99 +1527,172 @@ export function renderPages(container, options = {}) {
     if (badge) badge.style.display = 'inline-block';
   }
 
-  // --- SIGNATURE PAD ---
+  // --- SIGNATURE STUDIO MODAL INTEGRATION ---
 
-  function initSignaturePad() {
-    const pad = container.querySelector('#sig-pad');
-    if (!pad) return;
-
-    pad.width = pad.offsetWidth || 380;
-    pad.height = pad.offsetHeight || 110;
-
-    const ctx = pad.getContext('2d');
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
-    ctx.lineWidth = 2.5;
-    ctx.strokeStyle = wmInkColor;
-
-    let drawing = false;
-    let lastX = 0, lastY = 0;
-
-    const getPos = (e) => {
-      const rect = pad.getBoundingClientRect();
-      const scaleX = pad.width / rect.width;
-      const scaleY = pad.height / rect.height;
-      return {
-        x: (e.clientX - rect.left) * scaleX,
-        y: (e.clientY - rect.top) * scaleY
-      };
-    };
-
-    pad.addEventListener('pointerdown', (e) => {
-      drawing = true;
-      const pos = getPos(e);
-      lastX = pos.x;
-      lastY = pos.y;
-      ctx.beginPath();
-      ctx.moveTo(lastX, lastY);
-      e.preventDefault();
+  function openDrawSignatureStudio() {
+    openSignatureModal({
+      initialColor: wmInkColor,
+      initialPen: 'fountain',
+      initialWidth: 2.6,
+      onSave: async ({ blob, inkColor }) => {
+        if (!blob) return;
+        wmImageData = await blob.arrayBuffer();
+        if (wmImagePreviewUrl) URL.revokeObjectURL(wmImagePreviewUrl);
+        wmImagePreviewUrl = URL.createObjectURL(blob);
+        wmInkColor = inkColor || wmInkColor;
+        enableWatermark = true;
+        modified = true;
+        showEditedBadge();
+        updateWatermarkPreviewCard();
+        updateOverlays();
+      }
     });
-
-    pad.addEventListener('pointermove', (e) => {
-      if (!drawing) return;
-      const pos = getPos(e);
-      ctx.beginPath();
-      ctx.moveTo(lastX, lastY);
-      ctx.lineTo(pos.x, pos.y);
-      ctx.stroke();
-      lastX = pos.x;
-      lastY = pos.y;
-      e.preventDefault();
-    });
-
-    const stop = () => {
-      if (!drawing) return;
-      drawing = false;
-      syncDrawnSignature();
-    };
-
-    pad.addEventListener('pointerup', stop);
-    pad.addEventListener('pointercancel', stop);
-    pad.addEventListener('pointerleave', stop);
   }
 
-  async function syncDrawnSignature() {
-    const pad = container.querySelector('#sig-pad');
-    if (!pad) return;
+  function updateWatermarkPreviewCard() {
+    const card = container.querySelector('#wm-sig-preview-card');
+    if (!card) return;
 
-    const blob = await new Promise(res => pad.toBlob(res, 'image/png'));
-    if (blob) {
-      wmImageData = await blob.arrayBuffer();
-      if (wmImagePreviewUrl) URL.revokeObjectURL(wmImagePreviewUrl);
-      wmImagePreviewUrl = URL.createObjectURL(blob);
-      enableWatermark = true;
-      modified = true;
-      showEditedBadge();
-      updateOverlays();
+    if (wmImagePreviewUrl) {
+      card.innerHTML = `
+        <img id="wm-drawn-sig-thumb" src="${wmImagePreviewUrl}" style="max-height:80px; max-width:85%; object-fit:contain" alt="Drawn Signature" />
+        <div style="position:absolute; top:6px; right:6px; display:flex; gap:4px">
+          <button type="button" class="btn btn-ghost btn-sm" id="btn-reopen-sig" style="padding:2px 8px; font-size:11px; background:rgba(255,255,255,0.9); box-shadow:var(--shadow-xs)">
+            ${icon('edit', 12)} Edit
+          </button>
+          <button type="button" class="btn btn-ghost btn-sm" id="btn-clear-sig-preview" style="padding:2px 8px; font-size:11px; color:var(--color-danger); background:rgba(255,255,255,0.9); box-shadow:var(--shadow-xs)">
+            Clear
+          </button>
+        </div>
+      `;
+      card.querySelector('#btn-reopen-sig')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        openDrawSignatureStudio();
+      });
+      card.querySelector('#btn-clear-sig-preview')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        clearDrawnSignature();
+      });
+    } else {
+      card.innerHTML = `
+        <div style="display:flex; flex-direction:column; align-items:center; text-align:center; gap:4px; padding:10px 0">
+          <span style="font-size:24px">✍️</span>
+          <span style="font-size:12px; font-weight:600; color:var(--color-accent)">Click here to draw signature in full window</span>
+          <span style="font-size:11px; color:var(--color-text-tertiary)">Pen styles, ink colors, undo/redo & high-definition smoothing</span>
+        </div>
+      `;
     }
   }
 
-  // --- CANVAS RENDERING WITH INSTANT BITMAP CACHE ---
+  function clearDrawnSignature() {
+    if (wmImagePreviewUrl) URL.revokeObjectURL(wmImagePreviewUrl);
+    wmImagePreviewUrl = null;
+    wmImageData = null;
+    updateWatermarkPreviewCard();
+    updateOverlays();
+  }
+
+  // --- FULL-PAGE FIT & ZOOM ENGINE (DYNAMIC PDF SIZING) ---
+
+  async function fitPageToViewport(mode = 'fit-width') {
+    if (!pdfDoc) return;
+    const viewportEl = container.querySelector('#preview-viewport');
+    const worksiteEl = container.querySelector('#pages-worksite');
+    if (!viewportEl) return;
+
+    try {
+      const page = await pdfDoc.getPage(activePage);
+      const baseViewport = page.getViewport({ scale: 1, rotation: rotations[activePage] || 0 });
+
+      // Measure layout dimensions directly within the preview viewport container
+      const vW = (viewportEl.clientWidth > 80) 
+        ? viewportEl.clientWidth 
+        : ((worksiteEl ? worksiteEl.clientWidth : window.innerWidth) - 48);
+      const maxAvailableW = Math.max(200, vW - 32);
+
+      const vH = (viewportEl.clientHeight > 80)
+        ? viewportEl.clientHeight
+        : Math.min(850, window.innerHeight - 240);
+      const maxAvailableH = Math.max(260, vH - 32);
+
+      if (mode === 'fit-width') {
+        // Naturally scale the PDF so it fills the available viewport width nicely
+        const targetW = Math.min(maxAvailableW, Math.max(260, Math.min(780, maxAvailableW)));
+        previewZoom = Math.max(0.25, Math.min(2.5, +(targetW / baseViewport.width).toFixed(2)));
+      } else if (mode === 'zoom-100') {
+        previewZoom = 1.0;
+      } else {
+        // Fit both width and height inside the viewport
+        const scaleW = maxAvailableW / baseViewport.width;
+        const scaleH = maxAvailableH / baseViewport.height;
+        previewZoom = Math.max(0.25, Math.min(2.5, +(Math.min(scaleW, scaleH)).toFixed(2)));
+      }
+
+      const zoomLabel = container.querySelector('#zoom-label');
+      if (zoomLabel) zoomLabel.textContent = `${Math.round(previewZoom * 100)}%`;
+
+      container.querySelector('#btn-fit-width')?.classList.toggle('active', mode === 'fit-width');
+      container.querySelector('#btn-fit-page')?.classList.toggle('active', mode === 'fit-page');
+      container.querySelector('#btn-zoom-100')?.classList.toggle('active', mode === 'zoom-100');
+
+      renderPreviewCanvas();
+    } catch (e) {
+      console.warn('fitPageToViewport error:', e);
+    }
+  }
+
+  // Helper: dynamically adjust workspace preview width to the PDF size
+  function updateWorkspaceBoxSizing(canvas) {
+    if (!canvas) return;
+    const worksiteEl = container.querySelector('#pages-worksite');
+    const previewBox = container.querySelector('#worksite-preview-box');
+    const editorBox = container.querySelector('#worksite-editor-box');
+    if (!previewBox || !editorBox) return;
+
+    if (editorLayoutMode === 'bottom') {
+      const cssW = parseFloat(canvas.style.width) || canvas.width || 600;
+      const maxAvailableW = worksiteEl ? (worksiteEl.clientWidth || window.innerWidth) : window.innerWidth;
+
+      // Snugly fit ONLY the preview card to the PDF canvas width + header padding (e.g. 36px)
+      // so the preview wraps the PDF cleanly, while the tools section stays full width
+      const idealCardW = Math.min(maxAvailableW, Math.max(320, Math.round(cssW + 36)));
+      previewBox.style.maxWidth = `${idealCardW}px`;
+      previewBox.style.width = '100%';
+      previewBox.style.margin = '0 auto';
+
+      // Tools / workbench box strictly remains full width for spacious controls!
+      editorBox.style.maxWidth = '100%';
+      editorBox.style.width = '100%';
+    } else {
+      // In Side mode: preview box takes full column width, canvas is dead-centered
+      previewBox.style.maxWidth = '100%';
+      previewBox.style.width = '100%';
+      previewBox.style.margin = '0 auto';
+      editorBox.style.maxWidth = '100%';
+      editorBox.style.width = '100%';
+    }
+  }
+
+  // --- CANVAS RENDERING WITH HIGH-DPI RETINA & BITMAP CACHE ---
 
   async function renderPreviewCanvas() {
     const canvas = container.querySelector('#main-preview-canvas');
     const loading = container.querySelector('#preview-loading-indicator');
     if (!canvas || !pdfDoc) return;
 
-    const cacheKey = `${activePage}_${rotations[activePage] || 0}_${previewZoom}`;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    const cacheKey = `${activePage}_${rotations[activePage] || 0}_${previewZoom}_${dpr}`;
 
     // Instant render from cache (<1ms)
     if (pageRenderCache.has(cacheKey)) {
       const cached = pageRenderCache.get(cacheKey);
       canvas.width = cached.width;
       canvas.height = cached.height;
+      canvas.style.width = cached.style.width;
+      canvas.style.height = cached.style.height;
       const ctx = canvas.getContext('2d');
       ctx.drawImage(cached, 0, 0);
+      updateWorkspaceBoxSizing(canvas);
       updateOverlays();
       return;
     }
@@ -1513,7 +1702,8 @@ export function renderPages(container, options = {}) {
     try {
       const renderedCanvas = await renderPageToCanvas(pdfDoc, activePage, {
         scale: previewZoom,
-        rotation: rotations[activePage] || 0
+        rotation: rotations[activePage] || 0,
+        dpr: dpr
       }, canvas);
 
       // Save bitmap in cache
@@ -1521,9 +1711,12 @@ export function renderPages(container, options = {}) {
         const offscreen = document.createElement('canvas');
         offscreen.width = renderedCanvas.width;
         offscreen.height = renderedCanvas.height;
+        offscreen.style.width = renderedCanvas.style.width;
+        offscreen.style.height = renderedCanvas.style.height;
         offscreen.getContext('2d').drawImage(renderedCanvas, 0, 0);
         pageRenderCache.set(cacheKey, offscreen);
       }
+      updateWorkspaceBoxSizing(canvas);
     } catch (err) {
       console.warn('Canvas render error:', err);
     } finally {
@@ -1604,31 +1797,6 @@ export function renderPages(container, options = {}) {
     });
   }
 
-  function switchTab(tabId) {
-    if (!tabId) return;
-    activeTab = tabId;
-    container.querySelectorAll('.editor-tab-pill').forEach(b => {
-      const isCur = b.getAttribute('data-tab') === tabId;
-      b.classList.toggle('editor-tab-pill--active', isCur);
-    });
-
-    const panels = ['watermark', 'crop', 'organize', 'numbers', 'protect'];
-    panels.forEach(id => {
-      const p = container.querySelector(`#tab-panel-${id}`);
-      if (p) p.style.display = (id === tabId) ? 'block' : 'none';
-    });
-
-    if (tabId === 'organize') {
-      renderOrganizeThumbnails();
-    } else if (tabId === 'crop') {
-      syncCropInputValues();
-    } else if (tabId === 'watermark' && wmType === 'draw') {
-      setTimeout(initSignaturePad, 50);
-    }
-
-    updateOverlays();
-  }
-
   // --- EVENT BINDINGS ---
 
   function bindAllEvents() {
@@ -1651,7 +1819,14 @@ export function renderPages(container, options = {}) {
       });
     }
 
-    // Tabs switching
+    // Top Workbench Category Bar switching
+    container.querySelectorAll('.workbench-cat-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        switchTab(btn.getAttribute('data-tab'));
+      });
+    });
+
+    // Pill tabs switching
     container.querySelectorAll('.editor-tab-pill').forEach(btn => {
       btn.addEventListener('click', () => {
         switchTab(btn.getAttribute('data-tab'));
@@ -1671,10 +1846,54 @@ export function renderPages(container, options = {}) {
         switchTab(isOrganize ? 'watermark' : 'organize');
         const gridLabel = container.querySelector('#toggle-grid-label');
         if (gridLabel) gridLabel.textContent = isOrganize ? 'Full Page Grid' : 'Hide Grid';
-        const bottomSec = container.querySelector('#worksite-bottom-editor');
+        const bottomSec = container.querySelector('#worksite-editor-box') || container.querySelector('#worksite-bottom-editor');
         if (bottomSec) {
           bottomSec.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
         }
+      });
+    }
+
+    // Adjustable Layout Toggle (Side vs Bottom)
+    container.querySelector('#btn-toggle-layout')?.addEventListener('click', () => {
+      editorLayoutMode = editorLayoutMode === 'side' ? 'bottom' : 'side';
+      try {
+        localStorage.setItem('pdf_editor_layout_mode_v2', editorLayoutMode);
+      } catch (e) {}
+
+      const splitEl = container.querySelector('#editor-workspace-split');
+      const btn = container.querySelector('#btn-toggle-layout');
+      const lbl = container.querySelector('#layout-toggle-label');
+      if (splitEl) {
+        splitEl.className = `editor-workspace-split ${editorLayoutMode === 'side' ? 'editor-workspace-split--side' : 'editor-workspace-split--bottom'}`;
+      }
+      if (lbl) {
+        lbl.textContent = editorLayoutMode === 'side' ? 'Move to Bottom' : 'Move to Side';
+      }
+      if (btn) {
+        btn.classList.toggle('active', editorLayoutMode === 'side');
+      }
+
+      // Re-fit immediately and after layout transition completes
+      fitPageToViewport(editorLayoutMode === 'side' ? 'fit-page' : 'fit-width');
+      setTimeout(() => {
+        fitPageToViewport(editorLayoutMode === 'side' ? 'fit-page' : 'fit-width');
+      }, 100);
+      setTimeout(() => {
+        fitPageToViewport(editorLayoutMode === 'side' ? 'fit-page' : 'fit-width');
+      }, 250);
+    });
+
+    // Window Resize listener for real-time centering
+    if (!window._pdfPagesResizeBound) {
+      window._pdfPagesResizeBound = true;
+      window.addEventListener('resize', () => {
+        clearTimeout(window._pdfPagesResizeTimer);
+        window._pdfPagesResizeTimer = setTimeout(() => {
+          const v = container.querySelector('#preview-viewport');
+          if (v && v.clientWidth > 50) {
+            fitPageToViewport(editorLayoutMode === 'side' ? 'fit-page' : 'fit-width');
+          }
+        }, 150);
       });
     }
 
@@ -1687,19 +1906,75 @@ export function renderPages(container, options = {}) {
       setActivePage(activePage + 1);
     });
 
-    // Zoom controls
+    // Full-Page Fit and Zoom controls
+    container.querySelector('#btn-fit-width')?.addEventListener('click', () => {
+      fitPageToViewport('fit-width');
+    });
+
+    container.querySelector('#btn-fit-page')?.addEventListener('click', () => {
+      fitPageToViewport('fit-page');
+    });
+
+    container.querySelector('#btn-zoom-100')?.addEventListener('click', () => {
+      fitPageToViewport('zoom-100');
+    });
+
     container.querySelector('#zoom-in-btn')?.addEventListener('click', () => {
-      previewZoom = Math.min(2.0, previewZoom + 0.2);
+      previewZoom = Math.min(2.5, +(previewZoom + 0.15).toFixed(2));
       const lbl = container.querySelector('#zoom-label');
       if (lbl) lbl.textContent = `${Math.round(previewZoom * 100)}%`;
+      container.querySelector('#btn-fit-page')?.classList.remove('active');
+      container.querySelector('#btn-fit-width')?.classList.remove('active');
+      container.querySelector('#btn-zoom-100')?.classList.remove('active');
       renderPreviewCanvas();
     });
 
     container.querySelector('#zoom-out-btn')?.addEventListener('click', () => {
-      previewZoom = Math.max(0.6, previewZoom - 0.2);
+      previewZoom = Math.max(0.3, +(previewZoom - 0.15).toFixed(2));
       const lbl = container.querySelector('#zoom-label');
       if (lbl) lbl.textContent = `${Math.round(previewZoom * 100)}%`;
+      container.querySelector('#btn-fit-page')?.classList.remove('active');
+      container.querySelector('#btn-fit-width')?.classList.remove('active');
+      container.querySelector('#btn-zoom-100')?.classList.remove('active');
       renderPreviewCanvas();
+    });
+
+    // Signature Studio Popup triggers
+    container.querySelector('#btn-open-sig-modal')?.addEventListener('click', () => {
+      openDrawSignatureStudio();
+    });
+
+    const sigCard = container.querySelector('#wm-sig-preview-card');
+    if (sigCard) {
+      sigCard.addEventListener('click', (e) => {
+        if (e.target.closest('#btn-reopen-sig') || e.target.closest('#btn-clear-sig-preview')) return;
+        openDrawSignatureStudio();
+      });
+    }
+
+    container.querySelector('#btn-reopen-sig')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      openDrawSignatureStudio();
+    });
+
+    container.querySelector('#btn-clear-sig-preview')?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      clearDrawnSignature();
+    });
+
+    // Window resize handler to maintain preview fit
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        const fitBtn = container.querySelector('#btn-fit-page');
+        const fitWBtn = container.querySelector('#btn-fit-width');
+        if (fitBtn && fitBtn.classList.contains('active')) {
+          fitPageToViewport('fit-page');
+        } else if (fitWBtn && fitWBtn.classList.contains('active')) {
+          fitPageToViewport('fit-width');
+        }
+      }, 100);
     });
 
     // Header exclusion button
@@ -1763,34 +2038,8 @@ export function renderPages(container, options = {}) {
       if (imgBox) imgBox.style.display = wmType === 'image' ? 'block' : 'none';
       if (txtBox) txtBox.style.display = wmType === 'text' ? 'block' : 'none';
 
-      if (wmType === 'draw') initSignaturePad();
       updateOverlays();
     };
-
-    // Drawing Ink Colors
-    container.querySelectorAll('.ink-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        wmInkColor = btn.getAttribute('data-color');
-        container.querySelectorAll('.ink-btn').forEach(b => {
-          b.style.borderColor = b.getAttribute('data-color') === wmInkColor ? '#000' : 'transparent';
-        });
-        const pad = container.querySelector('#sig-pad');
-        if (pad) {
-          const ctx = pad.getContext('2d');
-          ctx.strokeStyle = wmInkColor;
-        }
-      });
-    });
-
-    container.querySelector('#btn-clear-sig')?.addEventListener('click', () => {
-      const pad = container.querySelector('#sig-pad');
-      if (pad) {
-        pad.getContext('2d').clearRect(0, 0, pad.width, pad.height);
-        wmImageData = null;
-        wmImagePreviewUrl = null;
-        updateOverlays();
-      }
-    });
 
     // Image upload
     const wmFileInput = container.querySelector('#wm-img-input');
@@ -2002,7 +2251,31 @@ export function renderPages(container, options = {}) {
       updateOverlays();
     });
 
-    // PASSWORD PROTECT
+    // PASSWORD LOCK & UNLOCK SUB-MODES
+    container.querySelector('#protect-submode-lock')?.addEventListener('click', () => {
+      protectSubMode = 'lock';
+      const lockBox = container.querySelector('#protect-box-lock');
+      const unlockBox = container.querySelector('#protect-box-unlock');
+      const btnLock = container.querySelector('#protect-submode-lock');
+      const btnUnlock = container.querySelector('#protect-submode-unlock');
+      if (lockBox) lockBox.style.display = 'grid';
+      if (unlockBox) unlockBox.style.display = 'none';
+      if (btnLock) btnLock.classList.add('active');
+      if (btnUnlock) btnUnlock.classList.remove('active');
+    });
+
+    container.querySelector('#protect-submode-unlock')?.addEventListener('click', () => {
+      protectSubMode = 'unlock';
+      const lockBox = container.querySelector('#protect-box-lock');
+      const unlockBox = container.querySelector('#protect-box-unlock');
+      const btnLock = container.querySelector('#protect-submode-lock');
+      const btnUnlock = container.querySelector('#protect-submode-unlock');
+      if (lockBox) lockBox.style.display = 'none';
+      if (unlockBox) unlockBox.style.display = 'grid';
+      if (btnLock) btnLock.classList.remove('active');
+      if (btnUnlock) btnUnlock.classList.add('active');
+    });
+
     container.querySelector('#protect-pass-val')?.addEventListener('input', (e) => {
       protectPassword = e.target.value;
       modified = true;
@@ -2013,8 +2286,100 @@ export function renderPages(container, options = {}) {
       modified = true;
     });
 
+    container.querySelector('#unlock-pass-val')?.addEventListener('input', (e) => {
+      unlockPassword = e.target.value;
+    });
+
+    container.querySelector('#btn-unlock-pdf')?.addEventListener('click', handleUnlock);
+
     // SAVE & EXPORT
     container.querySelector('#pm-save-btn')?.addEventListener('click', handleSave);
+  }
+
+  // --- UNLOCK / DECRYPT ACTION ---
+
+  async function handleUnlock() {
+    const unlockBtn = container.querySelector('#btn-unlock-pdf');
+    const feedback = container.querySelector('#unlock-status-feedback');
+    if (!pdfBuffer) {
+      if (feedback) {
+        feedback.style.display = 'block';
+        feedback.style.background = 'rgba(239, 68, 68, 0.1)';
+        feedback.style.color = 'var(--color-danger)';
+        feedback.innerHTML = `${icon('alertCircle', 14)} <span>Please upload a PDF document first.</span>`;
+      }
+      return;
+    }
+
+    if (unlockBtn) {
+      unlockBtn.disabled = true;
+      unlockBtn.innerHTML = `${icon('loader', 14)} Decrypting Document...`;
+    }
+    if (feedback) {
+      feedback.style.display = 'none';
+    }
+
+    try {
+      const decryptedBytes = await unlockPDF(pdfBuffer, unlockPassword);
+
+      // Download the clean unlocked PDF
+      const baseName = file && file.name ? getBasename(file.name) : 'document';
+      const outName = `${baseName}_unlocked.pdf`;
+      downloadArrayBuffer(decryptedBytes, outName, 'application/pdf');
+
+      // Update in-memory state to the decrypted document so user can continue editing cleanly!
+      pdfBuffer = decryptedBytes.slice(0);
+      pdfDoc = await loadPDFDocument(pdfBuffer);
+      pageCount = pdfDoc.numPages;
+      pageOrder = Array.from({ length: pageCount }, (_, i) => i + 1);
+      rotations = {};
+      deletedPages.clear();
+      pageRenderCache.clear();
+      thumbCache.clear();
+      isDocEncrypted = false;
+      protectPassword = '';
+      protectConfirm = '';
+      unlockPassword = '';
+
+      if (feedback) {
+        feedback.style.display = 'block';
+        feedback.style.background = 'rgba(16, 185, 129, 0.1)';
+        feedback.style.color = '#10b981';
+        feedback.innerHTML = `${icon('check', 14)} <strong>Document Unlocked!</strong> Permanent unencrypted copy downloaded and active in editor.`;
+      }
+
+      const statusBadge = container.querySelector('#protect-doc-status-badge');
+      if (statusBadge) {
+        statusBadge.style.background = 'rgba(16, 185, 129, 0.1)';
+        statusBadge.style.color = '#10b981';
+        statusBadge.textContent = '🔓 Document Currently Unlocked';
+      }
+
+      const passInput = container.querySelector('#unlock-pass-val');
+      if (passInput) passInput.value = '';
+
+      if (unlockBtn) {
+        unlockBtn.disabled = false;
+        unlockBtn.innerHTML = `${icon('check', 14)} Decrypted & Downloaded!`;
+        setTimeout(() => {
+          if (unlockBtn) unlockBtn.innerHTML = `${icon('unlock', 14)} Decrypt & Remove Password`;
+        }, 3000);
+      }
+
+      // Re-render UI & Canvas with decrypted document
+      renderInitialShell();
+    } catch (err) {
+      if (feedback) {
+        feedback.style.display = 'block';
+        feedback.style.background = 'rgba(239, 68, 68, 0.1)';
+        feedback.style.color = 'var(--color-danger)';
+        feedback.innerHTML = `${icon('alertCircle', 14)} <span>${err.message || 'Decryption failed. Please verify password.'}</span>`;
+      }
+      if (unlockBtn) {
+        unlockBtn.disabled = false;
+        unlockBtn.innerHTML = `${icon('unlock', 14)} Decrypt & Remove Password`;
+      }
+    }
   }
 
   // --- FILE HANDLING ---
@@ -2029,7 +2394,26 @@ export function renderPages(container, options = {}) {
 
       file = f;
       pdfBuffer = await readFileAsArrayBuffer(f);
-      pdfDoc = await loadPDFDocument(pdfBuffer);
+
+      // Check encryption status
+      const encrypted = await isPDFEncrypted(pdfBuffer);
+      isDocEncrypted = encrypted;
+
+      try {
+        pdfDoc = await loadPDFDocument(pdfBuffer);
+      } catch (docErr) {
+        const msg = (docErr.message || '').toLowerCase();
+        if (msg.includes('password') || docErr.name === 'PasswordException' || docErr.code === 1) {
+          isDocEncrypted = true;
+          protectSubMode = 'unlock';
+          activeTab = 'protect';
+          renderInitialShell();
+          showError('This PDF is password-protected. Enter the password under "Password Lock → Unlock PDF" below to decrypt and edit.');
+          return;
+        }
+        throw docErr;
+      }
+
       pageCount = pdfDoc.numPages;
       activePage = 1;
       pageOrder = Array.from({ length: pageCount }, (_, i) => i + 1);
@@ -2122,8 +2506,8 @@ export function renderPages(container, options = {}) {
         });
       }
 
-      // 5. Apply Password Protection ONLY if specified
-      if (protectPassword && protectPassword.trim().length > 0) {
+      // 5. Apply Password Protection ONLY if specified in Lock mode
+      if (protectSubMode === 'lock' && protectPassword && protectPassword.trim().length > 0) {
         if (protectPassword !== protectConfirm) {
           throw new Error('Passwords do not match. Please verify password and confirmation.');
         }
