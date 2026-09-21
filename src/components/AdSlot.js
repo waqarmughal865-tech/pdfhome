@@ -88,17 +88,42 @@ export function renderAdSlot(type = 'banner', slotKey = 'workspaceBottom') {
 }
 
 /**
- * Safely push AdSense requests after DOM updates.
+ * Safely push AdSense requests after DOM updates and handle unfilled status.
  */
 export function refreshAds() {
   if (typeof window === 'undefined') return;
   try {
     const uninitialized = document.querySelectorAll('ins.adsbygoogle:not([data-adsbygoogle-status])');
     if (uninitialized.length > 0) {
-      uninitialized.forEach(() => {
+      uninitialized.forEach((ins) => {
         try {
           (window.adsbygoogle = window.adsbygoogle || []).push({});
         } catch (e) {}
+
+        try {
+          const parent = ins.closest('.ad-container');
+          const checkStatus = () => {
+            const status = ins.getAttribute('data-ad-status');
+            if (status === 'unfilled') {
+              if (parent) {
+                parent.classList.add('ad-container--unfilled');
+                parent.style.display = 'none';
+              }
+            } else if (status === 'filled' || ins.querySelector('iframe')) {
+              if (parent) {
+                const label = parent.querySelector('.ad-label');
+                if (label) label.style.display = 'block';
+              }
+            }
+          };
+
+          // Check immediately and via MutationObserver
+          checkStatus();
+          const observer = new MutationObserver(() => {
+            checkStatus();
+          });
+          observer.observe(ins, { attributes: true, attributeFilter: ['data-ad-status'], childList: true });
+        } catch (_) {}
       });
     }
   } catch (e) {}

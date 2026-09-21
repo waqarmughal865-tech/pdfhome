@@ -229,11 +229,6 @@ function buildHomeContentHtml() {
           <span id="home-stats-text"></span>
           <button class="btn btn-ghost btn-sm" id="btn-stats-clear" style="font-size:11px">Reset filter</button>
         </div>
-
-        <!-- AdSlot -->
-        <div style="margin-top:var(--space-6)">
-          ${renderAdSlot('leaderboard', 'homeBanner')}
-        </div>
       </div>
 
       <!-- Tools Grid -->

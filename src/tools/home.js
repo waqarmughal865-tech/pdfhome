@@ -334,11 +334,6 @@ export function renderHome(container) {
           <span id="home-stats-text"></span>
           <button class="btn btn-ghost btn-sm" id="btn-stats-clear" style="font-size:11px">Reset filter</button>
         </div>
-
-        <!-- AdSense / Engagement Leaderboard Slot -->
-        <div style="margin-top:var(--space-6)">
-          ${renderAdSlot('leaderboard', 'homeBanner')}
-        </div>
       </div>
 
       <!-- Tools Grid -->

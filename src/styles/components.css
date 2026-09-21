@@ -1012,46 +1012,51 @@
   position: relative;
   text-align: center;
   border-radius: var(--radius-lg);
-  overflow: hidden;
-  transition: all var(--transition-base);
   clear: both;
 }
 
 .ad-container--leaderboard {
   max-width: 970px;
-  min-height: 90px;
 }
 
 .ad-container--rectangle {
   max-width: 336px;
-  min-height: 250px;
 }
 
 .ad-container--banner {
   max-width: 728px;
-  min-height: 90px;
 }
 
+/* Zero white box, zero borders, zero ghost placeholders */
 .ad-container ins.adsbygoogle {
-  background: var(--color-bg-secondary);
-  border-radius: var(--radius-lg);
-  border: 1px solid var(--color-border);
-  min-height: 90px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03);
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 
-.ad-container ins.adsbygoogle[data-ad-status="unfilled"] {
+/* When Google AdSense marks as unfilled, hide the ENTIRE container & label completely */
+.ad-container:has(ins.adsbygoogle[data-ad-status="unfilled"]),
+.ad-container.ad-container--unfilled {
   display: none !important;
+  margin: 0 !important;
+  height: 0 !important;
+  padding: 0 !important;
 }
 
-.ad-label {
-  display: block;
+/* Only display the advertisement label if the ad is actually filled with an iframe */
+.ad-container .ad-label {
+  display: none;
   font-size: 10px;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--color-text-tertiary);
   margin-bottom: 6px;
+}
+
+.ad-container:has(iframe) .ad-label,
+.ad-container:has(ins[data-ad-status="filled"]) .ad-label {
+  display: block;
 }
 
 /* Fallback Card: Pro-Tip & Feature Spotlight */
