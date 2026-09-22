@@ -65,9 +65,9 @@ export async function pdfToExcel(pdfBuffer, onProgress) {
 
     if (items.length === 0) continue;
 
-    // Group items into rows by vertical Y position (within 5pt tolerance)
+    // 1. Group items into physical rows by baseline Y (tolerance: 4.5pt)
     const sorted = [...items].sort((a, b) => b.transform[5] - a.transform[5]);
-    const rowBuckets = [];
+    const rawRowBuckets = [];
     let curBucket = [];
     let curY = null;
 
@@ -76,47 +76,133 @@ export async function pdfToExcel(pdfBuffer, onProgress) {
       if (!text) continue;
 
       const y = item.transform[5];
-      if (curY === null || Math.abs(curY - y) <= 5) {
+      if (curY === null || Math.abs(curY - y) <= 4.5) {
         curBucket.push(item);
         if (curY === null) curY = y;
       } else {
-        if (curBucket.length > 0) rowBuckets.push(curBucket);
+        if (curBucket.length > 0) rawRowBuckets.push(curBucket);
         curBucket = [item];
         curY = y;
       }
     }
-    if (curBucket.length > 0) rowBuckets.push(curBucket);
+    if (curBucket.length > 0) rawRowBuckets.push(curBucket);
 
-    // Within each row, sort cells by horizontal X position and cluster words of the same column
-    for (const bucket of rowBuckets) {
+    // 2. In each row, merge horizontally adjacent text fragments (gap <= 10pt) into cell fragments
+    const pageRowsWithCells = [];
+    const allCellStarts = [];
+
+    for (const bucket of rawRowBuckets) {
       bucket.sort((a, b) => a.transform[4] - b.transform[4]);
 
-      const mergedCells = [];
-      let curCellText = '';
-      let prevEndX = null;
+      const cellFragments = [];
+      let curFragment = null;
 
       for (const it of bucket) {
         const str = (it.str || '').trim();
         if (!str) continue;
+
         const startX = it.transform[4];
         const approxWidth = it.width || (str.length * 6);
         const endX = startX + approxWidth;
 
-        // If horizontal gap between items is > 15pt, it's a distinct table column
-        if (prevEndX !== null && (startX - prevEndX) > 15) {
-          if (curCellText) mergedCells.push(curCellText);
-          curCellText = str;
+        if (!curFragment) {
+          curFragment = { startX, endX, text: str };
+        } else if ((startX - curFragment.endX) <= 10) {
+          curFragment.text += ' ' + str;
+          curFragment.endX = Math.max(curFragment.endX, endX);
         } else {
-          // Close proximity -> same table column / phrase
-          curCellText = curCellText ? `${curCellText} ${str}` : str;
+          cellFragments.push(curFragment);
+          allCellStarts.push(curFragment.startX);
+          curFragment = { startX, endX, text: str };
         }
-        prevEndX = endX;
       }
-      if (curCellText) mergedCells.push(curCellText);
+      if (curFragment) {
+        cellFragments.push(curFragment);
+        allCellStarts.push(curFragment.startX);
+      }
 
-      if (mergedCells.length > 0) {
-        rows.push(mergedCells);
+      if (cellFragments.length > 0) {
+        pageRowsWithCells.push(cellFragments);
       }
+    }
+
+    if (pageRowsWithCells.length === 0) continue;
+
+    // 3. Cluster allCellStarts across the page to establish global column boundaries
+    allCellStarts.sort((a, b) => a - b);
+    const colClusters = [];
+
+    for (const x of allCellStarts) {
+      const matchingCluster = colClusters.find(c => Math.abs(c.center - x) <= 24);
+      if (matchingCluster) {
+        matchingCluster.points.push(x);
+        matchingCluster.minX = Math.min(matchingCluster.minX, x);
+        matchingCluster.maxX = Math.max(matchingCluster.maxX, x);
+        matchingCluster.center = matchingCluster.points.reduce((s, v) => s + v, 0) / matchingCluster.points.length;
+      } else {
+        colClusters.push({
+          points: [x],
+          minX: x,
+          maxX: x,
+          center: x
+        });
+      }
+    }
+
+    colClusters.sort((a, b) => a.center - b.center);
+
+    // Merge adjacent clusters that are too close (< 18pt apart)
+    const mergedClusters = [];
+    for (const cl of colClusters) {
+      if (mergedClusters.length === 0) {
+        mergedClusters.push(cl);
+      } else {
+        const last = mergedClusters[mergedClusters.length - 1];
+        if (cl.center - last.center < 18) {
+          last.points.push(...cl.points);
+          last.minX = Math.min(last.minX, cl.minX);
+          last.maxX = Math.max(last.maxX, cl.maxX);
+          last.center = last.points.reduce((s, v) => s + v, 0) / last.points.length;
+        } else {
+          mergedClusters.push(cl);
+        }
+      }
+    }
+
+    const numCols = Math.max(1, mergedClusters.length);
+
+    // 4. Map each row's cells into the canonical global column indices
+    for (const rowCells of pageRowsWithCells) {
+      const mappedRow = new Array(numCols).fill('');
+
+      for (const cell of rowCells) {
+        let bestColIdx = 0;
+        let minDistance = Infinity;
+
+        for (let cIdx = 0; cIdx < numCols; cIdx++) {
+          const cluster = mergedClusters[cIdx];
+          const dist = Math.abs(cell.startX - cluster.center);
+          if (dist < minDistance) {
+            minDistance = dist;
+            bestColIdx = cIdx;
+          }
+        }
+
+        if (mappedRow[bestColIdx]) {
+          mappedRow[bestColIdx] += ' ' + cell.text;
+        } else {
+          mappedRow[bestColIdx] = cell.text;
+        }
+      }
+
+      if (mappedRow.some(c => c && c.trim())) {
+        rows.push(mappedRow);
+      }
+    }
+
+    // Add empty row separator between distinct pages if multi-page
+    if (p < total && rows.length > 0) {
+      rows.push(new Array(numCols).fill(''));
     }
   }
 
@@ -150,14 +236,28 @@ export async function pdfToExcel(pdfBuffer, onProgress) {
 
       if (!cleanRaw) continue;
 
-      // Check if pure numeric (integers or decimals)
-      const isPureNum = /^-?\d+(\.\d+)?$/.test(cleanRaw) &&
-                        isFinite(Number(cleanRaw)) &&
-                        cleanRaw.length <= 15 &&
-                        !(cleanRaw.length > 1 && cleanRaw.startsWith('0') && !cleanRaw.startsWith('0.'));
+      // Check if numeric / financial data
+      let isNumeric = false;
+      let numericVal = null;
 
-      if (isPureNum) {
-        rowXml += `<c r="${cellRef}"><v>${cleanRaw}</v></c>`;
+      const cleanMoney = cleanRaw.replace(/[$€£¥₹\s]/g, '');
+      if (/^\(?-?\d{1,3}(,\d{3})*(\.\d+)?\)?$/.test(cleanMoney) || /^-?\d+(\.\d+)?$/.test(cleanMoney)) {
+        let parseTarget = cleanMoney;
+        let isNegative = false;
+        if (parseTarget.startsWith('(') && parseTarget.endsWith(')')) {
+          isNegative = true;
+          parseTarget = parseTarget.slice(1, -1);
+        }
+        parseTarget = parseTarget.replace(/,/g, '');
+        const n = parseFloat(parseTarget);
+        if (isFinite(n) && parseTarget.length <= 15) {
+          isNumeric = true;
+          numericVal = isNegative ? -n : n;
+        }
+      }
+
+      if (isNumeric && numericVal !== null) {
+        rowXml += `<c r="${cellRef}"><v>${numericVal}</v></c>`;
         rowHasCells = true;
       } else {
         // Enforce Excel cell character limit (32,767 chars)
@@ -177,14 +277,33 @@ export async function pdfToExcel(pdfBuffer, onProgress) {
   const lastColLetter = getColLetter(maxColIdx);
   const dimensionRef = rows.length > 0 ? `A1:${lastColLetter}${rows.length}` : 'A1';
 
+  // Calculate optimal column widths based on maximum content length
+  const colWidths = [];
+  for (let c = 0; c <= maxColIdx; c++) {
+    let maxLen = 8;
+    for (const r of rows) {
+      if (r && r[c]) {
+        maxLen = Math.max(maxLen, String(r[c]).length);
+      }
+    }
+    colWidths.push(Math.min(50, Math.max(10, Math.round(maxLen * 1.2) + 2)));
+  }
+
+  const colsXml = colWidths.map((w, idx) =>
+    `    <col min="${idx + 1}" max="${idx + 1}" width="${w}" customWidth="1"/>`
+  ).join('\n');
+
   const sheetXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"
            xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
   <dimension ref="${dimensionRef}"/>
   <sheetViews>
-    <sheetView tabSelected="1" workbookViewId="0"/>
+    <sheetView tabSelected="1" workbookViewId="0" showGridLines="1"/>
   </sheetViews>
-  <sheetFormatPr defaultRowHeight="15"/>
+  <sheetFormatPr defaultRowHeight="16"/>
+  <cols>
+${colsXml}
+  </cols>
   <sheetData>
 ${sheetDataXml}  </sheetData>
 </worksheet>`;

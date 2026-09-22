@@ -19,10 +19,15 @@ export async function pdfToSlides(pdfBytes, onProgress = () => {}) {
 
   const zip = new JSZip();
 
-  // PPTX Presentation Size (Standard 16:9 Widescreen: 12192000 x 6858000 EMUs)
-  // 1 inch = 914400 EMUs, 1 pt = 12700 EMUs
-  const slideWidthEMU = 12192000;
-  const slideHeightEMU = 6858000;
+  // Determine slide dimensions directly from the PDF page geometry
+  // 1 pt = 12700 EMUs
+  const firstPage = await pdfDoc.getPage(1);
+  const baseViewport = firstPage.getViewport({ scale: 1.0 });
+  const docPageWidthPt = baseViewport.width || 595.28;
+  const docPageHeightPt = baseViewport.height || 841.89;
+
+  const slideWidthEMU = Math.round(docPageWidthPt * 12700);
+  const slideHeightEMU = Math.round(docPageHeightPt * 12700);
 
   // 1. [Content_Types].xml
   let contentTypesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -70,7 +75,7 @@ export async function pdfToSlides(pdfBytes, onProgress = () => {}) {
   </p:sldMasterIdLst>
   <p:sldIdLst>${sldIdLstXml}
   </p:sldIdLst>
-  <p:sldSz cx="${slideWidthEMU}" cy="${slideHeightEMU}" type="screen16x9"/>
+  <p:sldSz cx="${slideWidthEMU}" cy="${slideHeightEMU}" type="custom"/>
   <p:notesSz cx="${slideHeightEMU}" cy="${slideWidthEMU}"/>
 </p:presentation>`;
   zip.file('ppt/presentation.xml', presentationXml);
@@ -125,8 +130,8 @@ export async function pdfToSlides(pdfBytes, onProgress = () => {}) {
     onProgress(pct, `Generating slide ${pageNum} of ${numPages}...`);
 
     const page = await pdfDoc.getPage(pageNum);
-    // Render at high resolution (scale 2.0)
-    const viewport = page.getViewport({ scale: 2.0 });
+    // Render at crisp high resolution (scale 2.5)
+    const viewport = page.getViewport({ scale: 2.5 });
     const canvas = document.createElement('canvas');
     canvas.width = Math.floor(viewport.width);
     canvas.height = Math.floor(viewport.height);
@@ -139,26 +144,11 @@ export async function pdfToSlides(pdfBytes, onProgress = () => {}) {
     const imageBuffer = await imageBlob.arrayBuffer();
     zip.file(`ppt/media/image${pageNum}.png`, imageBuffer);
 
-    // Calculate picture dimensions in slide maintaining aspect ratio
-    const pageAspect = viewport.width / viewport.height;
-    const slideAspect = slideWidthEMU / slideHeightEMU;
-
-    let picWidthEMU = slideWidthEMU;
-    let picHeightEMU = slideHeightEMU;
-    let offsetXEMU = 0;
-    let offsetYEMU = 0;
-
-    if (pageAspect > slideAspect) {
-      // Page is wider than slide 16:9
-      picWidthEMU = slideWidthEMU;
-      picHeightEMU = Math.round(slideWidthEMU / pageAspect);
-      offsetYEMU = Math.round((slideHeightEMU - picHeightEMU) / 2);
-    } else {
-      // Page is taller or portrait
-      picHeightEMU = slideHeightEMU;
-      picWidthEMU = Math.round(slideHeightEMU * pageAspect);
-      offsetXEMU = Math.round((slideWidthEMU - picWidthEMU) / 2);
-    }
+    // Exact 1:1 match with slide geometry - zero offset, zero letterboxing
+    const picWidthEMU = slideWidthEMU;
+    const picHeightEMU = slideHeightEMU;
+    const offsetXEMU = 0;
+    const offsetYEMU = 0;
 
     // Individual slide XML with picture element
     const slideXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>

@@ -306,21 +306,37 @@ function setupLinkInterceptor() {
     const link = e.target.closest('a');
     if (!link) return;
 
-    // Check if open contact button or explicit action
-    if (link.hasAttribute('data-open-contact') || link.getAttribute('target') === '_blank') {
+    // NEVER intercept download links, new tab targets, or explicit actions
+    if (
+      link.hasAttribute('download') ||
+      link.hasAttribute('data-open-contact') ||
+      link.getAttribute('target') === '_blank' ||
+      link.getAttribute('rel') === 'external'
+    ) {
       return;
     }
 
     const href = link.getAttribute('href');
     if (!href) return;
 
-    // Ignore external URLs, mailto, tel, javascript
-    if (href.startsWith('http://') || href.startsWith('https://') || href.startsWith('mailto:') || href.startsWith('javascript:')) {
+    // NEVER intercept blob URLs, data URLs, external protocols, or non-internal schemes
+    if (
+      href.startsWith('blob:') ||
+      href.startsWith('data:') ||
+      href.startsWith('http://') ||
+      href.startsWith('https://') ||
+      href.startsWith('//') ||
+      href.startsWith('mailto:') ||
+      href.startsWith('tel:') ||
+      href.startsWith('javascript:')
+    ) {
       return;
     }
 
-    // Ignore hash-only clicks that don't match our routing format
-    if (href.startsWith('#') && !href.startsWith('#/')) {
+    // STRICT: Only intercept genuine internal route paths (e.g. '/merge-pdf' or '#/pdf-to-word')
+    const isInternalPath = href.startsWith('/') && !href.startsWith('//');
+    const isInternalHash = href.startsWith('#/');
+    if (!isInternalPath && !isInternalHash) {
       return;
     }
 

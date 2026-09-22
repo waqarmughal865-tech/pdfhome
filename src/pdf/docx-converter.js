@@ -322,7 +322,9 @@ function parseItemsIntoLines(items, pageHeight, linkAnnotations = []) {
       const itemWidth = item.width || (str.length * 6);
       const itemEndX = itemX + itemWidth;
       const fontSize = Math.round(Math.hypot(item.transform[0], item.transform[1])) || 11;
-      const isBold = (item.fontName || '').toLowerCase().includes('bold') || (item.fontName || '').toLowerCase().includes('f1');
+      const fnLower = (item.fontName || '').toLowerCase();
+      const isBold = fnLower.includes('bold') || fnLower.includes('f1') || fnLower.includes('black') || fnLower.includes('heavy');
+      const isItalic = fnLower.includes('italic') || fnLower.includes('oblique');
 
       let itemLinkUrl = null;
       for (const annot of linkAnnotations) {
@@ -335,6 +337,15 @@ function parseItemsIntoLines(items, pageHeight, linkAnnotations = []) {
         }
       }
 
+      const runObj = {
+        text: str,
+        fontSize,
+        isBold,
+        isItalic,
+        linkUrl: itemLinkUrl,
+        hasSpaceBefore: false
+      };
+
       if (!currentCluster) {
         currentCluster = {
           text: str,
@@ -342,7 +353,9 @@ function parseItemsIntoLines(items, pageHeight, linkAnnotations = []) {
           endX: itemEndX,
           fontSize,
           isBold,
-          linkUrl: itemLinkUrl
+          isItalic,
+          linkUrl: itemLinkUrl,
+          runs: [runObj]
         };
       } else if ((itemX - currentCluster.endX) > 28) {
         clusters.push(currentCluster);
@@ -352,11 +365,15 @@ function parseItemsIntoLines(items, pageHeight, linkAnnotations = []) {
           endX: itemEndX,
           fontSize,
           isBold,
-          linkUrl: itemLinkUrl
+          isItalic,
+          linkUrl: itemLinkUrl,
+          runs: [runObj]
         };
       } else {
         const gap = itemX - currentCluster.endX;
-        if (gap > 1.2) {
+        const needSpace = gap > 1.2;
+        runObj.hasSpaceBefore = needSpace;
+        if (needSpace) {
           currentCluster.text += ' ' + str;
         } else {
           currentCluster.text += str;
@@ -364,7 +381,9 @@ function parseItemsIntoLines(items, pageHeight, linkAnnotations = []) {
         currentCluster.endX = Math.max(currentCluster.endX, itemEndX);
         currentCluster.fontSize = Math.max(currentCluster.fontSize, fontSize);
         if (isBold) currentCluster.isBold = true;
+        if (isItalic) currentCluster.isItalic = true;
         if (itemLinkUrl) currentCluster.linkUrl = itemLinkUrl;
+        currentCluster.runs.push(runObj);
       }
     }
     if (currentCluster) clusters.push(currentCluster);
@@ -373,6 +392,14 @@ function parseItemsIntoLines(items, pageHeight, linkAnnotations = []) {
     const joinedText = clusters.map(c => c.text).join(' ').trim();
     if (!joinedText) continue;
 
+    const lineRuns = [];
+    clusters.forEach((c, cIdx) => {
+      if (cIdx > 0 && c.runs && c.runs.length > 0) {
+        c.runs[0].hasSpaceBefore = true;
+      }
+      if (c.runs) lineRuns.push(...c.runs);
+    });
+
     parsedLines.push({
       y: lineY,
       topDist,
@@ -380,6 +407,7 @@ function parseItemsIntoLines(items, pageHeight, linkAnnotations = []) {
       endX: clusters[clusters.length - 1].endX,
       fontSize: clusters[0].fontSize || 11,
       clusters,
+      runs: lineRuns,
       fullText: joinedText
     });
   }
@@ -425,8 +453,12 @@ function buildBlocksFromLines(parsedLines, pageWidth, minContentX, deduplicatedL
         break;
       }
 
-      if (potentialTableRows.length >= 2) {
-        const numCols = Math.max(...potentialTableRows.map(r => r.clusters.length));
+      const numCols = Math.max(...potentialTableRows.map(r => r.clusters.length));
+      // Only form a table if it has at least 3 rows OR (at least 2 rows and at least 3 columns)
+      // A 2-row, 2-column structure in resumes/timelines is key-value metadata, not a spreadsheet table
+      const isGenuineTable = (potentialTableRows.length >= 3) || (potentialTableRows.length >= 2 && numCols >= 3);
+
+      if (isGenuineTable) {
         const colBoundaries = [];
 
         for (let c = 0; c < numCols; c++) {
@@ -500,21 +532,146 @@ function buildBlocksFromLines(parsedLines, pageWidth, minContentX, deduplicatedL
     const isSubHeading = (fontSize >= 12 && fontSize < 16) || (fontSize >= 11 && text.length < 40 && text === text.toUpperCase());
 
     if (isMainHeading || isSubHeading) {
+      let align = 'left';
+      const relStartX = Math.max(0, cur.startX - minContentX);
+      if (relStartX > 20) {
+        const itemMid = ((cur.startX + cur.endX) / 2) - minContentX;
+        if (Math.abs(itemMid - pageWidth / 2) < 20) {
+          align = 'center';
+        } else if (relStartX > pageWidth * 0.5) {
+          align = 'right';
+        }
+      }
       finalBlocks.push({
         type: 'heading',
         topDist: cur.topDist,
         text,
+        runs: cur.runs || null,
         fontSize,
         level: isMainHeading ? 1 : 2,
-        align: (Math.abs((cur.startX + cur.endX) / 2 - pageWidth / 2) < 25) ? 'center' : 'left',
-        indentPt: Math.max(0, cur.startX - minContentX)
+        align,
+        indentPt: relStartX
       });
       pIdx++;
       continue;
     }
 
     // Check if single line has 2 distinct clusters (e.g. Date on left, Title on right)
-    if (cur.clusters.length === 2 && (cur.clusters[1].startX - cur.clusters[0].endX) > 28) {
+    if (cur.clusters.length === 2 && (cur.clusters[1].startX - cur.clusters[0].endX) >= 28) {
+      const splitX = cur.clusters[1].startX;
+
+      // Check if subsequent lines continue this timeline/experience entry
+      let hasContinuation = false;
+      let testIdx = pIdx + 1;
+      while (testIdx < processedBlocks.length) {
+        const pb = processedBlocks[testIdx];
+        if (pb.type !== 'singleLine') break;
+        const pl = pb.line;
+        if (pl.fontSize >= 13) break;
+        if (pl.clusters.length === 1 && pl.startX >= splitX - 25) {
+          hasContinuation = true;
+          break;
+        }
+        if (pl.clusters.length === 2 && (pl.clusters[1].startX - pl.clusters[0].endX) >= 28) {
+          break;
+        }
+        testIdx++;
+      }
+
+      if (hasContinuation) {
+        const leftLines = [cur.clusters[0]];
+        const rightLines = [cur.clusters[1]];
+        let nIdx = pIdx + 1;
+
+        while (nIdx < processedBlocks.length) {
+          const nb = processedBlocks[nIdx];
+          if (nb.type !== 'singleLine') break;
+          const nl = nb.line;
+          if (nl.fontSize >= 13) break; // heading starts next section
+
+          if (nl.clusters.length === 2 && (nl.clusters[1].startX - nl.clusters[0].endX) >= 28) {
+            // Check if left cluster is a new primary date entry
+            const leftTxt = nl.clusters[0].text.trim();
+            if (leftLines.length >= 2 && /\b(19\d\d|20\d\d|Present|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)\b/i.test(leftTxt)) {
+              break;
+            }
+            leftLines.push(nl.clusters[0]);
+            rightLines.push(nl.clusters[1]);
+            nIdx++;
+          } else if (nl.clusters.length === 1 && nl.startX >= splitX - 25) {
+            rightLines.push(nl.clusters[0]);
+            nIdx++;
+          } else {
+            break;
+          }
+        }
+
+        const leftBlocks = leftLines.map(c => ({
+          type: 'paragraph',
+          text: c.text,
+          runs: c.runs || null,
+          fontSize: c.fontSize || 10,
+          isBold: Boolean(c.isBold),
+          align: 'left',
+          indentPt: 0
+        }));
+
+        const rightBlocks = [];
+        let rI = 0;
+        while (rI < rightLines.length) {
+          const curR = rightLines[rI];
+          let mergedRText = curR.text;
+          const mergedRRuns = curR.runs ? [...curR.runs] : [];
+          let nextRI = rI + 1;
+
+          const isBullet = Boolean(curR.text.match(/^([•●▪▫–—-]|(?:\d+|[a-zA-Z])[\.\)])\s+/));
+          const isTitle = curR.isBold && (rI === 0);
+
+          if (!isTitle) {
+            while (nextRI < rightLines.length) {
+              const nextR = rightLines[nextRI];
+              const isNextBullet = Boolean(nextR.text.match(/^([•●▪▫–—-]|(?:\d+|[a-zA-Z])[\.\)])\s+/));
+              const isNextTitle = nextR.isBold;
+              if (isNextBullet || isNextTitle) break;
+
+              mergedRText += ' ' + nextR.text;
+              if (nextR.runs && nextR.runs.length > 0) {
+                nextR.runs[0].hasSpaceBefore = true;
+                mergedRRuns.push(...nextR.runs);
+              }
+              nextRI++;
+            }
+          }
+
+          rightBlocks.push({
+            type: isTitle ? 'heading' : (isBullet ? 'list' : 'paragraph'),
+            text: mergedRText,
+            runs: mergedRRuns.length > 0 ? mergedRRuns : null,
+            fontSize: curR.fontSize || 10,
+            level: 2,
+            isBold: Boolean(curR.isBold),
+            bullet: isBullet ? '•' : null,
+            align: 'left',
+            indentPt: 0
+          });
+
+          rI = nextRI;
+        }
+
+        const leftWidthDxa = Math.round((splitX - minContentX) * 20);
+
+        finalBlocks.push({
+          type: 'timelineEntry',
+          topDist: cur.topDist,
+          leftWidthDxa,
+          leftBlocks,
+          rightBlocks
+        });
+
+        pIdx = nIdx;
+        continue;
+      }
+
       finalBlocks.push({
         type: 'tabbedLine',
         topDist: cur.topDist,
@@ -530,6 +687,7 @@ function buildBlocksFromLines(parsedLines, pageWidth, minContentX, deduplicatedL
     const bulletMatch = text.match(/^([•●▪▫–—-]|(?:\d+|[a-zA-Z])[\.\)])\s+(.*)$/);
     if (bulletMatch) {
       let bulletBody = bulletMatch[2];
+      const mergedListRuns = cur.runs ? [...cur.runs] : [];
       let nextLineIdx = pIdx + 1;
 
       while (nextLineIdx < processedBlocks.length) {
@@ -548,6 +706,10 @@ function buildBlocksFromLines(parsedLines, pageWidth, minContentX, deduplicatedL
           Math.abs(nextL.startX - cur.startX) < 18
         ) {
           bulletBody += ' ' + nextL.fullText;
+          if (nextL.runs && nextL.runs.length > 0) {
+            nextL.runs[0].hasSpaceBefore = true;
+            mergedListRuns.push(...nextL.runs);
+          }
           nextLineIdx++;
         } else {
           break;
@@ -559,6 +721,7 @@ function buildBlocksFromLines(parsedLines, pageWidth, minContentX, deduplicatedL
         topDist: cur.topDist,
         bullet: bulletMatch[1],
         text: bulletBody,
+        runs: mergedListRuns.length > 0 ? mergedListRuns : null,
         fontSize,
         indentPt: Math.max(0, cur.startX - minContentX)
       });
@@ -569,6 +732,7 @@ function buildBlocksFromLines(parsedLines, pageWidth, minContentX, deduplicatedL
 
     // Normal paragraph: merge consecutive wrapped lines belonging to same paragraph
     let mergedText = cur.fullText;
+    const mergedParaRuns = cur.runs ? [...cur.runs] : [];
     let lastLine = cur;
     let nextPIdx = pIdx + 1;
 
@@ -593,6 +757,10 @@ function buildBlocksFromLines(parsedLines, pageWidth, minContentX, deduplicatedL
         Boolean(lastLine.clusters[0]?.isBold) === Boolean(nextL.clusters[0]?.isBold)
       ) {
         mergedText += ' ' + nextL.fullText;
+        if (nextL.runs && nextL.runs.length > 0) {
+          nextL.runs[0].hasSpaceBefore = true;
+          mergedParaRuns.push(...nextL.runs);
+        }
         lastLine = nextL;
         nextPIdx++;
       } else {
@@ -601,20 +769,24 @@ function buildBlocksFromLines(parsedLines, pageWidth, minContentX, deduplicatedL
     }
 
     let align = 'left';
-    const midX = (cur.startX + cur.endX) / 2;
-    if (Math.abs(midX - pageWidth / 2) < 25 && (cur.endX - cur.startX) < pageWidth * 0.6) {
-      align = 'center';
-    } else if (cur.startX > pageWidth * 0.55 && (cur.endX - cur.startX) < pageWidth * 0.4) {
-      align = 'right';
+    const relStartX = Math.max(0, cur.startX - minContentX);
+    if (relStartX > 20) {
+      const itemMid = ((cur.startX + cur.endX) / 2) - minContentX;
+      if (Math.abs(itemMid - pageWidth / 2) < 20 && (cur.endX - cur.startX) < pageWidth * 0.6) {
+        align = 'center';
+      } else if (relStartX > pageWidth * 0.5 && (cur.endX - cur.startX) < pageWidth * 0.45) {
+        align = 'right';
+      }
     }
 
     finalBlocks.push({
       type: 'paragraph',
       topDist: cur.topDist,
       text: mergedText,
+      runs: mergedParaRuns.length > 0 ? mergedParaRuns : null,
       fontSize,
       align,
-      indentPt: Math.max(0, cur.startX - minContentX)
+      indentPt: relStartX
     });
 
     pIdx = nextPIdx;
@@ -749,9 +921,11 @@ export async function pdfToDocx(pdfBuffer, optionsOrProgress = {}, maybeProgress
 
       const rawLines = [];
       const pendingImages = [];
+      const pageRectangles = [];
 
       if (ops && ops.fnArray) {
         let ctm = [1, 0, 0, 1, 0, 0];
+        let curFillRgb = [0, 0, 0];
         const ctmStack = [];
         let pendingPath = null;
 
@@ -760,11 +934,17 @@ export async function pdfToDocx(pdfBuffer, optionsOrProgress = {}, maybeProgress
           const args = ops.argsArray[idx];
 
           if (fn === pdfjsLib.OPS.save) {
-            ctmStack.push([...ctm]);
+            ctmStack.push({ ctm: [...ctm], fill: [...curFillRgb] });
           } else if (fn === pdfjsLib.OPS.restore) {
-            if (ctmStack.length > 0) ctm = ctmStack.pop();
+            if (ctmStack.length > 0) {
+              const st = ctmStack.pop();
+              ctm = st.ctm;
+              curFillRgb = st.fill;
+            }
           } else if (fn === pdfjsLib.OPS.transform) {
             ctm = multMatrix(ctm, args);
+          } else if (fn === pdfjsLib.OPS.setFillRGBColor) {
+            curFillRgb = [args[0], args[1], args[2]];
           } else if (fn === pdfjsLib.OPS.constructPath) {
             pendingPath = { args, ctm: [...ctm] };
           } else if (
@@ -795,6 +975,16 @@ export async function pdfToDocx(pdfBuffer, optionsOrProgress = {}, maybeProgress
                     width,
                     left,
                     right
+                  });
+                } else if (width >= 40 && height >= 40 && (fn === pdfjsLib.OPS.fill || fn === pdfjsLib.OPS.eoFill || fn === pdfjsLib.OPS.fillStroke)) {
+                  pageRectangles.push({
+                    left,
+                    right,
+                    bottom,
+                    top,
+                    width,
+                    height,
+                    fillRgb: [...curFillRgb]
                   });
                 }
               }
@@ -926,6 +1116,7 @@ export async function pdfToDocx(pdfBuffer, optionsOrProgress = {}, maybeProgress
       const validItems = items.filter(it => it.str && it.str.trim());
       const colAnalysis = detectColumns(validItems, pageWidth);
 
+      let isPageSidebar = false;
       if (colAnalysis.isMultiColumn) {
         const g = colAnalysis.gutter;
 
@@ -1014,15 +1205,40 @@ export async function pdfToDocx(pdfBuffer, optionsOrProgress = {}, maybeProgress
         col1Blocks.sort((a, b) => a.topDist - b.topDist);
         col2Blocks.sort((a, b) => a.topDist - b.topDist);
 
-        const col1WidthDxa = Math.max(2000, Math.round((g.start - minContentX + 15) * 20));
-        const col2WidthDxa = Math.max(3000, Math.round((maxContentX - g.end + 15) * 20));
+        // Check if Column 1 is covered by a colored sidebar background rectangle
+        let col1BgColor = null;
+        let col1IsDark = false;
+        let sidebarActualWidthPt = 0;
+        for (const rect of pageRectangles) {
+          if (rect.left <= 45 && rect.right >= g.start - 45 && rect.height >= pageHeight * 0.4) {
+            const [r, gVal, b] = rect.fillRgb;
+            const lum = 0.299 * r + 0.587 * gVal + 0.114 * b;
+            if (lum < 240) {
+              col1BgColor = [r, gVal, b].map(c => Math.max(0, Math.min(255, Math.round(c))).toString(16).padStart(2, '0')).join('').toUpperCase();
+              col1IsDark = (lum < 140);
+              sidebarActualWidthPt = rect.right;
+              break;
+            }
+          }
+        }
+
+        const isSidebarLayout = Boolean(col1BgColor);
+        isPageSidebar = isSidebarLayout;
+        const sidebarW = (isSidebarLayout && sidebarActualWidthPt > 50) ? sidebarActualWidthPt : g.start;
+        const col1WidthDxa = isSidebarLayout
+          ? Math.round(sidebarW * 20)
+          : Math.max(2000, Math.round((g.start - minContentX + 15) * 20));
+        const col2WidthDxa = isSidebarLayout
+          ? Math.round((pageWidth - sidebarW) * 20)
+          : Math.max(3000, Math.round((maxContentX - g.end + 15) * 20));
 
         pageBlocks.push({
           type: 'columnLayout',
           topDist: headerBlocks.length > 0 ? (headerBlocks[headerBlocks.length - 1].topDist + 20) : 0,
+          hasSidebar: isSidebarLayout,
           columns: [
-            { widthDxa: col1WidthDxa, blocks: col1Blocks },
-            { widthDxa: col2WidthDxa, blocks: col2Blocks }
+            { widthDxa: col1WidthDxa, blocks: col1Blocks, isSidebar: isSidebarLayout, bgColor: col1BgColor, isDark: col1IsDark },
+            { widthDxa: col2WidthDxa, blocks: col2Blocks, isSidebar: false, bgColor: null, isDark: false }
           ]
         });
 
@@ -1040,6 +1256,37 @@ export async function pdfToDocx(pdfBuffer, optionsOrProgress = {}, maybeProgress
 
       pageBlocks.sort((a, b) => a.topDist - b.topDist);
 
+      // Calibrate vertical spacing budget to strictly avoid extra page spillover
+      const numBlocks = pageBlocks.length;
+      const tightSpacing = numBlocks > 18;
+
+      for (let bIdx = 0; bIdx < pageBlocks.length; bIdx++) {
+        const curBlk = pageBlocks[bIdx];
+        const nextBlk = pageBlocks[bIdx + 1];
+
+        if (nextBlk && curBlk.topDist !== undefined && nextBlk.topDist !== undefined) {
+          const delta = Math.max(0, nextBlk.topDist - curBlk.topDist);
+          if (delta <= 13) {
+            curBlk.customAfterDxa = 0;
+          } else if (delta <= 22) {
+            curBlk.customAfterDxa = tightSpacing ? 10 : 30;
+          } else if (delta <= 36) {
+            curBlk.customAfterDxa = tightSpacing ? 30 : 60;
+          } else {
+            curBlk.customAfterDxa = tightSpacing ? 50 : Math.min(100, Math.round(delta * 3.5));
+          }
+        } else {
+          curBlk.customAfterDxa = tightSpacing ? 10 : 30;
+        }
+
+        if (curBlk.type === 'heading') {
+          curBlk.customBeforeDxa = tightSpacing ? 40 : 80;
+          curBlk.customAfterDxa = tightSpacing ? 20 : 40;
+        } else {
+          curBlk.customBeforeDxa = 0;
+        }
+      }
+
       docPages.push({
         pageNum,
         pageWidth,
@@ -1048,6 +1295,8 @@ export async function pdfToDocx(pdfBuffer, optionsOrProgress = {}, maybeProgress
         maxContentX,
         minContentY,
         maxContentY,
+        tightSpacing,
+        hasSidebar: isPageSidebar,
         elements: pageBlocks
       });
     }
@@ -1058,14 +1307,54 @@ export async function pdfToDocx(pdfBuffer, optionsOrProgress = {}, maybeProgress
 
   onProgress?.(total, total, 'Compiling layout-faithful Microsoft Word (.docx)...');
 
-  // Helper to render text runs with hyperlinks
-  function renderRuns(text, fontSize, isBold = false, isItalic = false, color = null) {
-    const szVal = fontSize
-      ? `<w:sz w:val="${Math.round(fontSize * 2)}"/><w:szCs w:val="${Math.round(fontSize * 2)}"/>`
+  // Helper to render text runs with hyperlinks and per-run inline styles
+  function renderRuns(runsOrText, defaultFontSize = 11, defaultBold = false, defaultItalic = false, defaultColor = null) {
+    if (Array.isArray(runsOrText)) {
+      if (runsOrText.length === 0) return '';
+      let resultXml = '';
+      for (const r of runsOrText) {
+        if (!r || (!r.text && !r.hasSpaceBefore)) continue;
+        const textContent = (r.hasSpaceBefore ? ' ' : '') + (r.text || '');
+        if (!textContent) continue;
+
+        const sz = r.fontSize || defaultFontSize;
+        const szVal = sz
+          ? `<w:sz w:val="${Math.round(sz * 2)}"/><w:szCs w:val="${Math.round(sz * 2)}"/>`
+          : '<w:sz w:val="22"/><w:szCs w:val="22"/>';
+        const bVal = (r.isBold !== undefined ? r.isBold : defaultBold) ? '<w:b/><w:bCs/>' : '';
+        const iVal = (r.isItalic !== undefined ? r.isItalic : defaultItalic) ? '<w:i/><w:iCs/>' : '';
+        const col = r.color || defaultColor;
+        const cVal = col ? `<w:color w:val="${col}"/>` : '';
+
+        if (r.linkUrl) {
+          const relId = getOrCreateHyperlinkRel(r.linkUrl);
+          resultXml += `
+            <w:hyperlink r:id="${relId}">
+              <w:r>
+                <w:rPr>
+                  <w:rStyle w:val="Hyperlink"/>
+                  ${szVal}
+                  <w:color w:val="0563C1"/>
+                  <w:u w:val="single"/>
+                </w:rPr>
+                <w:t xml:space="preserve">${escapeXml(textContent)}</w:t>
+              </w:r>
+            </w:hyperlink>
+          `;
+        } else {
+          resultXml += `<w:r><w:rPr>${szVal}${bVal}${iVal}${cVal}</w:rPr><w:t xml:space="preserve">${escapeXml(textContent)}</w:t></w:r>`;
+        }
+      }
+      return resultXml || `<w:r><w:t xml:space="preserve"></w:t></w:r>`;
+    }
+
+    const text = String(runsOrText || '');
+    const szVal = defaultFontSize
+      ? `<w:sz w:val="${Math.round(defaultFontSize * 2)}"/><w:szCs w:val="${Math.round(defaultFontSize * 2)}"/>`
       : '<w:sz w:val="22"/><w:szCs w:val="22"/>';
-    const bVal = isBold ? '<w:b/><w:bCs/>' : '';
-    const iVal = isItalic ? '<w:i/><w:iCs/>' : '';
-    const cVal = color ? `<w:color w:val="${color}"/>` : '';
+    const bVal = defaultBold ? '<w:b/><w:bCs/>' : '';
+    const iVal = defaultItalic ? '<w:i/><w:iCs/>' : '';
+    const cVal = defaultColor ? `<w:color w:val="${defaultColor}"/>` : '';
 
     const urlRegex = /(https?:\/\/[^\s]+|mailto:[^\s]+|[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/g;
     let lastIdx = 0;
@@ -1108,7 +1397,15 @@ export async function pdfToDocx(pdfBuffer, optionsOrProgress = {}, maybeProgress
   }
 
   // Helper to render an element (block) into WordprocessingML XML
-  function renderBlockToXml(elem, pg, availableWidthDxa = 8000) {
+  function renderBlockToXml(elem, pg, availableWidthDxa = 8000, colContext = null) {
+    const lineDxa = pg.tightSpacing ? 220 : 240;
+    const isDarkCol = Boolean(colContext && colContext.isDark);
+    const bodyTextColor = isDarkCol ? 'F8FAFC' : '334155';
+    const headingColor = isDarkCol ? 'FFFFFF' : '0F172A';
+    const subHeadingColor = isDarkCol ? 'F1F5F9' : '1E293B';
+    const dividerColor = isDarkCol ? '64748B' : 'CBD5E1';
+    const bulletColor = isDarkCol ? 'E2E8F0' : '475569';
+
     if (elem.type === 'columnLayout') {
       let cellsXml = '';
       let gridXml = '';
@@ -1117,19 +1414,38 @@ export async function pdfToDocx(pdfBuffer, optionsOrProgress = {}, maybeProgress
         totalW += col.widthDxa;
         gridXml += `<w:gridCol w:w="${col.widthDxa}"/>`;
         let colContentXml = '';
+        const curColContext = {
+          isDark: Boolean(col.isDark),
+          bgColor: col.bgColor || null,
+          isSidebar: Boolean(col.isSidebar)
+        };
         for (const subElem of col.blocks) {
-          colContentXml += renderBlockToXml(subElem, pg, col.widthDxa);
+          colContentXml += renderBlockToXml(subElem, pg, col.widthDxa, curColContext);
         }
         if (!colContentXml.trim()) {
-          colContentXml = '<w:p><w:pPr><w:spacing w:after="60"/></w:pPr></w:p>';
+          colContentXml = '<w:p><w:pPr><w:spacing w:after="40"/></w:pPr></w:p>';
         } else if (!colContentXml.trim().endsWith('</w:p>')) {
-          colContentXml += '<w:p><w:pPr><w:spacing w:after="40"/></w:pPr></w:p>';
+          colContentXml += '<w:p><w:pPr><w:spacing w:after="30"/></w:pPr></w:p>';
         }
+
+        const shdXml = col.bgColor ? `<w:shd w:val="clear" w:color="auto" w:fill="${col.bgColor}"/>` : '';
+        const padLeft = col.isSidebar ? Math.max(480, Math.round(pg.minContentX * 20)) : 420;
+        const padRight = col.isSidebar ? 240 : 420;
+        const padTop = 360;
+        const padBottom = 360;
+
         cellsXml += `
           <w:tc>
             <w:tcPr>
               <w:tcW w:w="${col.widthDxa}" w:type="dxa"/>
               <w:vAlign w:val="top"/>
+              ${shdXml}
+              <w:tcMar>
+                <w:top w:w="${padTop}" w:type="dxa"/>
+                <w:left w:w="${padLeft}" w:type="dxa"/>
+                <w:bottom w:w="${padBottom}" w:type="dxa"/>
+                <w:right w:w="${padRight}" w:type="dxa"/>
+              </w:tcMar>
             </w:tcPr>
             ${colContentXml}
           </w:tc>
@@ -1139,6 +1455,8 @@ export async function pdfToDocx(pdfBuffer, optionsOrProgress = {}, maybeProgress
         <w:tbl>
           <w:tblPr>
             <w:tblW w:w="${totalW}" w:type="dxa"/>
+            <w:tblInd w:w="0" w:type="dxa"/>
+            <w:jc w:val="left"/>
             <w:tblLayout w:type="fixed"/>
             <w:tblBorders>
               <w:top w:val="none"/>
@@ -1150,9 +1468,9 @@ export async function pdfToDocx(pdfBuffer, optionsOrProgress = {}, maybeProgress
             </w:tblBorders>
             <w:tblCellMar>
               <w:top w:w="0" w:type="dxa"/>
-              <w:left w:w="80" w:type="dxa"/>
+              <w:left w:w="0" w:type="dxa"/>
               <w:bottom w:w="0" w:type="dxa"/>
-              <w:right w:w="80" w:type="dxa"/>
+              <w:right w:w="0" w:type="dxa"/>
             </w:tblCellMar>
           </w:tblPr>
           <w:tblGrid>
@@ -1163,7 +1481,7 @@ export async function pdfToDocx(pdfBuffer, optionsOrProgress = {}, maybeProgress
             ${cellsXml}
           </w:tr>
         </w:tbl>
-        <w:p><w:pPr><w:spacing w:after="60"/></w:pPr></w:p>
+        <w:p><w:pPr><w:spacing w:after="40"/></w:pPr></w:p>
       `;
     }
 
@@ -1173,9 +1491,9 @@ export async function pdfToDocx(pdfBuffer, optionsOrProgress = {}, maybeProgress
           <w:p>
             <w:pPr>
               <w:pBdr>
-                <w:bottom w:val="single" w:sz="12" w:space="1" w:color="CCCCCC"/>
+                <w:bottom w:val="single" w:sz="10" w:space="1" w:color="${dividerColor}"/>
               </w:pBdr>
-              <w:spacing w:before="40" w:after="60"/>
+              <w:spacing w:before="20" w:after="40"/>
             </w:pPr>
             <w:r><w:t xml:space="preserve"></w:t></w:r>
           </w:p>
@@ -1188,9 +1506,9 @@ export async function pdfToDocx(pdfBuffer, optionsOrProgress = {}, maybeProgress
           <w:pPr>
             <w:ind w:left="${leftIndentDxa}" w:right="${rightIndentDxa}"/>
             <w:pBdr>
-              <w:bottom w:val="single" w:sz="12" w:space="1" w:color="CCCCCC"/>
+              <w:bottom w:val="single" w:sz="12" w:space="1" w:color="${dividerColor}"/>
             </w:pBdr>
-            <w:spacing w:before="60" w:after="80"/>
+            <w:spacing w:before="30" w:after="50"/>
           </w:pPr>
           <w:r><w:t xml:space="preserve"></w:t></w:r>
         </w:p>
@@ -1207,12 +1525,12 @@ export async function pdfToDocx(pdfBuffer, optionsOrProgress = {}, maybeProgress
         emuWidth = maxColEmu;
         emuHeight = Math.round(emuHeight * ratio);
       }
-      const jcVal = elem.align || 'center';
+      const jcVal = (colContext && colContext.isSidebar) ? 'center' : (elem.align || 'center');
       return `
         <w:p>
           <w:pPr>
             <w:jc w:val="${jcVal}"/>
-            <w:spacing w:before="60" w:after="80" w:line="240" w:lineRule="auto"/>
+            <w:spacing w:before="40" w:after="50" w:line="${lineDxa}" w:lineRule="auto"/>
           </w:pPr>
           <w:r>
             <w:drawing>
@@ -1252,39 +1570,54 @@ export async function pdfToDocx(pdfBuffer, optionsOrProgress = {}, maybeProgress
     }
 
     if (elem.type === 'tabbedLine') {
-      const leftText = elem.leftCluster.text;
-      const rightText = elem.rightCluster.text;
+      const leftRuns = elem.leftCluster.runs || elem.leftCluster.text;
+      const rightRuns = elem.rightCluster.runs || elem.rightCluster.text;
       const tabPosDxa = Math.max(1200, Math.round((elem.rightCluster.startX - elem.leftCluster.startX) * 20));
+      const afterDxa = elem.customAfterDxa !== undefined ? elem.customAfterDxa : 30;
       return `
         <w:p>
           <w:pPr>
             <w:tabs>
               <w:tab w:val="left" w:pos="${tabPosDxa}"/>
             </w:tabs>
-            <w:spacing w:before="30" w:after="40" w:line="240" w:lineRule="auto"/>
+            <w:spacing w:before="10" w:after="${afterDxa}" w:line="${lineDxa}" w:lineRule="auto"/>
           </w:pPr>
-          ${renderRuns(leftText, elem.fontSize, elem.leftCluster.isBold || false, false, '64748B')}
+          ${renderRuns(leftRuns, elem.fontSize, elem.leftCluster.isBold || false, false, isDarkCol ? 'CBD5E1' : '64748B')}
           <w:r><w:tab/></w:r>
-          ${renderRuns(rightText, elem.fontSize, elem.rightCluster.isBold || false, false, '0F172A')}
+          ${renderRuns(rightRuns, elem.fontSize, elem.rightCluster.isBold || false, false, isDarkCol ? 'FFFFFF' : '0F172A')}
         </w:p>
       `;
     }
 
     if (elem.type === 'table') {
       const numCols = elem.numCols || 2;
+      const totalColMeasured = (elem.colBoundaries && elem.colBoundaries.length >= numCols)
+        ? elem.colBoundaries.reduce((sum, b) => sum + Math.max(40, b.maxX - b.minX + 15), 0)
+        : (numCols * 100);
+
+      const colWidthsDxa = [];
+      let gridColsXml = '';
+      for (let c = 0; c < numCols; c++) {
+        let wDxa;
+        if (elem.colBoundaries && elem.colBoundaries[c]) {
+          const b = elem.colBoundaries[c];
+          wDxa = Math.max(1000, Math.round(((b.maxX - b.minX + 15) / totalColMeasured) * availableWidthDxa));
+        } else {
+          wDxa = Math.round(availableWidthDxa / numCols);
+        }
+        colWidthsDxa.push(wDxa);
+        gridColsXml += `<w:gridCol w:w="${wDxa}"/>`;
+      }
+
       let tableRowsXml = '';
-      elem.rows.forEach((row, rIdx) => {
-        const isHead = (rIdx === 0 && elem.rows.length > 1);
+      elem.rows.forEach((rowCells, rIdx) => {
+        const isHead = (rIdx === 0);
         let cellsXml = '';
         for (let c = 0; c < numCols; c++) {
-          const cell = row[c] || { text: '' };
-          const safeText = escapeXml(cell.text || '');
-          let colWidthDxa = 2400;
-          if (elem.colBoundaries && elem.colBoundaries[c]) {
-            const b = elem.colBoundaries[c];
-            colWidthDxa = Math.max(1200, Math.round((b.maxX - b.minX + 15) * 20));
-          }
+          const cellContent = rowCells[c] || '';
+          const colWidthDxa = colWidthsDxa[c] || Math.round(availableWidthDxa / numCols);
           const bgShd = isHead ? '<w:shd w:val="clear" w:color="auto" w:fill="F1F5F9"/>' : '';
+
           cellsXml += `
             <w:tc>
               <w:tcPr>
@@ -1293,16 +1626,9 @@ export async function pdfToDocx(pdfBuffer, optionsOrProgress = {}, maybeProgress
               </w:tcPr>
               <w:p>
                 <w:pPr>
-                  <w:spacing w:before="40" w:after="40" w:line="240" w:lineRule="auto"/>
+                  <w:spacing w:before="20" w:after="20" w:line="${lineDxa}" w:lineRule="auto"/>
                 </w:pPr>
-                <w:r>
-                  <w:rPr>
-                    ${isHead ? '<w:b/><w:bCs/>' : ''}
-                    <w:sz w:val="20"/><w:szCs w:val="20"/>
-                    <w:color w:val="${isHead ? '0F172A' : '334155'}"/>
-                  </w:rPr>
-                  <w:t xml:space="preserve">${safeText}</w:t>
-                </w:r>
+                ${renderRuns(cellContent, 10, isHead, false, isHead ? '0F172A' : '334155')}
               </w:p>
             </w:tc>
           `;
@@ -1320,7 +1646,8 @@ export async function pdfToDocx(pdfBuffer, optionsOrProgress = {}, maybeProgress
       return `
         <w:tbl>
           <w:tblPr>
-            <w:tblW w:w="0" w:type="auto"/>
+            <w:tblW w:w="${availableWidthDxa}" w:type="dxa"/>
+            <w:tblLayout w:type="fixed"/>
             <w:tblBorders>
               <w:top w:val="single" w:sz="6" w:space="0" w:color="CBD5E1"/>
               <w:left w:val="none"/>
@@ -1330,67 +1657,136 @@ export async function pdfToDocx(pdfBuffer, optionsOrProgress = {}, maybeProgress
               <w:insideV w:val="none"/>
             </w:tblBorders>
             <w:tblCellMar>
-              <w:top w:w="100" w:type="dxa"/>
-              <w:left w:w="140" w:type="dxa"/>
-              <w:bottom w:w="100" w:type="dxa"/>
-              <w:right w:w="140" w:type="dxa"/>
+              <w:top w:w="80" w:type="dxa"/>
+              <w:left w:w="120" w:type="dxa"/>
+              <w:bottom w:w="80" w:type="dxa"/>
+              <w:right w:w="120" w:type="dxa"/>
             </w:tblCellMar>
           </w:tblPr>
+          <w:tblGrid>
+            ${gridColsXml}
+          </w:tblGrid>
           ${tableRowsXml}
         </w:tbl>
-        <w:p><w:pPr><w:spacing w:after="80"/></w:pPr></w:p>
+        <w:p><w:pPr><w:spacing w:after="40"/></w:pPr></w:p>
+      `;
+    }
+
+    if (elem.type === 'timelineEntry') {
+      const leftW = Math.max(1600, Math.min(Math.round(availableWidthDxa * 0.45), elem.leftWidthDxa || 2600));
+      const rightW = availableWidthDxa - leftW;
+      let leftXml = '';
+      let rightXml = '';
+
+      for (const b of (elem.leftBlocks || [])) {
+        leftXml += renderBlockToXml(b, pg, leftW, colContext);
+      }
+      for (const b of (elem.rightBlocks || [])) {
+        rightXml += renderBlockToXml(b, pg, rightW, colContext);
+      }
+
+      if (!leftXml.trim()) leftXml = '<w:p><w:pPr><w:spacing w:after="20"/></w:pPr></w:p>';
+      if (!rightXml.trim()) rightXml = '<w:p><w:pPr><w:spacing w:after="20"/></w:pPr></w:p>';
+
+      return `
+        <w:tbl>
+          <w:tblPr>
+            <w:tblW w:w="${availableWidthDxa}" w:type="dxa"/>
+            <w:tblInd w:w="0" w:type="dxa"/>
+            <w:jc w:val="left"/>
+            <w:tblLayout w:type="fixed"/>
+            <w:tblBorders>
+              <w:top w:val="none"/><w:left w:val="none"/><w:bottom w:val="none"/><w:right w:val="none"/>
+              <w:insideH w:val="none"/><w:insideV w:val="none"/>
+            </w:tblBorders>
+            <w:tblCellMar>
+              <w:top w:w="20" w:type="dxa"/>
+              <w:left w:w="0" w:type="dxa"/>
+              <w:bottom w:w="40" w:type="dxa"/>
+              <w:right w:w="80" w:type="dxa"/>
+            </w:tblCellMar>
+          </w:tblPr>
+          <w:tblGrid>
+            <w:gridCol w:w="${leftW}"/>
+            <w:gridCol w:w="${rightW}"/>
+          </w:tblGrid>
+          <w:tr>
+            <w:trPr><w:cantSplit/></w:trPr>
+            <w:tc>
+              <w:tcPr>
+                <w:tcW w:w="${leftW}" w:type="dxa"/>
+                <w:vAlign w:val="top"/>
+              </w:tcPr>
+              ${leftXml}
+            </w:tc>
+            <w:tc>
+              <w:tcPr>
+                <w:tcW w:w="${rightW}" w:type="dxa"/>
+                <w:vAlign w:val="top"/>
+              </w:tcPr>
+              ${rightXml}
+            </w:tc>
+          </w:tr>
+        </w:tbl>
+        <w:p><w:pPr><w:spacing w:after="30"/></w:pPr></w:p>
       `;
     }
 
     if (elem.type === 'heading') {
       const hStyle = elem.level === 1 ? 'Heading1' : 'Heading2';
       const jcVal = elem.align && elem.align !== 'left' ? `<w:jc w:val="${elem.align}"/>` : '';
+      const beforeDxa = elem.customBeforeDxa !== undefined ? elem.customBeforeDxa : (pg.tightSpacing ? 40 : 80);
+      const afterDxa = elem.customAfterDxa !== undefined ? elem.customAfterDxa : (pg.tightSpacing ? 20 : 40);
       return `
         <w:p>
           <w:pPr>
             <w:pStyle w:val="${hStyle}"/>
-            <w:spacing w:before="160" w:after="60" w:line="240" w:lineRule="auto"/>
+            <w:spacing w:before="${beforeDxa}" w:after="${afterDxa}" w:line="${lineDxa}" w:lineRule="auto"/>
             ${jcVal}
           </w:pPr>
-          ${renderRuns(elem.text, elem.fontSize, true, false, elem.level === 1 ? '0F172A' : '334155')}
+          ${renderRuns(elem.runs || elem.text, elem.fontSize, true, false, elem.level === 1 ? headingColor : subHeadingColor)}
         </w:p>
       `;
     }
 
     if (elem.type === 'list') {
+      const beforeDxa = elem.customBeforeDxa !== undefined ? elem.customBeforeDxa : 0;
+      const afterDxa = elem.customAfterDxa !== undefined ? elem.customAfterDxa : (pg.tightSpacing ? 15 : 30);
       return `
         <w:p>
           <w:pPr>
             <w:ind w:left="360" w:hanging="200"/>
-            <w:spacing w:before="20" w:after="40" w:line="240" w:lineRule="auto"/>
+            <w:spacing w:before="${beforeDxa}" w:after="${afterDxa}" w:line="${lineDxa}" w:lineRule="auto"/>
           </w:pPr>
           <w:r>
             <w:rPr>
               <w:b/><w:bCs/>
               <w:sz w:val="${Math.round(elem.fontSize * 2)}"/><w:szCs w:val="${Math.round(elem.fontSize * 2)}"/>
-              <w:color w:val="475569"/>
+              <w:color w:val="${bulletColor}"/>
             </w:rPr>
             <w:t xml:space="preserve">${escapeXml(elem.bullet)} </w:t>
           </w:r>
-          ${renderRuns(elem.text, elem.fontSize, false, false, '334155')}
+          ${renderRuns(elem.runs || elem.text, elem.fontSize, false, false, bodyTextColor)}
         </w:p>
       `;
     }
 
     if (elem.type === 'paragraph') {
       const jcVal = elem.align && elem.align !== 'left' ? `<w:jc w:val="${elem.align}"/>` : '';
-      const indVal = (elem.indentPt && elem.indentPt > 18)
-        ? `<w:ind w:left="${Math.round(elem.indentPt * 20)}"/>`
+      const indVal = (elem.indentPt && elem.indentPt > 18 && elem.indentPt < 90 && !(colContext && colContext.isSidebar))
+        ? `<w:ind w:left="${Math.min(480, Math.round(elem.indentPt * 20))}"/>`
         : '';
+      const beforeDxa = elem.customBeforeDxa !== undefined ? elem.customBeforeDxa : 0;
+      const afterDxa = elem.customAfterDxa !== undefined ? elem.customAfterDxa : (pg.tightSpacing ? 15 : 35);
       return `
         <w:p>
           <w:pPr>
             <w:pStyle w:val="Normal"/>
-            <w:spacing w:before="20" w:after="60" w:line="240" w:lineRule="auto"/>
+            <w:spacing w:before="${beforeDxa}" w:after="${afterDxa}" w:line="${lineDxa}" w:lineRule="auto"/>
             ${indVal}
             ${jcVal}
           </w:pPr>
-          ${renderRuns(elem.text, elem.fontSize || 11, false, false, '334155')}
+          ${renderRuns(elem.runs || elem.text, elem.fontSize || 11, false, false, bodyTextColor)}
         </w:p>
       `;
     }
@@ -1398,24 +1794,44 @@ export async function pdfToDocx(pdfBuffer, optionsOrProgress = {}, maybeProgress
     return '';
   }
 
-  // Construct WordprocessingML XML body
+  // Construct WordprocessingML XML body with isolated per-page sections
   let bodyXml = '';
 
   for (let pIdx = 0; pIdx < docPages.length; pIdx++) {
     const pg = docPages[pIdx];
+    const pgWidthDxa = Math.round(pg.pageWidth * 20);
+    const pgHeightDxa = Math.round(pg.pageHeight * 20);
+    const isLandscape = pg.pageWidth > pg.pageHeight;
+    const isSidebarPage = Boolean(pg.hasSidebar);
+    const marginLeftDxa = isSidebarPage ? 0 : Math.max(360, Math.min(1080, Math.round(pg.minContentX * 20)));
+    const marginRightDxa = isSidebarPage ? 0 : Math.max(360, Math.min(1080, Math.round((pg.pageWidth - pg.maxContentX) * 20)));
+    const marginTopDxa = isSidebarPage ? 0 : Math.max(360, Math.min(1080, Math.round((pg.pageHeight - pg.maxContentY) * 20)));
+    const marginBottomDxa = isSidebarPage ? 0 : Math.max(360, Math.min(1080, Math.round(pg.minContentY * 20)));
+    const availableWidthDxa = isSidebarPage ? pgWidthDxa : Math.max(4000, pgWidthDxa - marginLeftDxa - marginRightDxa);
 
     for (const elem of pg.elements) {
-      bodyXml += renderBlockToXml(elem, pg);
+      bodyXml += renderBlockToXml(elem, pg, availableWidthDxa);
     }
 
-    // Page break between pages
+    // Section break for multi-page isolation
     if (pIdx < docPages.length - 1) {
-      bodyXml += '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+      bodyXml += `
+        <w:p>
+          <w:pPr>
+            <w:sectPr>
+              <w:pgSz w:w="${pgWidthDxa}" w:h="${pgHeightDxa}" ${isLandscape ? 'w:orient="landscape"' : ''}/>
+              <w:pgMar w:top="${marginTopDxa}" w:right="${marginRightDxa}" w:bottom="${marginBottomDxa}" w:left="${marginLeftDxa}" w:header="360" w:footer="360" w:gutter="0"/>
+              <w:cols w:space="720"/>
+              <w:docGrid w:linePitch="360"/>
+            </w:sectPr>
+          </w:pPr>
+        </w:p>
+      `;
     }
   }
 
-  // Calculate overall page dimensions from PDF
-  const firstPg = docPages[0] || {
+  // Calculate final page dimensions for the root section
+  const lastPg = docPages[docPages.length - 1] || {
     pageWidth: 595.28,
     pageHeight: 841.89,
     minContentX: 54,
@@ -1424,15 +1840,14 @@ export async function pdfToDocx(pdfBuffer, optionsOrProgress = {}, maybeProgress
     maxContentY: 787
   };
 
-  const pageWidthDxa = Math.round(firstPg.pageWidth * 20);
-  const pageHeightDxa = Math.round(firstPg.pageHeight * 20);
-  const isLandscape = firstPg.pageWidth > firstPg.pageHeight;
-
-  // Accurate margin calculation based on actual PDF content layout
-  const marginLeftDxa = Math.max(360, Math.min(1080, Math.round(firstPg.minContentX * 20)));
-  const marginRightDxa = Math.max(360, Math.min(1080, Math.round((firstPg.pageWidth - firstPg.maxContentX) * 20)));
-  const marginTopDxa = Math.max(360, Math.min(1080, Math.round((firstPg.pageHeight - firstPg.maxContentY) * 20)));
-  const marginBottomDxa = Math.max(360, Math.min(1080, Math.round(firstPg.minContentY * 20)));
+  const pageWidthDxa = Math.round(lastPg.pageWidth * 20);
+  const pageHeightDxa = Math.round(lastPg.pageHeight * 20);
+  const isLandscape = lastPg.pageWidth > lastPg.pageHeight;
+  const isLastSidebar = Boolean(lastPg.hasSidebar);
+  const marginLeftDxa = isLastSidebar ? 0 : Math.max(360, Math.min(1080, Math.round(lastPg.minContentX * 20)));
+  const marginRightDxa = isLastSidebar ? 0 : Math.max(360, Math.min(1080, Math.round((lastPg.pageWidth - lastPg.maxContentX) * 20)));
+  const marginTopDxa = isLastSidebar ? 0 : Math.max(360, Math.min(1080, Math.round((lastPg.pageHeight - lastPg.maxContentY) * 20)));
+  const marginBottomDxa = isLastSidebar ? 0 : Math.max(360, Math.min(1080, Math.round(lastPg.minContentY * 20)));
 
   // OpenXML Package Manifests
   const contentTypesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>

@@ -6,18 +6,22 @@
 /**
  * Download a single Blob as a file.
  */
-export function downloadBlob(blob, filename) {
+export function downloadBlob(blob, filename = 'download') {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
   a.download = filename;
+  a.setAttribute('download', filename);
+  a.rel = 'noopener';
   
-  // Position offscreen instead of display:none (some browsers ignore click on display:none)
+  // Stop propagation so document-level click interceptors never block this synthetic click
+  a.addEventListener('click', (e) => e.stopPropagation());
+
+  // Position offscreen with opacity 0 (NEVER set pointer-events: none because Chromium blocks .click()!)
   a.style.position = 'fixed';
   a.style.left = '-9999px';
   a.style.top = '-9999px';
   a.style.opacity = '0';
-  a.style.pointerEvents = 'none';
   
   document.body.appendChild(a);
   
@@ -32,10 +36,10 @@ export function downloadBlob(blob, filename) {
   // Cleanup after a generous delay (60s) so large files or slow downloads are never cancelled prematurely
   setTimeout(() => {
     try {
-      URL.revokeObjectURL(url);
       if (a.parentNode) {
         document.body.removeChild(a);
       }
+      URL.revokeObjectURL(url);
     } catch (e) {}
   }, 60000);
 }
@@ -43,23 +47,24 @@ export function downloadBlob(blob, filename) {
 /**
  * Download an ArrayBuffer or Uint8Array as a file.
  */
-export function downloadArrayBuffer(buffer, filename, mimeType = 'application/pdf') {
+export function downloadArrayBuffer(buffer, filename, mimeType = 'application/octet-stream') {
   if (!buffer) {
     console.error('downloadArrayBuffer: No buffer provided');
     return;
   }
 
-  let arrayBuffer;
-  if (buffer instanceof Uint8Array) {
-    // Create an independent ArrayBuffer slice respecting byteOffset and byteLength
-    arrayBuffer = buffer.buffer.slice(buffer.byteOffset, buffer.byteOffset + buffer.byteLength);
+  let blobData;
+  if (buffer instanceof Blob) {
+    blobData = buffer;
+  } else if (buffer instanceof Uint8Array) {
+    blobData = buffer;
   } else if (buffer instanceof ArrayBuffer) {
-    arrayBuffer = buffer.slice(0);
+    blobData = new Uint8Array(buffer);
   } else {
-    arrayBuffer = buffer;
+    blobData = buffer;
   }
 
-  const blob = new Blob([arrayBuffer], { type: mimeType });
+  const blob = (blobData instanceof Blob) ? blobData : new Blob([blobData], { type: mimeType || 'application/octet-stream' });
   downloadBlob(blob, filename);
 }
 

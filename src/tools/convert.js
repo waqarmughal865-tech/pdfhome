@@ -472,7 +472,9 @@ export function renderConvert(container, initialMode = 'pdf-to-docx') {
     container.querySelector('#conv-start-btn')?.addEventListener('click', executeConversion);
 
     // Download button
-    container.querySelector('#conv-download-btn')?.addEventListener('click', () => {
+    container.querySelector('#conv-download-btn')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      e.stopPropagation();
       if (resultBuffer) {
         const cfg = getCurrentConfig();
         downloadArrayBuffer(resultBuffer, resultFilename, cfg.outputMime);
