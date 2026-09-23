@@ -573,8 +573,13 @@ function buildToolSchemaJson(seoData, canonicalUrl) {
 /**
  * Build Full HTML Page from Base Template
  */
-function createPageHtml({ title, description, canonicalUrl, mainContentHtml, currentPath = '/', customSchemaJson = null, keywords = null }) {
+function createPageHtml({ title, description, canonicalUrl, mainContentHtml, currentPath = '/', customSchemaJson = null, keywords = null, noindex = false }) {
   let html = baseTemplate;
+
+  // Robots (noindex for 404 page)
+  if (noindex) {
+    html = html.replace(/<meta name="robots" content="[\s\S]*?" \/>/, '<meta name="robots" content="noindex, follow" />');
+  }
 
   // Title
   html = html.replace(/<title>[\s\S]*?<\/title>/, `<title>${title}</title>`);
@@ -812,4 +817,33 @@ const contactHtml = createPageHtml({
 writeHtmlFile(path.resolve(DIST_DIR, 'contact', 'index.html'), contactHtml);
 console.log('  ✓ Pre-rendered: /contact (dist/contact/index.html)');
 
-console.log(`\n🎉 Success: ${toolCount + 4} routes pre-rendered with complete static HTML, metadata, and structured data!`);
+// 6. Custom 404 Page
+const notFoundHtml = createPageHtml({
+  title: '404 — Page Not Found | PDFHome',
+  description: 'The requested page was not found on PDFHome. Browse our free online PDF tools including merge, split, compress, and convert.',
+  canonicalUrl: `${DOMAIN}/`,
+  noindex: true,
+  mainContentHtml: `
+    <div class="tool-page-wrapper" style="text-align:center; padding:var(--space-12) var(--space-4);">
+      <div style="font-size:72px; font-weight:800; background:linear-gradient(135deg, var(--color-primary), var(--color-accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:var(--space-2);">404</div>
+      <h1 style="font-size:var(--text-xl); font-weight:700; color:var(--color-text-primary); margin-bottom:var(--space-2)">Page Not Found</h1>
+      <p style="color:var(--color-text-secondary); margin-bottom:var(--space-6); max-width:480px; margin-left:auto; margin-right:auto; line-height:1.6">
+        The page you're looking for doesn't exist. It may have been moved or removed.
+      </p>
+      <div style="display:flex; flex-wrap:wrap; gap:var(--space-2); justify-content:center; margin-bottom:var(--space-8)">
+        <a href="/" class="btn btn-primary">← Back to Home</a>
+        <a href="/merge-pdf" class="btn btn-secondary">Merge PDF</a>
+        <a href="/compress-pdf" class="btn btn-secondary">Compress PDF</a>
+        <a href="/pdf-to-word" class="btn btn-secondary">PDF to Word</a>
+      </div>
+      <p style="font-size:12px; color:var(--color-text-tertiary)">
+        Looking for a specific tool? Use the navigation above or browse all tools on the <a href="/" style="color:var(--color-primary)">homepage</a>.
+      </p>
+    </div>
+  `,
+  currentPath: '/404'
+});
+writeHtmlFile(path.resolve(DIST_DIR, '404.html'), notFoundHtml);
+console.log('  ✓ Pre-rendered: /404 (dist/404.html)');
+
+console.log(`\n🎉 Success: ${toolCount + 5} routes pre-rendered with complete static HTML, metadata, and structured data!`);

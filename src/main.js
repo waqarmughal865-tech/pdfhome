@@ -263,7 +263,40 @@ async function navigate() {
     path = aliases[path];
   }
 
-  const handler = routes[path] || routes['/'];
+  const handler = routes[path] || null;
+
+  // Show 404 for unknown routes instead of silently falling back to home
+  if (!handler) {
+    updateActiveNav('');
+    if (contentEl) {
+      contentEl.innerHTML = `
+        <div class="tool-page-wrapper" style="text-align:center; padding:var(--space-12) var(--space-4);">
+          <div style="font-size:72px; font-weight:800; background:linear-gradient(135deg, var(--color-primary), var(--color-accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:var(--space-2);">404</div>
+          <h1 style="font-size:var(--text-xl); font-weight:700; color:var(--color-text-primary); margin-bottom:var(--space-2)">Page Not Found</h1>
+          <p style="color:var(--color-text-secondary); margin-bottom:var(--space-6); max-width:480px; margin-left:auto; margin-right:auto; line-height:1.6">
+            The page <code style="background:var(--color-surface-alt); padding:2px 6px; border-radius:4px; font-size:13px">${path}</code> doesn't exist. It may have been moved or removed.
+          </p>
+          <div style="display:flex; flex-wrap:wrap; gap:var(--space-2); justify-content:center; margin-bottom:var(--space-8)">
+            <a href="/" class="btn btn-primary">← Back to Home</a>
+            <a href="/merge-pdf" class="btn btn-secondary">Merge PDF</a>
+            <a href="/compress-pdf" class="btn btn-secondary">Compress PDF</a>
+            <a href="/pdf-to-word" class="btn btn-secondary">PDF to Word</a>
+          </div>
+          <p style="font-size:12px; color:var(--color-text-tertiary)">
+            Looking for a specific tool? Use the navigation above or browse all tools on the <a href="/" style="color:var(--color-primary)">homepage</a>.
+          </p>
+        </div>
+      `;
+    }
+    window.scrollTo({ top: 0, behavior: 'instant' });
+    updateSimpleSeo({
+      title: '404 — Page Not Found | PDFHome',
+      description: 'The requested page was not found on PDFHome. Browse our free online PDF tools including merge, split, compress, and convert.',
+      slug: path,
+      noindex: true
+    });
+    return;
+  }
 
   updateActiveNav(path);
 

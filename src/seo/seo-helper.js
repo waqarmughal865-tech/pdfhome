@@ -15,6 +15,11 @@ export function updatePageSeo(seoData) {
   // 1. Page Title
   document.title = seoData.metaTitle || `${seoData.name} — PDFHome`;
 
+  let metaRobots = document.querySelector('meta[name="robots"]');
+  if (metaRobots) {
+    metaRobots.content = 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1';
+  }
+
   // 2. Meta Description
   let metaDesc = document.querySelector('meta[name="description"]');
   if (!metaDesc) {
@@ -59,6 +64,11 @@ export function resetHomeSeo() {
   const homeUrl = `${DOMAIN}/`;
 
   document.title = homeTitle;
+
+  let metaRobots = document.querySelector('meta[name="robots"]');
+  if (metaRobots) {
+    metaRobots.content = 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1';
+  }
 
   let metaDesc = document.querySelector('meta[name="description"]');
   if (metaDesc) metaDesc.content = homeDesc;
@@ -191,8 +201,13 @@ function injectToolSchema(seoData, canonicalUrl) {
 /**
  * Update metadata for static/legal pages (Privacy, Terms, Contact)
  */
-export function updateSimpleSeo({ title, description, slug }) {
+export function updateSimpleSeo({ title, description, slug, noindex = false }) {
   document.title = title || 'PDFHome';
+
+  let metaRobots = document.querySelector('meta[name="robots"]');
+  if (metaRobots) {
+    metaRobots.content = noindex ? 'noindex, follow' : 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1';
+  }
 
   let metaDesc = document.querySelector('meta[name="description"]');
   if (metaDesc) metaDesc.content = description || '';
