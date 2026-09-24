@@ -109,9 +109,19 @@ export function renderMerge(container) {
                       Drag items or use the position selector / arrows to place images before or after any page
                     </p>
                   </div>
-                  <span style="font-size:var(--text-xs); font-weight:var(--weight-semibold); color:var(--color-accent); background:var(--color-accent-subtle); padding:4px 8px; border-radius:var(--radius-sm)">
-                    ${items.length} Items Active
-                  </span>
+                  <div style="display:flex; align-items:center; gap:var(--space-2)">
+                    <div style="display:inline-flex; border:1px solid var(--color-border); border-radius:var(--radius-sm); overflow:hidden">
+                      <button class="btn btn-ghost btn-sm" id="merge-sort-az" title="Sort files naturally A to Z (numeric aware, e.g. 1, 2, 10)" style="font-size:var(--text-xs); padding:2px 8px; border-radius:0; border-right:1px solid var(--color-border); height:26px">
+                        Sort A→Z
+                      </button>
+                      <button class="btn btn-ghost btn-sm" id="merge-sort-za" title="Sort files naturally Z to A" style="font-size:var(--text-xs); padding:2px 8px; border-radius:0; height:26px">
+                        Sort Z→A
+                      </button>
+                    </div>
+                    <span style="font-size:var(--text-xs); font-weight:var(--weight-semibold); color:var(--color-accent); background:var(--color-accent-subtle); padding:4px 8px; border-radius:var(--radius-sm)">
+                      ${items.length} Items Active
+                    </span>
+                  </div>
                 </div>
 
                 <div class="file-list" id="merge-file-list" style="margin-top:var(--space-2)">
@@ -361,6 +371,19 @@ export function renderMerge(container) {
         }
       });
       items = [];
+      render();
+    });
+
+    // Natural Alphanumeric Sort (numeric-aware: file1, file2, file10)
+    const naturalCompare = (a, b) => (a.name || '').localeCompare(b.name || '', undefined, { numeric: true, sensitivity: 'base' });
+
+    document.getElementById('merge-sort-az')?.addEventListener('click', () => {
+      items.sort(naturalCompare);
+      render();
+    });
+
+    document.getElementById('merge-sort-za')?.addEventListener('click', () => {
+      items.sort((a, b) => naturalCompare(b, a));
       render();
     });
   }

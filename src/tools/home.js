@@ -17,7 +17,7 @@ export const TOOL_REGISTRY = [
     iconName: 'penTool',
     path: '/sign-pdf',
     badge: 'Popular',
-    keywords: ['signature on pdf', 'sign pdf', 'transparent signature', 'digital signature', 'draw signature', 'e-sign', 'sign', 'handwritten signature', 'stamp signature', 'electronic signature', 'online pdf signer']
+    keywords: ['signature on pdf', 'sign pdf', 'transparent signature', 'digital signature', 'draw signature', 'e-sign', 'sign', 'handwritten signature', 'stamp signature', 'electronic signature', 'online pdf signer', 'autograph', 'sign contract']
   },
   {
     id: 'pdf-to-docx',
@@ -28,7 +28,7 @@ export const TOOL_REGISTRY = [
     iconName: 'fileText',
     path: '/pdf-to-word',
     badge: 'High Demand',
-    keywords: ['pdf to word', 'pdf to docx', 'convert pdf to word', 'editable docx', 'word document', 'export word']
+    keywords: ['pdf to word', 'pdf to docx', 'convert pdf to word', 'editable docx', 'word document', 'export word', 'doc', 'docx']
   },
   {
     id: 'merge',
@@ -39,7 +39,7 @@ export const TOOL_REGISTRY = [
     iconName: 'merge',
     path: '/merge-pdf',
     badge: 'Essential',
-    keywords: ['merge pdf', 'combine pdf', 'join pdf', 'unite pdf', 'merge documents', 'combine files']
+    keywords: ['merge pdf', 'combine pdf', 'join pdf', 'unite pdf', 'merge documents', 'combine files', 'stitch', 'bind', 'bundle', 'attach']
   },
   {
     id: 'split',
@@ -49,7 +49,7 @@ export const TOOL_REGISTRY = [
     iconClass: 'split',
     iconName: 'scissors',
     path: '/split-pdf',
-    keywords: ['split pdf', 'extract pages', 'separate pdf', 'cut pdf', 'page extractor', 'divide pdf']
+    keywords: ['split pdf', 'extract pages', 'separate pdf', 'cut pdf', 'page extractor', 'divide pdf', 'slice', 'break up', 'isolate pages']
   },
   {
     id: 'compress',
@@ -60,7 +60,7 @@ export const TOOL_REGISTRY = [
     iconName: 'compress',
     path: '/compress-pdf',
     badge: 'Smart Size',
-    keywords: ['compress pdf', 'reduce pdf size', 'shrink pdf', 'optimize pdf', 'smaller pdf', 'downsize pdf']
+    keywords: ['compress pdf', 'reduce pdf size', 'shrink pdf', 'optimize pdf', 'smaller pdf', 'downsize pdf', 'compact', 'minify', 'make pdf smaller']
   },
   {
     id: 'watermark-pdf',
@@ -71,7 +71,7 @@ export const TOOL_REGISTRY = [
     iconName: 'stamp',
     path: '/watermark-pdf',
     badge: 'Security',
-    keywords: ['watermark on pdf', 'watermark pdf', 'add watermark', 'confidential stamp', 'logo watermark', 'copyright stamp', 'text watermark']
+    keywords: ['watermark on pdf', 'watermark pdf', 'add watermark', 'confidential stamp', 'logo watermark', 'copyright stamp', 'text watermark', 'stamp', 'draft']
   },
   {
     id: 'protect-pdf',
@@ -82,7 +82,7 @@ export const TOOL_REGISTRY = [
     iconName: 'lock',
     path: '/protect-pdf',
     badge: 'Encrypted',
-    keywords: ['protect pdf', 'password protect pdf', 'lock pdf', 'encrypt pdf', 'secure pdf', 'set password', 'restrict pdf']
+    keywords: ['protect pdf', 'password protect pdf', 'lock pdf', 'encrypt pdf', 'secure pdf', 'set password', 'restrict pdf', 'encryption', 'privacy lock']
   },
   {
     id: 'ocr-pdf',
@@ -93,7 +93,7 @@ export const TOOL_REGISTRY = [
     iconName: 'scan',
     path: '/ocr-pdf',
     badge: 'AI Engine',
-    keywords: ['ocr pdf', 'picture pdf to text', 'searchable pdf', 'scanned pdf to text', 'extract text from image pdf', 'optical character recognition', 'tesseract']
+    keywords: ['ocr pdf', 'picture pdf to text', 'searchable pdf', 'scanned pdf to text', 'extract text from image pdf', 'optical character recognition', 'tesseract', 'scan text', 'read scanned pdf', 'image to text']
   },
   {
     id: 'pdf-to-excel',
@@ -103,7 +103,7 @@ export const TOOL_REGISTRY = [
     iconClass: 'excel',
     iconName: 'fileSpreadsheet',
     path: '/pdf-to-excel',
-    keywords: ['pdf to excel', 'pdf to xlsx', 'convert pdf to sheet', 'extract table from pdf', 'spreadsheet']
+    keywords: ['pdf to excel', 'pdf to xlsx', 'convert pdf to sheet', 'extract table from pdf', 'spreadsheet', 'xls', 'xlsx', 'table']
   },
   {
     id: 'pdf-to-slides',
@@ -113,7 +113,7 @@ export const TOOL_REGISTRY = [
     iconClass: 'slides',
     iconName: 'presentation',
     path: '/pdf-to-powerpoint',
-    keywords: ['pdf to slides', 'pdf to pptx', 'pdf to powerpoint', 'convert pdf to presentation']
+    keywords: ['pdf to slides', 'pdf to pptx', 'pdf to powerpoint', 'convert pdf to presentation', 'slides', 'deck', 'powerpoint']
   },
   {
     id: 'pdf-to-image',
@@ -123,7 +123,7 @@ export const TOOL_REGISTRY = [
     iconClass: 'pdf-to-image',
     iconName: 'image',
     path: '/pdf-to-jpg',
-    keywords: ['pdf to image', 'pdf to jpg', 'pdf to png', 'extract pictures from pdf', 'convert pdf to pictures']
+    keywords: ['pdf to image', 'pdf to jpg', 'pdf to png', 'extract pictures from pdf', 'convert pdf to pictures', 'rasterize', 'export photos']
   },
   {
     id: 'image-to-pdf',
@@ -133,7 +133,7 @@ export const TOOL_REGISTRY = [
     iconClass: 'image-to-pdf',
     iconName: 'paperclip',
     path: '/jpg-to-pdf',
-    keywords: ['image to pdf', 'jpg to pdf', 'png to pdf', 'photos to pdf', 'pictures to pdf']
+    keywords: ['image to pdf', 'jpg to pdf', 'png to pdf', 'photos to pdf', 'pictures to pdf', 'convert photo to pdf', 'scan to pdf', 'pic to pdf']
   },
   {
     id: 'organize-pdf',
@@ -143,7 +143,7 @@ export const TOOL_REGISTRY = [
     iconClass: 'pages',
     iconName: 'rotateCw',
     path: '/rotate-pdf',
-    keywords: ['rotate pdf', 'turn pdf', 'reorient pdf', 'rotate pages', 'clockwise rotate']
+    keywords: ['rotate pdf', 'turn pdf', 'reorient pdf', 'rotate pages', 'clockwise rotate', 'flip pdf', 'landscape to portrait', 'fix upside down']
   },
   {
     id: 'delete-pdf-pages',
@@ -153,7 +153,7 @@ export const TOOL_REGISTRY = [
     iconClass: 'split',
     iconName: 'trash2',
     path: '/delete-pdf-pages',
-    keywords: ['delete pdf pages', 'remove pages from pdf', 'delete page', 'remove blank pages']
+    keywords: ['delete pdf pages', 'remove pages from pdf', 'delete page', 'remove blank pages', 'discard pages', 'cut out pages', 'strip pages']
   },
   {
     id: 'crop-pdf',
@@ -163,7 +163,7 @@ export const TOOL_REGISTRY = [
     iconClass: 'pages',
     iconName: 'crop',
     path: '/crop-pdf',
-    keywords: ['crop pdf', 'trim margins', 'crop pages', 'trim pdf', 'cut borders', 'remove scanner margins']
+    keywords: ['crop pdf', 'trim margins', 'crop pages', 'trim pdf', 'cut borders', 'remove scanner margins', 'white borders', 'trim white space']
   },
   {
     id: 'page-numbers',
@@ -173,7 +173,7 @@ export const TOOL_REGISTRY = [
     iconClass: 'pages',
     iconName: 'hash',
     path: '/page-numbers',
-    keywords: ['number pdf pages', 'page numbers', 'header footer', 'bates numbering', 'add page numbers']
+    keywords: ['number pdf pages', 'page numbers', 'header footer', 'bates numbering', 'add page numbers', 'page count', 'page footer']
   },
   {
     id: 'excel-to-pdf',
@@ -183,7 +183,7 @@ export const TOOL_REGISTRY = [
     iconClass: 'excel',
     iconName: 'fileSpreadsheet',
     path: '/excel-to-pdf',
-    keywords: ['excel to pdf', 'xlsx to pdf', 'convert sheet to pdf', 'export excel as pdf']
+    keywords: ['excel to pdf', 'xlsx to pdf', 'convert sheet to pdf', 'export excel as pdf', 'sheet to pdf', 'xls to pdf']
   },
   {
     id: 'slides-to-pdf',
@@ -193,7 +193,7 @@ export const TOOL_REGISTRY = [
     iconClass: 'slides',
     iconName: 'presentation',
     path: '/pdf-to-powerpoint',
-    keywords: ['pptx to pdf', 'slides to pdf', 'powerpoint to pdf', 'export slides to pdf']
+    keywords: ['pptx to pdf', 'slides to pdf', 'powerpoint to pdf', 'export slides to pdf', 'ppt to pdf']
   },
   {
     id: 'docx-to-pdf',
@@ -203,7 +203,7 @@ export const TOOL_REGISTRY = [
     iconClass: 'docx',
     iconName: 'fileText',
     path: '/word-to-pdf',
-    keywords: ['word to pdf', 'docx to pdf', 'convert word to pdf', 'save as pdf']
+    keywords: ['word to pdf', 'docx to pdf', 'convert word to pdf', 'save as pdf', 'doc to pdf', 'document to pdf']
   },
   {
     id: 'pages',
@@ -254,7 +254,15 @@ export function renderHome(container) {
       const inDesc = card.desc.toLowerCase().includes(q);
       const inKeywords = card.keywords?.some(k => k.toLowerCase().includes(q) || q.includes(k.toLowerCase()));
 
-      return inName || inDesc || inKeywords;
+      // Tokenized multi-word search (e.g. "shrink pdf files", "join my scans", "sign contract")
+      const qWords = q.split(/\s+/).filter(w => w.length > 1);
+      const inWords = qWords.length > 0 && qWords.some(word =>
+        card.name.toLowerCase().includes(word) ||
+        card.desc.toLowerCase().includes(word) ||
+        card.keywords?.some(k => k.toLowerCase().includes(word))
+      );
+
+      return inName || inDesc || inKeywords || inWords;
     });
   }
 
