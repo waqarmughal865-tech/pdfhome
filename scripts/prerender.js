@@ -50,6 +50,8 @@ if (fs.existsSync(themeInitSrc)) {
  */
 const NAV_TOOLS = [
   { id: 'sign', label: 'Sign PDF', path: '/sign-pdf' },
+  { id: 'pages', label: 'Page Editor', path: '/pages' },
+  { id: 'convert', label: 'Convert', path: '/convert' },
   { id: 'merge', label: 'Merge', path: '/merge-pdf' },
   { id: 'split', label: 'Split', path: '/split-pdf' },
   { id: 'compress', label: 'Compress', path: '/compress-pdf' },

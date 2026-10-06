@@ -381,7 +381,18 @@
 }
 
 .drop-zone input[type="file"] {
-  display: none;
+  /* Visually hidden but still rendered: <label for> activation and keyboard
+     focus keep working. display:none would break the file picker. */
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* ── File List ── */

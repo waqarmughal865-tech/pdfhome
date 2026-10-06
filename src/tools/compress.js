@@ -38,7 +38,8 @@ export function renderCompress(container) {
   function getExpectedSize(presetKey) {
     if (!file) return '';
     const ratio = COMPRESSION_PRESETS[presetKey]?.estRatio || 0.5;
-    const estBytes = Math.max(12000, Math.round(file.size * ratio));
+    // Never estimate above the original size (avoids nonsense like "~11.7 KB" for a 2 KB file).
+    const estBytes = Math.min(file.size, Math.max(1500, Math.round(file.size * ratio)));
     return formatFileSize(estBytes);
   }
 

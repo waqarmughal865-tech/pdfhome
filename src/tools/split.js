@@ -5,11 +5,12 @@
 
 import { icon } from '../components/icons.js';
 import { validateFileType, checkFileSize, sanitizeFilename, formatFileSize, readFileAsArrayBuffer, PDF_MIME, getBasename } from '../utils/file-utils.js';
-import { downloadArrayBuffer, downloadMultipleBlobs } from '../utils/download.js';
+import { downloadArrayBuffer, downloadBlob, downloadMultipleBlobs } from '../utils/download.js';
 import { extractPages, splitAllPages } from '../pdf/engine.js';
 import { loadPDFDocument, generateThumbnail } from '../pdf/renderer.js';
 import { parsePageRanges } from '../utils/page-range-parser.js';
 import { classifyError } from '../utils/error-handler.js';
+import JSZip from 'jszip';
 
 export function renderSplit(container) {
   let file = null;
@@ -404,12 +405,12 @@ export function renderSplit(container) {
           </div>
 
           <button class="btn btn-primary btn-lg" id="split-download">
-            ${icon('download', 18)} Download ${results.length > 1 ? 'All Files' : 'PDF'}
+            ${icon('download', 18)} Download ${results.length > 1 ? 'ZIP' : 'PDF'}
           </button>
         </div>
       `;
 
-      document.getElementById('split-download').addEventListener('click', () => {
+      document.getElementById('split-download').addEventListener('click', async () => {
         const inputName = document.getElementById('split-filename-input')?.value.trim();
         let finalFilenames = defaultFilenames;
 
@@ -422,8 +423,23 @@ export function renderSplit(container) {
           }
         }
 
-        const blobs = results.map(r => new Blob([r], { type: 'application/pdf' }));
-        downloadMultipleBlobs(blobs, finalFilenames);
+        if (results.length > 1) {
+          // Package all pages as a ZIP archive (matches the advertised "Instant ZIP Packaging").
+          try {
+            const zip = new JSZip();
+            results.forEach((r, i) => zip.file(finalFilenames[i], r));
+            const zipBlob = await zip.generateAsync({ type: 'blob' });
+            const zipName = `${(inputName ? sanitizeFilename(inputName) : `${baseName}_split_pages`).replace(/\.zip$/i, '')}.zip`;
+            downloadBlob(zipBlob, zipName);
+          } catch {
+            // Fall back to individual downloads if ZIP packaging fails.
+            const blobs = results.map(r => new Blob([r], { type: 'application/pdf' }));
+            downloadMultipleBlobs(blobs, finalFilenames);
+          }
+        } else {
+          const blobs = results.map(r => new Blob([r], { type: 'application/pdf' }));
+          downloadMultipleBlobs(blobs, finalFilenames);
+        }
       });
     } catch (err) {
       progressEl.style.display = 'none';
