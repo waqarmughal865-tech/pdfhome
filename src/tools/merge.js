@@ -585,9 +585,12 @@ export function renderMerge(container) {
             <p class="error-display__title">${title}</p>
             <p class="error-display__message">${message}</p>
           </div>
-          <button class="error-display__dismiss" onclick="this.closest('.error-display').parentElement.style.display='none'">${icon('x', 16)}</button>
+          <button class="error-display__dismiss" type="button">${icon('x', 16)}</button>
         </div>
       `;
+      errorEl.querySelector('.error-display__dismiss')?.addEventListener('click', () => {
+        errorEl.style.display = 'none';
+      });
     }
   }
 

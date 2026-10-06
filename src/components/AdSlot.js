@@ -7,6 +7,13 @@
  */
 
 import { icon } from './icons.js';
+import { getConsent } from './ConsentBanner.js';
+
+// ConsentBanner.js self-initializes on DOMContentLoaded and is imported here
+// (side effect) so it executes at app boot — AdSlot.js is statically imported
+// by src/main.js. Circular import is safe: both modules only call each other's
+// functions at runtime, after full module evaluation.
+import './ConsentBanner.js';
 
 // Configuration: Google AdSense Publisher ID
 export const ADSENSE_CONFIG = {
@@ -89,10 +96,27 @@ export function renderAdSlot(type = 'banner', slotKey = 'workspaceBottom') {
 
 /**
  * Safely push AdSense requests after DOM updates and handle unfilled status.
+ *
+ * CONSENT GATE: ad pushes are only performed when the visitor has explicitly
+ * opted in via the consent banner (localStorage 'pdfhome-consent' with
+ * adConsent === true). Without consent — rejected or undecided — we never
+ * touch window.adsbygoogle and hide the ad containers instead of leaving
+ * empty "Advertisement" boxes.
  */
 export function refreshAds() {
   if (typeof window === 'undefined') return;
   try {
+    // ── Consent check ─────────────────────────────────────────────
+    const consent = getConsent();
+    if (!consent || consent.adConsent !== true) {
+      // No ad consent: hide ad containers so no empty ad slots remain.
+      document.querySelectorAll('.ad-container').forEach((container) => {
+        if (container.classList.contains('ad-container--fallback')) return;
+        container.style.display = 'none';
+      });
+      return;
+    }
+    // ── Consented: push ads as before ─────────────────────────────
     const uninitialized = document.querySelectorAll('ins.adsbygoogle:not([data-adsbygoogle-status])');
     if (uninitialized.length > 0) {
       uninitialized.forEach((ins) => {

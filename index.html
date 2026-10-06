@@ -5,30 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
   
   <!-- Instant Zero-Flash Theme Execution: Runs synchronously before any DOM paint -->
-  <script>
-    (function () {
-      try {
-        var theme = localStorage.getItem('pdf-home-theme') || localStorage.getItem('pdf-workspace-theme');
-        if (!theme) {
-          theme = (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light';
-        }
-        document.documentElement.setAttribute('data-theme', theme);
-        document.documentElement.dataset.theme = theme;
-        document.documentElement.classList.add('no-transitions');
-        document.documentElement.style.backgroundColor = (theme === 'dark') ? '#0b0f19' : '#f8fafc';
-        document.documentElement.style.colorScheme = theme;
-      } catch (e) {}
-    })();
-  </script>
+  <script src="/theme-init.js"></script>
 
   <!-- Client-Side Hardening & Anti-XSS Security Policies with AdSense support -->
   <meta http-equiv="X-Content-Type-Options" content="nosniff" />
   <meta name="referrer" content="strict-origin-when-cross-origin" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' blob: https://cdn.jsdelivr.net https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.google.com https://ep2.adtrafficquality.google; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://pagead2.googlesyndication.com https://*.doubleclick.net https://*.google.com https://*.gstatic.com; frame-src 'self' https://googleads.g.doubleclick.net https://*.google.com https://pagead2.googlesyndication.com https://tpc.googlesyndication.com; connect-src 'self' blob: data: https://cdn.jsdelivr.net https://tessdata.projectnaptha.com https://*.firebaseio.com https://*.firebasedatabase.app https://*.googleapis.com https://pagead2.googlesyndication.com https://*.google.com https://*.doubleclick.net; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' blob: https://cdn.jsdelivr.net https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.google.com https://ep2.adtrafficquality.google; worker-src 'self' blob:; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https://pagead2.googlesyndication.com https://*.doubleclick.net https://*.google.com https://*.gstatic.com; frame-src 'self' https://googleads.g.doubleclick.net https://*.google.com https://pagead2.googlesyndication.com https://tpc.googlesyndication.com; connect-src 'self' blob: data: https://cdn.jsdelivr.net https://*.firebaseio.com https://*.firebasedatabase.app https://*.googleapis.com https://pagead2.googlesyndication.com https://*.google.com https://*.doubleclick.net; object-src 'none'; frame-ancestors 'none'; base-uri 'self'; form-action 'self';" />
 
-  <!-- Google AdSense -->
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9649951726869483"
-     crossorigin="anonymous"></script>
+  <!-- Google AdSense: injected dynamically by the consent banner (Worker B) only after consent -->
 
   <title>PDFHome — 100% Free Online PDF Tools &amp; Office Converter (Private &amp; Fast)</title>
   <meta name="description" content="Free online PDF tools. Merge, split, compress, sign, and convert PDF to Word, Excel, PowerPoint, and JPG directly in your browser. 100% private, no file uploads, and no limits." />
@@ -84,7 +68,6 @@
         "url": "https://pdfhome.site/",
         "description": "Client-side PDF editor and converter offering digital signatures, watermarks, margin cropping, password encryption, bidirectional conversion to Word, Excel, PowerPoint, JPG, and local OCR.",
         "applicationCategory": "UtilitiesApplication",
-        "operatingSystem": "All modern browsers (Chrome, Edge, Safari, Firefox)",
         "offers": {
           "@type": "Offer",
           "price": "0.00",

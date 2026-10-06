@@ -4,10 +4,7 @@
  * step-by-step How-To instructions, FAQs, and related internal links.
  */
 
-import { MULTILINGUAL_QUERIES } from './multilingual-queries.js';
-
 export const DOMAIN = 'https://pdfhome.site';
-export { MULTILINGUAL_QUERIES };
 
 export const TOOL_SEO_DATA = {
   'merge-pdf': {
@@ -18,14 +15,14 @@ export const TOOL_SEO_DATA = {
     metaTitle: 'Merge PDF Online Free — Combine Multiple PDF Files | PDFHome',
     metaDescription: 'Combine multiple PDF files into one document in seconds. 100% free, private in-browser PDF merger with custom drag-and-drop page ordering and zero server uploads.',
     h1: 'Merge PDF Files Online Free',
-    intro: 'Combine multiple PDF files, documents, and images into a single unified PDF in seconds. Drag and drop your files to arrange them in your preferred reading order. All processing runs 100% locally in your browser for instant speed and absolute privacy.',
+    intro: 'Combine multiple PDF files, documents, and images into a single unified PDF in seconds. Drag and drop your files to arrange them in your preferred reading order. All processing runs locally in your browser for instant speed. Document files never leave your browser; ads use cookies per our privacy policy.',
     howTo: [
       { step: 1, title: 'Upload PDF Files', desc: 'Select or drag and drop two or more PDF files from your device into the upload box.' },
       { step: 2, title: 'Arrange Document Order', desc: 'Drag the file cards up or down to set the exact sequence you want them to appear in the combined document.' },
       { step: 3, title: 'Merge & Download', desc: 'Click "Merge PDF" to generate and download your combined document instantly with zero file uploads.' }
     ],
     features: [
-      { title: '100% In-Browser Privacy', desc: 'Your confidential documents never touch any cloud server or database.' },
+      { title: 'In-Browser Privacy', desc: 'Your confidential documents never touch any cloud server or database. Document files never leave your browser; ads use cookies per our privacy policy.' },
       { title: 'Custom File Ordering', desc: 'Easily reorder, add, or remove documents before compiling.' },
       { title: 'Preserve Visual Quality', desc: 'Retains original fonts, vector sharpness, and high-resolution images.' },
       { title: 'Zero Limits & No Sign-Up', desc: 'Free forever with no queues, email requirements, or file size paywalls.' }
@@ -80,7 +77,7 @@ export const TOOL_SEO_DATA = {
     intro: 'Shrink large PDF documents for faster email sharing and web uploads. PDFHome optimizes structural streams, duplicate font descriptors, and image compression while actively ensuring file size never inflates.',
     howTo: [
       { step: 1, title: 'Upload PDF Document', desc: 'Select or drop the PDF file you want to compress into the tool workspace.' },
-      { step: 2, title: 'Select Compression Level', desc: 'Choose your desired compression strength from Recommended, High, or Extreme modes.' },
+      { step: 2, title: 'Select Compression Level', desc: 'Choose your compression level: Lossless, Balanced (Recommended), or Strong (Maximum Savings).' },
       { step: 3, title: 'Download Smaller PDF', desc: 'Review the live file size reduction percentage and save your optimized PDF immediately.' }
     ],
     features: [
@@ -90,7 +87,7 @@ export const TOOL_SEO_DATA = {
       { title: 'Private & Serverless', desc: 'Documents remain on your computer throughout the entire optimization process.' }
     ],
     faqs: [
-      { q: 'Will compressing a PDF make text blurry?', a: 'No. PDFHome uses vector-aware optimization that preserves font outlines and crisp text rendering.' },
+      { q: 'Will compressing a PDF make text blurry?', a: 'Lossless mode preserves vector text so it stays crisp, selectable, and searchable. Balanced and Strong modes rasterize pages into images for maximum size reduction — text in those outputs is not selectable or searchable.' },
       { q: 'What is Smart Size-Guard?', a: 'Smart Size-Guard prevents accidental file inflation on already-compressed PDFs, guaranteeing only smaller files are saved.' },
       { q: 'How much file size reduction can I expect?', a: 'Typical reduction ranges between 30% and 80% depending on embedded images and metadata streams in the original document.' },
       { q: 'Is there a file size limit for compression?', a: 'Since compression is done locally in your browser memory, you can compress large documents without server timeouts.' }
@@ -104,16 +101,16 @@ export const TOOL_SEO_DATA = {
     name: 'PDF to Word',
     toolId: 'convert-word',
     metaTitle: 'PDF to Word Converter Free — Convert PDF to Editable DOCX | PDFHome',
-    metaDescription: 'Convert PDF documents into 100% editable Microsoft Word DOCX files. Preserves tables, columns, headings, and formatting with Adobe Acrobat layout fidelity.',
+    metaDescription: 'Convert PDF documents into editable Microsoft Word DOCX files. Preserves tables, columns, headings, and formatting through best-effort structural reconstruction.',
     h1: 'Convert PDF to Word (DOCX) Online Free',
-    intro: 'Transform PDF documents into fully editable Microsoft Word (.docx) files with outstanding layout accuracy. Preserves tables, two-column sidebars, bold headings, bullet lists, divider lines, and embedded photos with fixed table stability.',
+    intro: 'Transform PDF documents into fully editable Microsoft Word (.docx) files. Reconstructs tables, two-column sidebars, bold headings, bullet lists, divider lines, and embedded photos on a best-effort basis.',
     howTo: [
       { step: 1, title: 'Select PDF Document', desc: 'Drop your PDF file into the converter area or click to browse files.' },
       { step: 2, title: 'Instant Layout Analysis', desc: 'The engine parses text clusters, font metrics, columns, and embedded images in memory.' },
       { step: 3, title: 'Download Editable Word DOCX', desc: 'Save your generated Microsoft Word document ready for editing in Word, Google Docs, or LibreOffice.' }
     ],
     features: [
-      { title: 'Adobe-Grade Layout Fidelity', desc: 'Accurately reconstructs complex multi-column resumes, reports, and tabular data.' },
+      { title: 'Best-Effort Layout Reconstruction', desc: 'Reconstructs multi-column resumes, reports, and tabular data on a best-effort basis; complex documents may need manual cleanup.' },
       { title: '100% Editable Text & Tables', desc: 'Produces genuine WordprocessingML paragraphs, headings, bullet lists, and tables.' },
       { title: 'Image & Photo Preservation', desc: 'Extracts and scales embedded profile pictures and logos directly into the document.' },
       { title: 'Zero Cloud Storage', desc: 'Your private resumes, contracts, and financial sheets are never uploaded to any cloud server.' }
@@ -191,7 +188,7 @@ export const TOOL_SEO_DATA = {
     metaTitle: 'PDF to JPG Converter Free — Convert PDF Pages to Images | PDFHome',
     metaDescription: 'Convert PDF pages into high-resolution JPG or PNG images online. Free, secure, client-side PDF to picture converter with ZIP download.',
     h1: 'Convert PDF to JPG Images Online Free',
-    intro: 'Render and extract high-resolution JPG or PNG pictures from any PDF document. Download individual pages as clear pictures or save all pages in a single ZIP archive. 100% private in-browser image rendering.',
+    intro: 'Render and extract high-resolution JPG or PNG pictures from any PDF document. Download individual pages as clear pictures or save all pages in a single ZIP archive. Document files never leave your browser; ads use cookies per our privacy policy.',
     howTo: [
       { step: 1, title: 'Select PDF File', desc: 'Choose the PDF document whose pages you want to convert into images.' },
       { step: 2, title: 'Choose Image Format', desc: 'Select JPG or PNG and adjust rendering resolution (DPI).' },
@@ -229,7 +226,7 @@ export const TOOL_SEO_DATA = {
       { title: 'Multiple Format Support', desc: 'Combine JPG, JPEG, PNG, WebP, and BMP images seamlessly.' },
       { title: 'Smart Page Sizing', desc: 'Fit to standard A4, US Letter, or auto-scale to the natural image aspect ratio.' },
       { title: 'Reorder Before Creating', desc: 'Drag-and-drop thumbnail sorting to organize picture order.' },
-      { title: 'Zero Cloud Uploads', desc: 'Your private family photos, receipts, and ID documents remain 100% on your device.' }
+      { title: 'Zero Cloud Uploads', desc: 'Your private family photos, receipts, and ID documents never leave your browser. Ads use cookies per our privacy policy.' }
     ],
     faqs: [
       { q: 'Can I combine multiple pictures into one PDF?', a: 'Yes, you can upload as many pictures as you need and combine them into a single PDF document.' },
@@ -256,7 +253,7 @@ export const TOOL_SEO_DATA = {
     features: [
       { title: 'Searchable & Selectable Text', desc: 'Search keywords, copy paragraphs, and index documents easily.' },
       { title: 'High Recognition Accuracy', desc: 'Recognizes printed text, column layouts, and various typefaces.' },
-      { title: '100% Private In-Browser OCR', desc: 'Scanned confidential medical and tax records are never sent to external AI servers.' },
+      { title: 'Private In-Browser OCR', desc: 'Scanned confidential medical and tax records are never sent to external AI servers.' },
       { title: 'No Subscription Required', desc: 'Free OCR character recognition without quotas or paywalls.' }
     ],
     faqs: [
@@ -273,7 +270,7 @@ export const TOOL_SEO_DATA = {
     name: 'Rotate PDF',
     toolId: 'pages-rotate',
     metaTitle: 'Rotate PDF Pages Online Free — Turn PDF 90, 180, 270 Degrees | PDFHome',
-    metaDescription: 'Rotate PDF pages permanently online. Turn individual pages or all pages 90, 180, or 270 degrees clockwise or counter-clockwise. Free and 100% private.',
+    metaDescription: 'Rotate PDF pages permanently online. Turn individual pages or all pages 90, 180, or 270 degrees clockwise or counter-clockwise. Free. Document files never leave your browser.',
     h1: 'Rotate PDF Pages Online Free',
     intro: 'Fix upside-down or sideways pages in your PDF documents. Rotate individual pages or all pages at once by 90°, 180°, or 270° clockwise or counter-clockwise. Save your rotated PDF permanently with zero server storage.',
     howTo: [
@@ -369,7 +366,7 @@ export const TOOL_SEO_DATA = {
       { title: 'Smooth Ink Canvas', desc: 'Pressure-sensitive signature drawing pad with blue and black ink options.' },
       { title: 'Transparent Stamp Upload', desc: 'Upload pre-made signature graphics and overlay them cleanly on signature lines.' },
       { title: '9-Point Grid Alignment', desc: 'Snap your signature precisely to standard contract signature boxes.' },
-      { title: '100% Private Signing', desc: 'Confidential contracts and personal signatures are never stored on any remote server.' }
+      { title: 'Private Signing', desc: 'Confidential contracts and personal signatures are never stored on any remote server.' }
     ],
     faqs: [
       { q: 'Is signing a PDF on PDFHome free?', a: 'Yes, signing PDFs is 100% free with no account creation or monthly subscription.' },
@@ -464,7 +461,7 @@ export const TOOL_SEO_DATA = {
     name: 'Word to PDF',
     toolId: 'convert-word',
     metaTitle: 'Word to PDF Converter Free — Convert DOCX to PDF Online | PDFHome',
-    metaDescription: 'Convert Microsoft Word (.docx) documents to PDF online for free. Fast, accurate, and 100% private in-browser conversion with layout preservation and zero server uploads.',
+    metaDescription: 'Convert Microsoft Word (.docx) documents to PDF online for free. Fast, accurate in-browser conversion with best-effort layout reconstruction. Document files never leave your browser; ads use cookies per our privacy policy.',
     h1: 'Word to PDF Converter Free Online',
     intro: 'Convert DOCX Word documents into professional, high-resolution PDF files right in your browser. Preserve fonts, formatting, margins, and layouts with zero server uploads and complete privacy.',
     howTo: [
@@ -473,7 +470,7 @@ export const TOOL_SEO_DATA = {
       { step: 3, title: 'Download PDF', desc: 'Click to export and download your clean, print-ready PDF file instantly.' }
     ],
     features: [
-      { title: '100% In-Browser Privacy', desc: 'Confidential business contracts and personal documents never leave your device.' },
+      { title: 'In-Browser Privacy', desc: 'Confidential business contracts and personal documents never leave your device.' },
       { title: 'Precise Layout Rendering', desc: 'Preserves tables, headings, lists, font styling, and margin alignment.' },
       { title: 'No Installation or Sign-Up', desc: 'Free forever with no queues, email registration, or file size limits.' }
     ],
@@ -509,24 +506,36 @@ export const TOOL_SEO_DATA = {
       { q: 'Are my financial spreadsheets secure?', a: 'Completely. All data processing is client-side in your browser; nothing is uploaded.' }
     ],
     relatedTools: ['pdf-to-excel', 'merge-pdf', 'compress-pdf', 'pdf-to-word']
+  },
+
+  'slides-to-pdf': {
+    slug: '/slides-to-pdf',
+    aliases: ['#/slides-to-pdf'],
+    name: 'Slides (PPTX) to PDF',
+    toolId: 'convert-slides',
+    metaTitle: 'PowerPoint to PDF Converter Free — Convert PPTX to PDF Online | PDFHome',
+    metaDescription: 'Convert Microsoft PowerPoint (.pptx) presentations to PDF online for free. Fast, private in-browser conversion with zero file uploads.',
+    h1: 'PowerPoint to PDF Converter Free Online',
+    intro: 'Convert PowerPoint slide presentations (.pptx) into clean, high-resolution PDF decks right in your browser. No server uploads, no sign-up, no watermarks.',
+    howTo: [
+      { step: 1, title: 'Upload Presentation', desc: 'Select or drag and drop your .pptx file into the converter workbench.' },
+      { step: 2, title: 'Convert Slides', desc: 'Our client-side engine renders each slide into crisp PDF pages in memory.' },
+      { step: 3, title: 'Download PDF', desc: 'Save your presentation as a shareable, print-ready PDF document instantly.' }
+    ],
+    features: [
+      { title: 'In-Browser Privacy', desc: 'Your decks and pitch presentations never leave your device.' },
+      { title: 'High-Resolution Slides', desc: 'Slides are rendered sharply so text and graphics stay crisp in the PDF.' },
+      { title: 'No Installation or Sign-Up', desc: 'Free forever with no queues, email registration, or watermarks.' }
+    ],
+    faqs: [
+      { q: 'Can I convert PPTX to PDF without PowerPoint installed?', a: 'Yes. PDFHome converts presentations directly inside your web browser.' },
+      { q: 'Are my presentation files uploaded to a server?', a: 'No. All processing happens entirely in your local browser session.' },
+      { q: 'Will animations or transitions carry over to the PDF?', a: 'No. Each slide is captured as a static page, so animations and transitions are not preserved.' },
+      { q: 'Does converting add a watermark?', a: 'No, PDFHome never adds watermarks or branding to your converted documents.' }
+    ],
+    relatedTools: ['pdf-to-powerpoint', 'pdf-to-word', 'merge-pdf', 'compress-pdf']
   }
 };
-
-// Attach multilingual search queries to each tool definition
-for (const [toolKey, group] of Object.entries(MULTILINGUAL_QUERIES)) {
-  if (TOOL_SEO_DATA[toolKey] && group.terms) {
-    TOOL_SEO_DATA[toolKey].multilingual = group.terms;
-    
-    // Add international multilingual query FAQ
-    if (TOOL_SEO_DATA[toolKey].faqs) {
-      const topTerms = group.terms.slice(0, 4).map(t => `"${t.term}" (${t.lang})`).join(', ');
-      TOOL_SEO_DATA[toolKey].faqs.push({
-        q: `Can I use this tool if I am searching in Spanish, French, German, or other languages?`,
-        a: `Yes! PDFHome is designed for international users worldwide. You can search and access this tool via common global queries such as ${topTerms}. All PDF processing runs locally in your browser with complete multi-language document support.`
-      });
-    }
-  }
-}
 
 /**
  * Helper to retrieve SEO metadata by key or slug.

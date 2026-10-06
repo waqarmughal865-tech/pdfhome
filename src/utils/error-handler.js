@@ -3,6 +3,8 @@
  * Logs error details to browser console for easy debugging.
  */
 
+import { escapeHtml } from './file-utils.js';
+
 /**
  * Classify an error and return a user-friendly message + title.
  * @param {Error|any} error
@@ -77,8 +79,10 @@ export function classifyError(error) {
     };
   }
 
-  // If there is a clean specific error message, include it
-  const cleanDetail = rawMsg.length > 0 && rawMsg.length < 120 ? ` (${rawMsg})` : '';
+  // If there is a clean specific error message, include it.
+  // The raw library message is escaped here (single choke point) because parser
+  // errors can echo untrusted file content that flows into innerHTML sinks.
+  const cleanDetail = rawMsg.length > 0 && rawMsg.length < 120 ? ` (${escapeHtml(rawMsg)})` : '';
 
   return {
     title: 'Processing Error',

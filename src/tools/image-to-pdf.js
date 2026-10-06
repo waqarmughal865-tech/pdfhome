@@ -350,7 +350,10 @@ export function renderImageToPdf(container) {
     const el = document.getElementById('i2p-error');
     if (el) {
       el.style.display = 'block';
-      el.innerHTML = `<div class="error-display"><span class="error-display__icon">${icon('alertCircle', 20)}</span><div class="error-display__content"><p class="error-display__title">${title}</p><p class="error-display__message">${message}</p></div><button class="error-display__dismiss" onclick="this.closest('.error-display').parentElement.style.display='none'">${icon('x', 16)}</button></div>`;
+      el.innerHTML = `<div class="error-display"><span class="error-display__icon">${icon('alertCircle', 20)}</span><div class="error-display__content"><p class="error-display__title">${title}</p><p class="error-display__message">${message}</p></div><button class="error-display__dismiss" type="button">${icon('x', 16)}</button></div>`;
+      el.querySelector('.error-display__dismiss')?.addEventListener('click', () => {
+        el.style.display = 'none';
+      });
     }
   }
 

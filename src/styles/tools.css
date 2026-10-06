@@ -778,27 +778,7 @@
   }
 
   .app-header__nav {
-    display: flex;
-    overflow-x: auto;
-    white-space: nowrap;
-    scrollbar-width: none;
-    -webkit-overflow-scrolling: touch;
-    padding: 2px 0;
-    margin-left: var(--space-2);
-    flex: 1;
-    min-width: 0;
-    max-width: 100%;
-    gap: 4px;
-  }
-
-  .app-header__nav::-webkit-scrollbar {
     display: none;
-  }
-
-  .app-header__nav-link {
-    padding: 6px 10px;
-    font-size: var(--text-xs);
-    flex-shrink: 0;
   }
 
   .home__hero {

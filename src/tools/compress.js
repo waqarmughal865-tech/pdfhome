@@ -564,9 +564,12 @@ export function renderCompress(container) {
             <p class="error-display__title">${title}</p>
             <p class="error-display__message">${message}</p>
           </div>
-          <button class="error-display__dismiss" onclick="this.closest('.error-display').parentElement.style.display='none'">${icon('x', 16)}</button>
+          <button class="error-display__dismiss" type="button">${icon('x', 16)}</button>
         </div>
       `;
+      el.querySelector('.error-display__dismiss')?.addEventListener('click', () => {
+        el.style.display = 'none';
+      });
     }
   }
 

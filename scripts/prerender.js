@@ -30,15 +30,26 @@ if (!fs.existsSync(DIST_INDEX)) {
   process.exit(1);
 }
 
-const baseTemplate = fs.readFileSync(DIST_INDEX, 'utf-8');
+// H4: strip the keyword-stuffed <noscript> block (contains a second <h1>)
+// from the base template so every generated page has exactly one visible H1.
+let baseTemplate = fs.readFileSync(DIST_INDEX, 'utf-8');
+baseTemplate = baseTemplate.replace(/<noscript>[\s\S]*?<\/noscript>/g, '');
+
+// Copy the render-blocking theme-init script to dist/. Vite does not bundle
+// plain <script src> tags, so without this /theme-init.js would 404 and
+// zero-flash theming would regress. (vite build empties dist/ first, and this
+// script runs after the build, so the copy is safe.)
+const themeInitSrc = path.resolve(ROOT_DIR, 'src', 'theme-init.js');
+if (fs.existsSync(themeInitSrc)) {
+  fs.copyFileSync(themeInitSrc, path.resolve(DIST_DIR, 'theme-init.js'));
+  console.log('  ✓ Copied: src/theme-init.js -> dist/theme-init.js');
+}
 
 /**
  * Shell Navigation Links
  */
 const NAV_TOOLS = [
   { id: 'sign', label: 'Sign PDF', path: '/sign-pdf' },
-  { id: 'pages', label: 'Page Editor', path: '/pages' },
-  { id: 'convert', label: 'Convert', path: '/convert' },
   { id: 'merge', label: 'Merge', path: '/merge-pdf' },
   { id: 'split', label: 'Split', path: '/split-pdf' },
   { id: 'compress', label: 'Compress', path: '/compress-pdf' },
@@ -59,6 +70,17 @@ function buildShellHtml(mainContentHtml, currentPath = '/') {
     `;
   }).join('');
 
+  const navHtmlMobile = NAV_TOOLS.map(t => {
+    const isActive = t.path === currentPath;
+    return `
+      <a class="app-header__nav-link mobile-nav__link ${isActive ? 'app-header__nav-link--active' : ''}"
+         href="${t.path}"
+         data-tool="${t.id}">
+        ${t.label}
+      </a>
+    `;
+  }).join('');
+
   return `
     <header class="app-header" id="app-header">
       <a class="app-header__logo" href="/" id="logo-link" aria-label="PDF Home">
@@ -67,14 +89,20 @@ function buildShellHtml(mainContentHtml, currentPath = '/') {
         </span>
         <span class="app-header__logo-text">PDF<span class="logo-accent">Home</span></span>
       </a>
-      <nav class="app-header__nav" id="main-nav">
+      <nav class="app-header__nav" id="main-nav" aria-label="Primary">
         ${navHtml}
       </nav>
       <div class="app-header__right">
+        <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-nav">
+          ${icon('menu', 20)}
+        </button>
         <button class="theme-toggle" id="theme-toggle" title="Toggle theme" aria-label="Toggle dark mode">
           ${icon('moon', 18)}
         </button>
       </div>
+      <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation" hidden>
+        ${navHtmlMobile}
+      </nav>
     </header>
 
     <main class="main-content" id="main-content">
@@ -140,7 +168,6 @@ function buildShellHtml(mainContentHtml, currentPath = '/') {
               <li><a class="app-footer__link" href="/watermark-pdf">${icon('chevronRight', 12)} Watermark PDF</a></li>
               <li><a class="app-footer__link" href="/crop-pdf">${icon('chevronRight', 12)} Crop PDF</a></li>
               <li><a class="app-footer__link" href="/page-numbers">${icon('chevronRight', 12)} Number Pages</a></li>
-              <li><a class="app-footer__link" href="/pages">${icon('chevronRight', 12)} Page Editor</a></li>
             </ul>
           </div>
 
@@ -174,7 +201,11 @@ function buildShellHtml(mainContentHtml, currentPath = '/') {
  * Build Homepage Content
  */
 function buildHomeContentHtml() {
-  const cardsHtml = TOOL_REGISTRY.map(card => `
+// Only link prerendered routes in static HTML: /pages and /convert are real
+// SPA routes but have no static page, so linking them here would serve
+// crawler-facing 404s. They remain reachable via in-app navigation.
+const prerenderedCards = TOOL_REGISTRY.filter(card => TOOL_SEO_DATA[card.id]);
+  const cardsHtml = prerenderedCards.map(card => `
     <a class="tool-card" href="${card.path}" data-category="${card.category}">
       <div class="tool-card__header">
         <div class="tool-card__icon tool-card__icon--${card.iconClass}">
@@ -215,7 +246,7 @@ function buildHomeContentHtml() {
 
           <!-- Filter Pills -->
           <div class="search-filter-pills" id="home-filter-pills">
-            <button class="filter-pill filter-pill--active" data-category="all">All Tools (${TOOL_REGISTRY.length})</button>
+            <button class="filter-pill filter-pill--active" data-category="all">All Tools (${prerenderedCards.length})</button>
             <button class="filter-pill" data-category="popular">Popular</button>
             <button class="filter-pill" data-category="sign">Sign & Security</button>
             <button class="filter-pill" data-category="convert">Convert Office</button>
@@ -242,7 +273,7 @@ function buildHomeContentHtml() {
           <div style="width:38px; height:38px; border-radius:var(--radius-lg); background:rgba(99,102,241,0.1); color:var(--color-primary); display:flex; align-items:center; justify-content:center">
             ${icon('zap', 20)}
           </div>
-          <h3 style="font-size:var(--text-md); font-weight:var(--weight-bold); margin:4px 0 0 0">Instant Local Speed</h3>
+          <h2 style="font-size:var(--text-md); font-weight:var(--weight-bold); margin:4px 0 0 0">Instant Local Speed</h2>
           <p style="font-size:var(--text-sm); color:var(--color-text-secondary); margin:0; line-height:1.5">
             Files never queue on a remote server. Document conversions, OCR character extraction, and digital signatures render instantaneously in memory.
           </p>
@@ -252,9 +283,9 @@ function buildHomeContentHtml() {
           <div style="width:38px; height:38px; border-radius:var(--radius-lg); background:rgba(34,197,94,0.1); color:#16a34a; display:flex; align-items:center; justify-content:center">
             ${icon('shieldCheck', 20)}
           </div>
-          <h3 style="font-size:var(--text-md); font-weight:var(--weight-bold); margin:4px 0 0 0">Private By Architecture</h3>
+          <h2 style="font-size:var(--text-md); font-weight:var(--weight-bold); margin:4px 0 0 0">Private By Architecture</h2>
           <p style="font-size:var(--text-sm); color:var(--color-text-secondary); margin:0; line-height:1.5">
-            Confidential contracts, tax records, and legal forms stay strictly inside your browser. No telemetry or server retention.
+            Confidential contracts, tax records, and legal forms stay strictly inside your browser. Document files never leave your browser; ads use cookies per our privacy policy.
           </p>
         </div>
 
@@ -262,7 +293,7 @@ function buildHomeContentHtml() {
           <div style="width:38px; height:38px; border-radius:var(--radius-lg); background:rgba(234,179,8,0.1); color:#ca8a04; display:flex; align-items:center; justify-content:center">
             ${icon('fileSpreadsheet', 20)}
           </div>
-          <h3 style="font-size:var(--text-md); font-weight:var(--weight-bold); margin:4px 0 0 0">Smart Office Suite</h3>
+          <h2 style="font-size:var(--text-md); font-weight:var(--weight-bold); margin:4px 0 0 0">Smart Office Suite</h2>
           <p style="font-size:var(--text-sm); color:var(--color-text-secondary); margin:0; line-height:1.5">
             Turn PDF reports into editable Word (.docx), tables into Excel (.xlsx), and decks into PowerPoint (.pptx) with full formatting intact.
           </p>
@@ -388,25 +419,6 @@ function buildToolPageHtml(seoData) {
     `)
     .join('');
 
-  // Multilingual & Global Intent Queries
-  const multilingualHtml = (seoData.multilingual && seoData.multilingual.length > 0) ? `
-    <section class="seo-section seo-multilingual" aria-labelledby="global-queries-heading">
-      <h2 id="global-queries-heading" class="seo-section__title">International Search Queries &amp; Global Support</h2>
-      <p class="seo-multilingual-intro">
-        Looking for ${seoData.name} in your native language? PDFHome is accessible worldwide without language barriers. Users across the globe search and access this tool with the following regional queries:
-      </p>
-      <div class="seo-multilingual-grid">
-        ${seoData.multilingual.map(m => `
-          <div class="seo-multilingual-card">
-            <span class="seo-multilingual-lang">${icon('globe', 12)} ${m.lang}</span>
-            <span class="seo-multilingual-term">${m.term}</span>
-            <span class="seo-multilingual-intent">${m.query}</span>
-          </div>
-        `).join('')}
-      </div>
-    </section>
-  ` : '';
-
   // FAQs
   const faqsHtml = (seoData.faqs || [])
     .map((faq, idx) => `
@@ -445,7 +457,7 @@ function buildToolPageHtml(seoData) {
         <div class="dropzone" id="dropzone" role="button" tabindex="0">
           <div class="dropzone__icon">${icon('upload', 44)}</div>
           <div class="dropzone__title">Select or drag &amp; drop files here</div>
-          <div class="dropzone__subtitle">100% private in-browser processing · Zero server uploads</div>
+          <div class="dropzone__subtitle">In-browser processing · Document files never leave your browser</div>
           <div class="dropzone__btn-wrap" style="margin-top:var(--space-3)">
             <button class="btn btn-primary btn-lg" type="button">Choose Files</button>
           </div>
@@ -467,9 +479,6 @@ function buildToolPageHtml(seoData) {
           ${featuresHtml}
         </div>
       </section>
-
-      <!-- Multilingual Global Support Hub -->
-      ${multilingualHtml}
 
       <!-- Frequently Asked Questions (FAQ) -->
       <section class="seo-section seo-faq" aria-labelledby="faq-heading">
@@ -499,10 +508,36 @@ function buildToolPageHtml(seoData) {
 }
 
 /**
+ * Shared Schema.org nodes reused across tool and legal pages.
+ */
+const ORG_SCHEMA_NODE = {
+  '@type': 'Organization',
+  '@id': `${DOMAIN}/#organization`,
+  'name': 'PDFHome',
+  'url': `${DOMAIN}/`,
+  'logo': `${DOMAIN}/icon.png`,
+  'contactPoint': {
+    '@type': 'ContactPoint',
+    'url': `${DOMAIN}/contact`,
+    'contactType': 'customer support'
+  }
+};
+
+const WEBSITE_SCHEMA_NODE = {
+  '@type': 'WebSite',
+  '@id': `${DOMAIN}/#website`,
+  'url': `${DOMAIN}/`,
+  'name': 'PDFHome',
+  'description': 'Free, private, in-browser PDF suite for converting, signing, merging, compressing, and editing PDF files.'
+};
+
+/**
  * Build Schema JSON-LD Graph
  */
 function buildToolSchemaJson(seoData, canonicalUrl) {
   const graph = [
+    WEBSITE_SCHEMA_NODE,
+    ORG_SCHEMA_NODE,
     {
       '@type': 'BreadcrumbList',
       'itemListElement': [
@@ -527,7 +562,6 @@ function buildToolSchemaJson(seoData, canonicalUrl) {
       'url': canonicalUrl,
       'description': seoData.metaDescription,
       'applicationCategory': 'UtilitiesApplication',
-      'operatingSystem': 'All modern web browsers',
       'offers': {
         '@type': 'Offer',
         'price': '0.00',
@@ -571,10 +605,43 @@ function buildToolSchemaJson(seoData, canonicalUrl) {
 }
 
 /**
+ * H6: page-appropriate schema for legal/info pages — minimal
+ * Organization + BreadcrumbList only, no FAQPage/WebApplication.
+ */
+function buildLegalSchemaJson(pageName, canonicalUrl) {
+  return JSON.stringify({
+    '@context': 'https://schema.org',
+    '@graph': [
+      ORG_SCHEMA_NODE,
+      {
+        '@type': 'BreadcrumbList',
+        'itemListElement': [
+          {
+            '@type': 'ListItem',
+            'position': 1,
+            'name': 'Home',
+            'item': `${DOMAIN}/`
+          },
+          {
+            '@type': 'ListItem',
+            'position': 2,
+            'name': pageName,
+            'item': canonicalUrl
+          }
+        ]
+      }
+    ]
+  }, null, 2);
+}
+
+/**
  * Build Full HTML Page from Base Template
  */
-function createPageHtml({ title, description, canonicalUrl, mainContentHtml, currentPath = '/', customSchemaJson = null, keywords = null, noindex = false }) {
+function createPageHtml({ title, description, canonicalUrl, mainContentHtml, currentPath = '/', customSchemaJson = null, noindex = false, modulePreloadTags = '' }) {
   let html = baseTemplate;
+
+  // L2: drop the legacy meta keywords tag entirely (spam-signal pattern)
+  html = html.replace(/<meta name="keywords" content="[\s\S]*?" \/>\n?/, '');
 
   // Robots (noindex for 404 page)
   if (noindex) {
@@ -587,16 +654,12 @@ function createPageHtml({ title, description, canonicalUrl, mainContentHtml, cur
   // Meta Description
   html = html.replace(/<meta name="description" content="[\s\S]*?" \/>/, `<meta name="description" content="${description}" />`);
 
-  // Per-page keywords (replace generic homepage keywords with tool-specific ones)
-  if (keywords) {
-    html = html.replace(/<meta name="keywords" content="[\s\S]*?" \/>/, `<meta name="keywords" content="${keywords}" />`);
+  // Canonical (dropped on noindex pages such as the 404 to avoid conflicting signals)
+  if (noindex) {
+    html = html.replace(/<link rel="canonical"[^>]*\/?>\n?/, '');
+  } else {
+    html = html.replace(/<link rel="canonical" href="[\s\S]*?" \/>/, `<link rel="canonical" href="${canonicalUrl}" />`);
   }
-
-  // Canonical + hreflang
-  html = html.replace(/<link rel="canonical" href="[\s\S]*?" \/>/, `<link rel="canonical" href="${canonicalUrl}" />`);
-  // Add hreflang tags after canonical for international SEO
-  const hreflangTags = `\n  <link rel="alternate" hreflang="en" href="${canonicalUrl}" />\n  <link rel="alternate" hreflang="x-default" href="${canonicalUrl}" />`;
-  html = html.replace(/(<link rel="canonical"[^>]*>)/, `$1${hreflangTags}`);
 
   // Open Graph
   html = html.replace(/<meta property="og:title" content="[\s\S]*?" \/>/, `<meta property="og:title" content="${title}" />`);
@@ -610,6 +673,11 @@ function createPageHtml({ title, description, canonicalUrl, mainContentHtml, cur
   // Schema.org JSON-LD
   if (customSchemaJson) {
     html = html.replace(/<script type="application\/ld\+json">[\s\S]*?<\/script>/, `<script type="application/ld+json">\n${customSchemaJson}\n  </script>`);
+  }
+
+  // H11: modulepreload hints for shared engine chunks (tool pages only)
+  if (modulePreloadTags) {
+    html = html.replace('</head>', `${modulePreloadTags}\n</head>`);
   }
 
   // App Body
@@ -639,7 +707,7 @@ console.log('🚀 Starting PDFHome Static Pre-Rendering Engine...');
 // 1. Homepage (/)
 const homeHtml = createPageHtml({
   title: 'PDFHome — 100% Free Online PDF Tools & Office Converter (Private & Fast)',
-  description: 'Free online PDF tools. Merge, split, compress, sign, and convert PDF to Word, Excel, PowerPoint, and JPG directly in your browser. 100% private, no file uploads, and no limits.',
+  description: 'Free PDF tools — merge, split, compress, sign, convert to Word, Excel, JPG in your browser. Files never leave your browser; ads use cookies per our policy.',
   canonicalUrl: `${DOMAIN}/`,
   mainContentHtml: buildHomeContentHtml(),
   currentPath: '/'
@@ -648,22 +716,24 @@ writeHtmlFile(path.resolve(DIST_DIR, 'index.html'), homeHtml);
 console.log('  ✓ Pre-rendered: / (dist/index.html)');
 
 // 2. All 18 Tool Pages
+
+// H11: modulepreload hints for the shared engine chunks (pdf-lib + pdf.js).
+// Defensive: only inject chunk files that actually exist in dist/assets.
+const ASSETS_DIR = path.resolve(DIST_DIR, 'assets');
+const engineChunkFiles = fs.existsSync(ASSETS_DIR)
+  ? fs.readdirSync(ASSETS_DIR).filter(f => /^es-.*\.js$/.test(f) || /^renderer-.*\.js$/.test(f))
+  : [];
+const toolPreloadTags = engineChunkFiles.map(f => `  <link rel="modulepreload" href="/assets/${f}" />`).join('\n');
+if (engineChunkFiles.length > 0) {
+  console.log(`  ℹ modulepreload hints: ${engineChunkFiles.join(', ')}`);
+}
+
 let toolCount = 0;
 for (const [key, seoData] of Object.entries(TOOL_SEO_DATA)) {
   const cleanSlug = seoData.slug.replace(/^\//, '');
   const canonicalUrl = `${DOMAIN}${seoData.slug}`;
   const customSchema = buildToolSchemaJson(seoData, canonicalUrl);
   const toolContentHtml = buildToolPageHtml(seoData);
-
-  // Build tool-specific keywords from SEO data
-  const toolKeywords = [
-    seoData.name.toLowerCase(),
-    `${seoData.name.toLowerCase()} online`,
-    `${seoData.name.toLowerCase()} free`,
-    `free ${seoData.name.toLowerCase()} online`,
-    'pdfhome',
-    ...(seoData.relatedTools || []).map(rt => rt.replace(/-/g, ' '))
-  ].join(', ');
 
   const toolPageHtml = createPageHtml({
     title: seoData.metaTitle,
@@ -672,7 +742,7 @@ for (const [key, seoData] of Object.entries(TOOL_SEO_DATA)) {
     mainContentHtml: toolContentHtml,
     currentPath: seoData.slug,
     customSchemaJson: customSchema,
-    keywords: toolKeywords
+    modulePreloadTags: toolPreloadTags
   });
 
   const outPath = path.resolve(DIST_DIR, cleanSlug, 'index.html');
@@ -718,31 +788,71 @@ const privacyHtml = createPageHtml({
         </section>
         <section style="border-top:1px solid var(--color-border); padding-top:var(--space-6)">
           <h2 style="font-size:var(--text-xl); font-weight:var(--weight-bold); color:var(--color-text-primary); margin-bottom:var(--space-3)">3. Local Storage Usage</h2>
-          <p>PDFHome uses browser localStorage strictly for user interface preferences such as Dark Mode or Light Mode theme states. No document content, passwords, or document metadata are saved in permanent browser storage.</p>
+          <p>
+            PDFHome uses browser <code style="background:var(--color-bg-tertiary); padding:2px 6px; border-radius:4px">localStorage</code> on your device to keep the site working smoothly and remember your choices:
+          </p>
+          <ul style="list-style:disc; margin-left:var(--space-5); margin-top:var(--space-2); display:flex; flex-direction:column; gap:var(--space-2)">
+            <li>Your theme preference (Dark Mode or Light Mode).</li>
+            <li>Your advertising-cookie choice for the consent banner (<code style="background:var(--color-bg-tertiary); padding:2px 6px; border-radius:4px">pdfhome-consent</code>).</li>
+            <li>Contact-form support data: submission timestamps for rate limiting (<code style="background:var(--color-bg-tertiary); padding:2px 6px; border-radius:4px">pdf_contact_history_v1</code>) and messages queued for delivery if you are offline (<code style="background:var(--color-bg-tertiary); padding:2px 6px; border-radius:4px">pdf_contact_offline_queue</code>, which may include the name and email you typed). You can clear these at any time by clearing your browser's site data.</li>
+          </ul>
+          <p style="margin-top:var(--space-3)">
+            No confidential document content, passwords, or document metadata are saved in permanent browser storage.
+          </p>
         </section>
         <section style="border-top:1px solid var(--color-border); padding-top:var(--space-6)">
-          <h2 style="font-size:var(--text-xl); font-weight:var(--weight-bold); color:var(--color-text-primary); margin-bottom:var(--space-3)">4. Third-Party Advertising & Google AdSense Cookie Disclosure</h2>
+          <h2 style="font-size:var(--text-xl); font-weight:var(--weight-bold); color:var(--color-text-primary); margin-bottom:var(--space-3)">4. Third-Party Libraries, Subprocessors & Network Destinations</h2>
           <p>
-            We partner with third-party advertising networks, including <strong>Google AdSense</strong>, to serve advertisements when you visit our website. These advertising partners may use cookies, web beacons, and similar technologies to gather non-personally identifiable information about your visits to this and other websites in order to deliver relevant ads about goods and services of interest to you.
+            Your <strong>document bytes</strong> never leave your browser, but loading and operating this website does involve the following third-party network destinations:
+          </p>
+          <ul style="list-style:disc; margin-left:var(--space-5); margin-top:var(--space-3); display:flex; flex-direction:column; gap:var(--space-2)">
+            <li><strong>Google AdSense</strong> — serves advertisements and may set advertising cookies/beacons, but <em>only</em> after you click "Accept" on our cookie-consent banner. If you reject or ignore the banner, no AdSense code is loaded at all.</li>
+            <li><strong>Google Fonts</strong> — font files are fetched per page view so the site renders correctly.</li>
+            <li><strong>jsDelivr CDN</strong> — serves the tesseract.js and pdf.js worker files loaded at runtime when you use OCR or PDF rendering features.</li>
+            <li><strong>Google Firebase Realtime Database</strong> — receives only the messages you intentionally submit through our contact form: your name, email address, message, topic, and browser locale. It never receives document content.</li>
+          </ul>
+        </section>
+        <section style="border-top:1px solid var(--color-border); padding-top:var(--space-6)">
+          <h2 style="font-size:var(--text-xl); font-weight:var(--weight-bold); color:var(--color-text-primary); margin-bottom:var(--space-3)">5. Third-Party Advertising & Google AdSense Cookie Disclosure</h2>
+          <p>
+            We partner with third-party advertising networks, including <strong>Google AdSense</strong>, to serve advertisements when you visit our website. These advertising partners may use cookies, web beacons, and similar technologies to gather information (not including your name, address, email, or telephone number) about your visits to this and other websites in order to deliver relevant ads about goods and services of interest to you.
           </p>
           <ul style="list-style:disc; margin-left:var(--space-5); margin-top:var(--space-3); display:flex; flex-direction:column; gap:var(--space-2)">
             <li>Third-party vendors, including Google, use cookies to serve ads based on a user's prior visits to our website or other websites.</li>
             <li>Google's use of advertising cookies enables it and its partners to serve ads to you based on your visit to PDFHome and/or other sites on the Internet.</li>
-            <li>You can opt out of personalized advertising by visiting <a href="https://adssettings.google.com" target="_blank" rel="noopener noreferrer" style="color:var(--color-accent); text-decoration:underline">Google Ads Settings</a> or <a href="https://www.aboutads.info/choices/" target="_blank" rel="noopener noreferrer" style="color:var(--color-accent); text-decoration:underline">aboutads.info</a>.</li>
+            <li>You can opt out of personalized advertising by visiting <a href="https://adssettings.google.com" target="_blank" rel="noopener noreferrer" style="color:var(--color-accent); text-decoration:underline">Google Ads Settings</a>. Alternatively, you can opt out of third-party vendors' use of cookies for personalized advertising by visiting <a href="https://www.aboutads.info/choices/" target="_blank" rel="noopener noreferrer" style="color:var(--color-accent); text-decoration:underline">aboutads.info</a>.</li>
           </ul>
         </section>
         <section style="border-top:1px solid var(--color-border); padding-top:var(--space-6)">
-          <h2 style="font-size:var(--text-xl); font-weight:var(--weight-bold); color:var(--color-text-primary); margin-bottom:var(--space-3)">5. GDPR & CCPA Compliance</h2>
-          <p>We respect the privacy rights of all visitors under the European General Data Protection Regulation (GDPR) and California Consumer Privacy Act (CCPA). Because our core document manipulation engine operates strictly client-side within your browser memory with zero file uploads or account profiling, we do not sell or share personal data derived from your files.</p>
+          <h2 style="font-size:var(--text-xl); font-weight:var(--weight-bold); color:var(--color-text-primary); margin-bottom:var(--space-3)">6. GDPR & CCPA Compliance</h2>
+          <p>We respect the privacy rights of all visitors under the European General Data Protection Regulation (GDPR) and the California Consumer Privacy Act (CCPA). Because our core document manipulation engine operates strictly client-side within your browser memory with zero file uploads or account profiling, we do not sell or share personal data derived from your files.</p>
         </section>
         <section style="border-top:1px solid var(--color-border); padding-top:var(--space-6)">
-          <h2 style="font-size:var(--text-xl); font-weight:var(--weight-bold); color:var(--color-text-primary); margin-bottom:var(--space-3)">6. Contact & Support Desk</h2>
-          <p>Have questions about this Privacy Policy? Contact our core developers via our <a href="/contact" style="color:var(--color-accent); font-weight:600; text-decoration:none">Support Desk</a>.</p>
+          <h2 style="font-size:var(--text-xl); font-weight:var(--weight-bold); color:var(--color-text-primary); margin-bottom:var(--space-3)">7. Contact & Support Desk</h2>
+          <p>
+            If you have questions, inquiries, or feedback regarding this Privacy Policy, AdSense disclosures, or data security, please reach out via our secure online contact desk:
+          </p>
+          <div style="margin-top:var(--space-3); display:inline-flex; align-items:center; gap:var(--space-3); background:var(--color-bg-primary); padding:var(--space-3) var(--space-5); border-radius:var(--radius-lg); border:1px solid var(--color-border)">
+            ${icon('mail', 18)}
+            <a href="/contact" style="color:var(--color-accent); font-weight:600; text-decoration:none">
+              Official PDF Home Support Desk
+            </a>
+          </div>
+        </section>
+        <section style="border-top:1px solid var(--color-border); padding-top:var(--space-6)">
+          <h2 style="font-size:var(--text-xl); font-weight:var(--weight-bold); color:var(--color-text-primary); margin-bottom:var(--space-3)">8. Contact Data Retention & Deletion Requests</h2>
+          <p>
+            Messages submitted through our contact form are stored in our private Firebase Realtime Database (name, email address, message, topic, submission time, and browser locale) so our team can respond to your inquiry. We keep contact submissions only as long as needed to handle your request and maintain a support history, after which they are deleted.
+          </p>
+          <p style="margin-top:var(--space-3)">
+            To request a copy or deletion of your contact submission, send a message through our <a href="/contact" style="color:var(--color-accent); text-decoration:underline">Support Desk</a> referencing the email address you used — we will honor deletion requests promptly. Messages you queued while offline (<code style="background:var(--color-bg-tertiary); padding:2px 6px; border-radius:4px">pdf_contact_offline_queue</code>) stay only in your browser until delivered and can be removed by clearing site data.
+          </p>
         </section>
       </div>
     </div>
   `,
-  currentPath: '/privacy'
+  currentPath: '/privacy',
+  customSchemaJson: buildLegalSchemaJson('Privacy Policy', `${DOMAIN}/privacy`)
 });
 writeHtmlFile(path.resolve(DIST_DIR, 'privacy', 'index.html'), privacyHtml);
 console.log('  ✓ Pre-rendered: /privacy (dist/privacy/index.html)');
@@ -783,7 +893,8 @@ const termsHtml = createPageHtml({
       </div>
     </div>
   `,
-  currentPath: '/terms'
+  currentPath: '/terms',
+  customSchemaJson: buildLegalSchemaJson('Terms of Service', `${DOMAIN}/terms`)
 });
 writeHtmlFile(path.resolve(DIST_DIR, 'terms', 'index.html'), termsHtml);
 console.log('  ✓ Pre-rendered: /terms (dist/terms/index.html)');
@@ -812,7 +923,8 @@ const contactHtml = createPageHtml({
       </div>
     </div>
   `,
-  currentPath: '/contact'
+  currentPath: '/contact',
+  customSchemaJson: buildLegalSchemaJson('Contact & Support', `${DOMAIN}/contact`)
 });
 writeHtmlFile(path.resolve(DIST_DIR, 'contact', 'index.html'), contactHtml);
 console.log('  ✓ Pre-rendered: /contact (dist/contact/index.html)');

@@ -5,6 +5,7 @@
 
 import { icon } from './icons.js';
 import { submitContactInquiry } from '../services/firebase-contact.js';
+import { escapeHtml } from '../utils/file-utils.js';
 
 export function renderPrivacy(container) {
   container.innerHTML = `
@@ -44,11 +45,13 @@ export function renderPrivacy(container) {
         <section style="border-top:1px solid var(--color-border); padding-top:var(--space-6)">
           <h2 style="font-size:var(--text-xl); font-weight:var(--weight-bold); color:var(--color-text-primary); margin-bottom:var(--space-3)">3. Local Storage Usage</h2>
           <p>
-            PDF Home uses browser <code style="background:var(--color-bg-tertiary); padding:2px 6px; border-radius:4px">localStorage</code> strictly for user experience preferences:
+            PDF Home uses browser <code style="background:var(--color-bg-tertiary); padding:2px 6px; border-radius:4px">localStorage</code> on your device to keep the site working smoothly and remember your choices:
           </p>
           <ul style="list-style:disc; margin-left:var(--space-5); margin-top:var(--space-2); display:flex; flex-direction:column; gap:var(--space-2)">
             <li>Your theme preference (Dark Mode or Light Mode).</li>
             <li>UI configuration toggles (such as organizer view state).</li>
+            <li>Your advertising-cookie choice for the consent banner (<code style="background:var(--color-bg-tertiary); padding:2px 6px; border-radius:4px">pdfhome-consent</code>).</li>
+            <li>Contact-form support data: submission timestamps for rate limiting (<code style="background:var(--color-bg-tertiary); padding:2px 6px; border-radius:4px">pdf_contact_history_v1</code>) and messages queued for delivery if you are offline (<code style="background:var(--color-bg-tertiary); padding:2px 6px; border-radius:4px">pdf_contact_offline_queue</code>, which may include the name and email you typed). You can clear these at any time by clearing your browser's site data.</li>
           </ul>
           <p style="margin-top:var(--space-3)">
             No confidential document content, passwords, or document metadata are saved in permanent browser storage.
@@ -56,10 +59,16 @@ export function renderPrivacy(container) {
         </section>
 
         <section style="border-top:1px solid var(--color-border); padding-top:var(--space-6)">
-          <h2 style="font-size:var(--text-xl); font-weight:var(--weight-bold); color:var(--color-text-primary); margin-bottom:var(--space-3)">4. Third-Party Libraries & Security</h2>
+          <h2 style="font-size:var(--text-xl); font-weight:var(--weight-bold); color:var(--color-text-primary); margin-bottom:var(--space-3)">4. Third-Party Libraries, Subprocessors & Network Destinations</h2>
           <p>
-            All client-side operations utilize audited, open-source web assemblies and standards including <code style="background:var(--color-bg-tertiary); padding:2px 6px; border-radius:4px">pdf-lib</code>, <code style="background:var(--color-bg-tertiary); padding:2px 6px; border-radius:4px">pdfjs-dist</code>, and <code style="background:var(--color-bg-tertiary); padding:2px 6px; border-radius:4px">tesseract.js</code>. No telemetry or covert telemetry beacons are embedded.
+            All client-side document operations utilize audited, open-source web assemblies and standards including <code style="background:var(--color-bg-tertiary); padding:2px 6px; border-radius:4px">pdf-lib</code>, <code style="background:var(--color-bg-tertiary); padding:2px 6px; border-radius:4px">pdfjs-dist</code>, and <code style="background:var(--color-bg-tertiary); padding:2px 6px; border-radius:4px">tesseract.js</code>. To keep the core promise above honest: your <strong>document bytes</strong> never leave your browser, but loading and operating this website does involve the following third-party network destinations:
           </p>
+          <ul style="list-style:disc; margin-left:var(--space-5); margin-top:var(--space-3); display:flex; flex-direction:column; gap:var(--space-2)">
+            <li><strong>Google AdSense</strong> (pagead2.googlesyndication.com) — serves advertisements and may set advertising cookies/beacons, but <em>only</em> after you click "Accept" on our cookie-consent banner. If you reject or ignore the banner, no AdSense code is loaded at all.</li>
+            <li><strong>Google Fonts</strong> (fonts.googleapis.com / fonts.gstatic.com) — font files are fetched per page view so the site renders correctly.</li>
+            <li><strong>jsDelivr CDN</strong> (cdn.jsdelivr.net) — serves the tesseract.js and pdf.js worker files loaded at runtime when you use OCR or PDF rendering features.</li>
+            <li><strong>Google Firebase Realtime Database</strong> (firebaseio.com) — receives only the messages you intentionally submit through our contact form: your name, email address, message, topic, and browser locale. It never receives document content.</li>
+          </ul>
         </section>
 
         <section style="border-top:1px solid var(--color-border); padding-top:var(--space-6)">
@@ -92,6 +101,16 @@ export function renderPrivacy(container) {
               Official PDF Home Support Desk
             </a>
           </div>
+        </section>
+
+        <section style="border-top:1px solid var(--color-border); padding-top:var(--space-6)">
+          <h2 style="font-size:var(--text-xl); font-weight:var(--weight-bold); color:var(--color-text-primary); margin-bottom:var(--space-3)">8. Contact Data Retention & Deletion Requests</h2>
+          <p>
+            Messages submitted through our contact form are stored in our private Firebase Realtime Database (name, email address, message, topic, submission time, and browser locale) so our team can respond to your inquiry. We keep contact submissions only as long as needed to handle your request and maintain a support history, after which they are deleted.
+          </p>
+          <p style="margin-top:var(--space-3)">
+            To request a copy or deletion of your contact submission, send a message through our <a href="/contact" style="color:var(--color-accent); text-decoration:underline">Support Desk</a> referencing the email address you used — we will honor deletion requests promptly. Messages you queued while offline (<code style="background:var(--color-bg-tertiary); padding:2px 6px; border-radius:4px">pdf_contact_offline_queue</code>) stay only in your browser until delivered and can be removed by clearing site data.
+          </p>
         </section>
 
       </div>
@@ -305,7 +324,7 @@ export function renderContact(container) {
             </div>
             <h3 class="contact-success-title" style="font-size:var(--text-lg)">Message Received!</h3>
             <p class="contact-success-msg" style="font-size:var(--text-sm)">
-              Thank you for reaching out, <strong>${name}</strong>. Your message was delivered to the PDF Home team. We will review your inquiry shortly.
+              Thank you for reaching out, <strong>${escapeHtml(name)}</strong>. Your message was delivered to the PDF Home team. We will review your inquiry shortly.
             </p>
             <a href="#/" class="btn btn-secondary btn-sm" style="margin-top:var(--space-2)">
               Back to Home

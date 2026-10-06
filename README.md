@@ -31,7 +31,7 @@ PDFHome is a high-performance, 100% client-side document workstation. All PDF op
 - **Number PDF Pages** (`/page-numbers`): Add customized headers or footers with page numbering.
 
 ## Technical Architecture & SEO
-- **Zero Server Uploads**: 100% client-side processing using `pdf-lib`, `pdfjs-dist`, `docx`, `xlsx`, and modern browser APIs.
+- **Zero Server Uploads**: 100% client-side processing using `pdf-lib`, `pdfjs-dist`, `jszip`, and modern browser APIs. Office document (`.docx`, `.xlsx`) conversions use hand-rolled builders on top of JSZip — no `docx`/`xlsx` npm packages.
 - **Clean HTML5 Routing**: Distinct SEO URLs for every tool with deep linking and fallback SPA redirection.
 - **Dynamic SEO Engine**: Updates canonical URLs, Open Graph tags, Twitter Cards, and injects Schema.org JSON-LD structured data (`SoftwareApplication`, `FAQPage`, `BreadcrumbList`) dynamically.
 - **Code-Splitting**: Dynamic `import()` statements lazy-load heavy PDF and conversion engines only when a user accesses that tool, maximizing Core Web Vitals and Lighthouse scores.

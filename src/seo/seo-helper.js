@@ -60,7 +60,7 @@ export function updatePageSeo(seoData) {
  */
 export function resetHomeSeo() {
   const homeTitle = 'PDFHome — 100% Free Online PDF Tools & Office Converter (Private & Fast)';
-  const homeDesc = 'Free online PDF tools. Merge, split, compress, sign, and convert PDF to Word, Excel, PowerPoint, and JPG directly in your browser. 100% private, no file uploads, and no limits.';
+  const homeDesc = 'Free PDF tools — merge, split, compress, sign, convert to Word, Excel, JPG in your browser. Files never leave your browser; ads use cookies per our policy.';
   const homeUrl = `${DOMAIN}/`;
 
   document.title = homeTitle;
@@ -153,7 +153,6 @@ function injectToolSchema(seoData, canonicalUrl) {
       'url': canonicalUrl,
       'description': seoData.metaDescription,
       'applicationCategory': 'UtilitiesApplication',
-      'operatingSystem': 'All modern web browsers',
       'offers': {
         '@type': 'Offer',
         'price': '0.00',

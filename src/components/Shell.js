@@ -31,7 +31,7 @@ export function renderShell(appEl) {
         </span>
         <span class="app-header__logo-text">PDF<span class="logo-accent">Home</span></span>
       </a>
-      <nav class="app-header__nav" id="main-nav">
+      <nav class="app-header__nav" id="main-nav" aria-label="Primary">
         ${TOOLS.map(t => `
           <a class="app-header__nav-link ${isLinkActive(currentPath, t) ? 'app-header__nav-link--active' : ''}"
              href="${t.path}"
@@ -41,10 +41,22 @@ export function renderShell(appEl) {
         `).join('')}
       </nav>
       <div class="app-header__right">
+        <button class="nav-toggle" id="nav-toggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobile-nav">
+          ${icon('menu', 20)}
+        </button>
         <button class="theme-toggle" id="theme-toggle" title="Toggle theme" aria-label="Toggle dark mode">
           ${(document.documentElement.getAttribute('data-theme') === 'dark') ? icon('sun', 18) : icon('moon', 18)}
         </button>
       </div>
+      <nav class="mobile-nav" id="mobile-nav" aria-label="Mobile navigation" hidden>
+        ${TOOLS.map(t => `
+          <a class="app-header__nav-link mobile-nav__link ${isLinkActive(currentPath, t) ? 'app-header__nav-link--active' : ''}"
+             href="${t.path}"
+             data-tool="${t.id}">
+            ${t.label}
+          </a>
+        `).join('')}
+      </nav>
     </header>
 
     <main class="main-content" id="main-content"></main>
@@ -142,6 +154,37 @@ export function renderShell(appEl) {
 
   // Initialize Contact Modal
   initContactModal();
+
+  // Mobile nav toggle
+  const navToggle = document.getElementById('nav-toggle');
+  const mobileNav = document.getElementById('mobile-nav');
+  function setMobileNav(open) {
+    if (!navToggle || !mobileNav) return;
+    mobileNav.hidden = !open;
+    navToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    navToggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+    navToggle.innerHTML = icon(open ? 'x' : 'menu', 20);
+  }
+  if (navToggle && mobileNav) {
+    navToggle.addEventListener('click', (e) => {
+      e.stopPropagation();
+      setMobileNav(mobileNav.hidden);
+    });
+    mobileNav.addEventListener('click', (e) => {
+      if (e.target.closest('a')) setMobileNav(false);
+    });
+    document.addEventListener('click', (e) => {
+      if (!mobileNav.hidden && !e.target.closest('#mobile-nav') && !e.target.closest('#nav-toggle')) {
+        setMobileNav(false);
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !mobileNav.hidden) setMobileNav(false);
+    });
+    window.addEventListener('resize', () => {
+      if (window.innerWidth > 768 && !mobileNav.hidden) setMobileNav(false);
+    });
+  }
 
   // Theme toggle
   const themeBtn = document.getElementById('theme-toggle');

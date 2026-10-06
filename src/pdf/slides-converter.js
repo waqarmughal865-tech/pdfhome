@@ -2,7 +2,7 @@
 // 100% Client-side bidirectional PDF <-> PowerPoint (PPTX) converter using JSZip and pdf-lib
 import JSZip from 'jszip';
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
-import * as pdfjsLib from 'pdfjs-dist';
+import { loadPDFDocument } from './renderer.js';
 
 /**
  * Convert PDF document to Microsoft PowerPoint Presentation (.pptx)
@@ -13,8 +13,9 @@ import * as pdfjsLib from 'pdfjs-dist';
  */
 export async function pdfToSlides(pdfBytes, onProgress = () => {}) {
   onProgress(5, 'Loading PDF for Presentation conversion...');
-  const loadingTask = pdfjsLib.getDocument({ data: pdfBytes });
-  const pdfDoc = await loadingTask.promise;
+  // Route through renderer's loadPDFDocument: pdf.js detaches the caller's buffer
+  // into its worker, so a clone is passed to keep our copy intact.
+  const pdfDoc = await loadPDFDocument(pdfBytes);
   const numPages = pdfDoc.numPages;
 
   const zip = new JSZip();

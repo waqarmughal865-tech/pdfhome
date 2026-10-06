@@ -1049,37 +1049,60 @@ export async function pdfToDocx(pdfBuffer, optionsOrProgress = {}, maybeProgress
         }
       }
 
-      // Resolve images asynchronously
+      // Resolve images concurrently with a bounded pool (per-image 1200ms timeout
+      // lives inside getPdfObject). Results keep input order so image ids and
+      // page layout stay deterministic.
       const pageImages = [];
-      for (const pImg of pendingImages) {
-        const imgObj = await getPdfObject(page, pImg.name);
-        if (imgObj) {
-          const pngBytes = await imageObjToPngUint8(imgObj);
-          if (pngBytes && pngBytes.length > 50) {
-            const imgId = nextImageId++;
-            const maxW = Math.min(pageWidth - 72, 468);
-            const w = Math.min(maxW, pImg.displayWidth || imgObj.width || 300);
-            const h = (pImg.displayWidth ? (pImg.displayHeight / pImg.displayWidth) : (imgObj.height / imgObj.width)) * w;
-
-            const imgItem = {
-              id: imgId,
-              relId: `rIdImg${imgId}`,
-              filename: `media/image${imgId}.png`,
-              bytes: pngBytes,
-              widthPt: w,
-              heightPt: h
-            };
-            images.push(imgItem);
-
-            pageImages.push({
-              type: 'image',
-              topDist: pImg.topDist,
-              imgItem,
-              align: (pImg.x > pageWidth * 0.45) ? 'right' : ((pImg.x > pageWidth * 0.25) ? 'center' : 'left'),
-              x: pImg.x
-            });
+      const resolvedImages = new Array(pendingImages.length).fill(null);
+      let poolCursor = 0;
+      const IMAGE_POOL_SIZE = 5;
+      async function resolveImageWorker() {
+        while (true) {
+          const idx = poolCursor++;
+          if (idx >= pendingImages.length) return;
+          const pImg = pendingImages[idx];
+          try {
+            const imgObj = await getPdfObject(page, pImg.name);
+            if (imgObj) {
+              const pngBytes = await imageObjToPngUint8(imgObj);
+              if (pngBytes && pngBytes.length > 50) {
+                resolvedImages[idx] = { pImg, imgObj, pngBytes };
+              }
+            }
+          } catch (e) {
+            // Unresolvable image — skip it, keep the rest of the page
           }
         }
+      }
+      await Promise.all(
+        Array.from({ length: Math.min(IMAGE_POOL_SIZE, pendingImages.length) }, () => resolveImageWorker())
+      );
+
+      for (const entry of resolvedImages) {
+        if (!entry) continue;
+        const { pImg, imgObj, pngBytes } = entry;
+        const imgId = nextImageId++;
+        const maxW = Math.min(pageWidth - 72, 468);
+        const w = Math.min(maxW, pImg.displayWidth || imgObj.width || 300);
+        const h = (pImg.displayWidth ? (pImg.displayHeight / pImg.displayWidth) : (imgObj.height / imgObj.width)) * w;
+
+        const imgItem = {
+          id: imgId,
+          relId: `rIdImg${imgId}`,
+          filename: `media/image${imgId}.png`,
+          bytes: pngBytes,
+          widthPt: w,
+          heightPt: h
+        };
+        images.push(imgItem);
+
+        pageImages.push({
+          type: 'image',
+          topDist: pImg.topDist,
+          imgItem,
+          align: (pImg.x > pageWidth * 0.45) ? 'right' : ((pImg.x > pageWidth * 0.25) ? 'center' : 'left'),
+          x: pImg.x
+        });
       }
 
       // 3. Extract Text Content & Group by Coordinates
@@ -2211,6 +2234,17 @@ export async function docxToPdf(docxBuffer, onProgress) {
             isBold
           });
         }
+
+        // Collect embedded image references (w:drawing → a:blip r:embed). The
+        // actual media targets are resolved from word/_rels/document.xml.rels
+        // further below so images are rendered instead of silently dropped.
+        const blipNodes = node.querySelectorAll('a\:blip, blip');
+        for (const blip of blipNodes) {
+          const embedId = blip.getAttribute('r:embed') || blip.getAttribute('embed');
+          if (embedId) {
+            docElements.push({ type: 'image', embedId });
+          }
+        }
       } else if (tag === 'tbl') {
         if (node.parentElement && node.parentElement.closest('w\\:tc, tc')) continue;
 
@@ -2274,6 +2308,56 @@ export async function docxToPdf(docxBuffer, onProgress) {
     }
   }
 
+  // 5b. Resolve embedded image targets via word/_rels/document.xml.rels so
+  // images referenced by a:blip r:embed are rendered instead of silently dropped
+  const imageBytesByTarget = new Map();
+  {
+    let relMap = {};
+    try {
+      const relsFile = zip.file('word/_rels/document.xml.rels');
+      if (relsFile && typeof DOMParser !== 'undefined') {
+        const relsText = await relsFile.async('text');
+        const relsDoc = new DOMParser().parseFromString(relsText, 'application/xml');
+        relsDoc.querySelectorAll('Relationship').forEach(rel => {
+          const rType = rel.getAttribute('Type') || '';
+          if (rType.includes('/image')) {
+            const rid = rel.getAttribute('Id');
+            const target = (rel.getAttribute('Target') || '').replace(/^\/+/, '');
+            if (rid && target) relMap[rid] = target;
+          }
+        });
+      }
+    } catch (e) {}
+
+    const targets = new Set();
+    for (const elem of docElements) {
+      if (elem.type === 'image') {
+        const target = relMap[elem.embedId];
+        if (target) {
+          elem.target = target;
+          targets.add(target);
+        } else {
+          elem.dropped = true;
+        }
+      }
+    }
+
+    await Promise.all([...targets].map(async (target) => {
+      try {
+        const imgFile = zip.file(`word/${target}`);
+        if (imgFile) {
+          const bytes = await imgFile.async('uint8array');
+          if (bytes && bytes.length > 0) imageBytesByTarget.set(target, bytes);
+        }
+      } catch (e) {}
+    }));
+
+    // Remove image placeholders whose target could not be resolved
+    for (let i = docElements.length - 1; i >= 0; i--) {
+      if (docElements[i].type === 'image' && docElements[i].dropped) docElements.splice(i, 1);
+    }
+  }
+
   // 6. Generate PDF pages
   onProgress?.(7, 10, 'Generating PDF pages...');
   const pdfDoc = await PDFDocument.create();
@@ -2325,6 +2409,31 @@ export async function docxToPdf(docxBuffer, onProgress) {
         color: rgb(0.8, 0.8, 0.8)
       });
       currentY -= 10;
+    } else if (elem.type === 'image') {
+      const bytes = imageBytesByTarget.get(elem.target);
+      if (bytes && bytes.length > 50) {
+        let embedded = null;
+        try {
+          const isJpeg = bytes[0] === 0xFF && bytes[1] === 0xD8;
+          embedded = isJpeg ? await pdfDoc.embedJpg(bytes) : await pdfDoc.embedPng(bytes);
+        } catch (e) {}
+        if (embedded) {
+          const imgScale = Math.min(1, contentWidth / embedded.width);
+          const drawW = embedded.width * imgScale;
+          const drawH = embedded.height * imgScale;
+          if (currentY - drawH < margin) {
+            currentPage = pdfDoc.addPage([pageWidth, pageHeight]);
+            currentY = pageHeight - margin;
+          }
+          currentPage.drawImage(embedded, {
+            x: (pageWidth - drawW) / 2,
+            y: currentY - drawH,
+            width: drawW,
+            height: drawH
+          });
+          currentY -= drawH + 8;
+        }
+      }
     } else if (elem.type === 'paragraph') {
       const isHead = elem.isHeading;
       const isBold = elem.isBold || isHead;
@@ -2363,7 +2472,18 @@ export async function docxToPdf(docxBuffer, onProgress) {
         const isHeader = (r === 0);
         const font = isHeader ? fontBold : fontRegular;
         const fontSize = isHeader ? 10 : 9;
-        const rowHeight = 20;
+        const cellLineHeight = Math.round(fontSize * 1.4);
+
+        // Wrap cell text to the column width (via the shared wrapText helper)
+        // instead of silently truncating at 40 chars; rows grow to fit
+        const cellLines = [];
+        let maxLines = 1;
+        for (let c = 0; c < colCount; c++) {
+          const wrapped = wrapText(row[c] || '', font, fontSize, Math.max(20, colWidth - 8));
+          cellLines.push(wrapped.length ? wrapped : ['']);
+          maxLines = Math.max(maxLines, cellLines[c].length);
+        }
+        const rowHeight = Math.max(20, maxLines * cellLineHeight + 10);
 
         if (currentY - rowHeight < margin) {
           currentPage = pdfDoc.addPage([pageWidth, pageHeight]);
@@ -2379,15 +2499,16 @@ export async function docxToPdf(docxBuffer, onProgress) {
         });
 
         for (let c = 0; c < colCount; c++) {
-          const cellText = row[c] || '';
-          if (cellText) {
+          const lines = cellLines[c];
+          for (let li = 0; li < lines.length; li++) {
+            if (!lines[li]) continue;
             safeDraw(
               currentPage,
-              cellText.slice(0, 40),
+              lines[li],
               font,
               fontSize,
               margin + c * colWidth + 4,
-              currentY - fontSize - 4,
+              currentY - fontSize - 4 - li * cellLineHeight,
               isHeader ? rgb(0.08, 0.1, 0.15) : rgb(0.25, 0.3, 0.35)
             );
           }

@@ -9,7 +9,8 @@
 
 import { icon } from '../components/icons.js';
 import { renderAdSlot } from '../components/AdSlot.js';
-import { validateFileType, checkFileSize, sanitizeFilename, formatFileSize, readFileAsArrayBuffer, PDF_MIME, getBasename } from '../utils/file-utils.js';
+import { validateFileType, checkFileSize, sanitizeFilename, formatFileSize, readFileAsArrayBuffer, PDF_MIME, getBasename, escapeHtml } from '../utils/file-utils.js';
+import { classifyError } from '../utils/error-handler.js';
 import { downloadArrayBuffer } from '../utils/download.js';
 import { applyWatermark, applyPageNumbers, applyCrop, lockPDF, unlockPDF, isPDFEncrypted } from '../pdf/editor-engine.js';
 import { loadPDFDocument, generateThumbnail, renderPageToCanvas } from '../pdf/renderer.js';
@@ -532,7 +533,7 @@ export function renderPages(container, options = {}) {
           <div id="wm-mode-text" style="display:${wmType === 'text' ? 'block' : 'none'}">
             <div style="display:flex; flex-direction:column; gap:4px">
               <label style="font-size:11px; font-weight:600; color:var(--color-text-secondary)">Watermark Text:</label>
-              <input type="text" id="wm-text-val" value="${wmText}" class="form-input" style="font-size:12px; padding:6px 8px" />
+              <input type="text" id="wm-text-val" value="${escapeHtml(wmText)}" class="form-input" style="font-size:12px; padding:6px 8px" />
             </div>
           </div>
 
@@ -1136,7 +1137,7 @@ export function renderPages(container, options = {}) {
         } else if (wmType === 'text' && wmText) {
           innerContent = `
             <div style="color:#1e293b; font-weight:800; font-size:${Math.max(12, Math.round(20 * wmScale))}px; white-space:nowrap; padding:2px 8px; text-shadow:0 1px 2px rgba(255,255,255,0.8)">
-              ${wmText}
+              ${escapeHtml(wmText)}
             </div>
           `;
         }
@@ -2373,7 +2374,7 @@ export function renderPages(container, options = {}) {
         feedback.style.display = 'block';
         feedback.style.background = 'rgba(239, 68, 68, 0.1)';
         feedback.style.color = 'var(--color-danger)';
-        feedback.innerHTML = `${icon('alertCircle', 14)} <span>${err.message || 'Decryption failed. Please verify password.'}</span>`;
+        feedback.innerHTML = `${icon('alertCircle', 14)} <span>${escapeHtml(err.message || 'Decryption failed. Please verify password.')}</span>`;
       }
       if (unlockBtn) {
         unlockBtn.disabled = false;
@@ -2427,7 +2428,8 @@ export function renderPages(container, options = {}) {
 
       renderInitialShell();
     } catch (err) {
-      showError(err.message || 'Failed to load PDF document.');
+      const { title, message } = classifyError(err);
+      showError(`${title} — ${message || 'Failed to load PDF document.'}`);
     }
   }
 
@@ -2525,7 +2527,8 @@ export function renderPages(container, options = {}) {
         }, 2500);
       }
     } catch (err) {
-      showError(err.message || 'Failed to save edits.');
+      const { title, message } = classifyError(err);
+      showError(`${title} — ${message || 'Failed to save edits.'}`);
       if (saveBtn) {
         saveBtn.disabled = false;
         saveBtn.innerHTML = `${icon('save', 18)} Save & Export PDF`;

@@ -4,6 +4,9 @@
   "version": "1.0.0",
   "description": "PDF Home — Fast, private, in-memory PDF editor, digital signature & office document converter suite",
   "type": "module",
+  "engines": {
+    "node": ">=18"
+  },
   "scripts": {
     "dev": "vite",
     "build": "vite build && node scripts/prerender.js",

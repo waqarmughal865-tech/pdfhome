@@ -3,6 +3,8 @@
  * All page numbers are 1-based (as users expect).
  */
 
+import { escapeHtml } from './file-utils.js';
+
 /**
  * Parse a page range string into a sorted, deduplicated array of page numbers.
  * @param {string} input - Range string like "1-3,5,8-10"
@@ -18,6 +20,8 @@ export function parsePageRanges(input, maxPage) {
   const parts = input.split(',').map(s => s.trim()).filter(Boolean);
   
   for (const part of parts) {
+    // Echoed into innerHTML error banners — escape the raw user input here.
+    const safePart = escapeHtml(part);
     // Check if it's a range (e.g., "1-5")
     if (part.includes('-')) {
       const [startStr, endStr] = part.split('-').map(s => s.trim());
@@ -25,16 +29,16 @@ export function parsePageRanges(input, maxPage) {
       const end = parseInt(endStr, 10);
 
       if (isNaN(start) || isNaN(end)) {
-        return { pages: [], error: `Invalid range: "${part}". Use numbers like "1-5".` };
+        return { pages: [], error: `Invalid range: "${safePart}". Use numbers like "1-5".` };
       }
       if (start < 1 || end < 1) {
-        return { pages: [], error: `Page numbers must be 1 or greater. Got: "${part}".` };
+        return { pages: [], error: `Page numbers must be 1 or greater. Got: "${safePart}".` };
       }
       if (start > maxPage || end > maxPage) {
         return { pages: [], error: `Page ${Math.max(start, end)} exceeds the document's ${maxPage} pages.` };
       }
       if (start > end) {
-        return { pages: [], error: `Invalid range: "${part}". Start must be ≤ end.` };
+        return { pages: [], error: `Invalid range: "${safePart}". Start must be ≤ end.` };
       }
       for (let i = start; i <= end; i++) {
         pages.add(i);
@@ -43,10 +47,10 @@ export function parsePageRanges(input, maxPage) {
       // Single page number
       const num = parseInt(part, 10);
       if (isNaN(num)) {
-        return { pages: [], error: `Invalid page number: "${part}".` };
+        return { pages: [], error: `Invalid page number: "${safePart}".` };
       }
       if (num < 1) {
-        return { pages: [], error: `Page numbers must be 1 or greater. Got: "${part}".` };
+        return { pages: [], error: `Page numbers must be 1 or greater. Got: "${safePart}".` };
       }
       if (num > maxPage) {
         return { pages: [], error: `Page ${num} exceeds the document's ${maxPage} pages.` };

@@ -6,6 +6,7 @@ import { renderShell, updateActiveNav } from './components/Shell.js';
 import { renderToolPage } from './components/ToolPageWrapper.js';
 import { resetHomeSeo, updateSimpleSeo } from './seo/seo-helper.js';
 import { refreshAds } from './components/AdSlot.js';
+import { escapeHtml } from './utils/file-utils.js';
 
 // ── Theme initialization ──
 let initialTheme = 'light';
@@ -191,7 +192,7 @@ const routes = {
   '/privacy': async (container) => {
     updateSimpleSeo({
       title: 'Privacy Policy — PDFHome',
-      description: 'Read the PDFHome Privacy Policy. 100% client-side, zero server uploads, and complete document confidentiality.',
+      description: 'Read the PDFHome Privacy Policy. Document files never leave your browser; ads use cookies per our privacy policy.',
       slug: '/privacy'
     });
     const { renderPrivacy } = await import('./components/Legal.js');
@@ -274,7 +275,7 @@ async function navigate() {
           <div style="font-size:72px; font-weight:800; background:linear-gradient(135deg, var(--color-primary), var(--color-accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; margin-bottom:var(--space-2);">404</div>
           <h1 style="font-size:var(--text-xl); font-weight:700; color:var(--color-text-primary); margin-bottom:var(--space-2)">Page Not Found</h1>
           <p style="color:var(--color-text-secondary); margin-bottom:var(--space-6); max-width:480px; margin-left:auto; margin-right:auto; line-height:1.6">
-            The page <code style="background:var(--color-surface-alt); padding:2px 6px; border-radius:4px; font-size:13px">${path}</code> doesn't exist. It may have been moved or removed.
+            The page <code style="background:var(--color-surface-alt); padding:2px 6px; border-radius:4px; font-size:13px">${escapeHtml(path)}</code> doesn't exist. It may have been moved or removed.
           </p>
           <div style="display:flex; flex-wrap:wrap; gap:var(--space-2); justify-content:center; margin-bottom:var(--space-8)">
             <a href="/" class="btn btn-primary">← Back to Home</a>

@@ -9,7 +9,8 @@
 
 import { icon } from '../components/icons.js';
 import { renderAdSlot } from '../components/AdSlot.js';
-import { sanitizeFilename, formatFileSize, readFileAsArrayBuffer, getBasename } from '../utils/file-utils.js';
+import { sanitizeFilename, formatFileSize, readFileAsArrayBuffer, getBasename, validateFileType, checkFileSize, PDF_MIME } from '../utils/file-utils.js';
+import { classifyError } from '../utils/error-handler.js';
 import { downloadArrayBuffer } from '../utils/download.js';
 import { pdfToDocx, docxToPdf } from '../pdf/docx-converter.js';
 import { pdfToExcel, excelToPdf } from '../pdf/excel-converter.js';
@@ -59,7 +60,7 @@ const CATEGORIES = {
     toOfficeMode: 'pdf-to-slides',
     toPdfMode: 'slides-to-pdf',
     toOfficeTitle: 'PDF to Slides (PPTX)',
-    toOfficeSub: 'Turn PDF pages into Microsoft PowerPoint presentation slides (.pptx)',
+    toOfficeSub: 'Turn PDF pages into Microsoft PowerPoint presentation slides (.pptx) — image-based slides (not editable)',
     toPdfTitle: 'Slides (PPTX) to PDF',
     toPdfSub: 'Convert PowerPoint (.pptx) presentations into high-resolution widescreen PDF slides',
     officeAccept: '.pptx,application/vnd.openxmlformats-officedocument.presentationml.presentation',
@@ -494,13 +495,29 @@ export function renderConvert(container, initialMode = 'pdf-to-docx') {
     const errorEl = container.querySelector('#conv-error');
     if (errorEl) errorEl.style.display = 'none';
 
+    // Shared guards: file type + size, same as every other tool
+    const cfg = getCurrentConfig();
+    const allowedMimes = (cfg.category.isOcr || direction === 'to-office')
+      ? [PDF_MIME]
+      : [cfg.category.officeMime];
+    if (!validateFileType(f, allowedMimes)) {
+      showError(`Invalid File — "${sanitizeFilename(f.name)}" is not a supported ${cfg.inputName} format.`);
+      return;
+    }
+    const sizeCheck = checkFileSize(f);
+    if (!sizeCheck.ok) {
+      showError(sizeCheck.message);
+      return;
+    }
+
     try {
       file = f;
       fileBuffer = await readFileAsArrayBuffer(f);
       resultBuffer = null;
       render();
     } catch (err) {
-      showError(err.message || 'Failed to read file.');
+      const { title, message } = classifyError(err);
+      showError(`${title} — ${message}`);
     }
   }
 
@@ -594,7 +611,14 @@ export function renderConvert(container, initialMode = 'pdf-to-docx') {
       render();
     } catch (err) {
       isConverting = false;
-      showError(err.message || 'Conversion failed. Please verify the document format.');
+      // Password-protected PDFs surface pdf.js PasswordException — give a clear,
+      // actionable message (loadPDFDocument supports an unlock retry via options.password)
+      if (err?.name === 'PasswordException' || err?.code === 1) {
+        showError('Password-Protected PDF — This PDF requires a password. Please unlock it first (Page Editor → Password Lock), then retry the conversion.');
+      } else {
+        const { title, message } = classifyError(err);
+        showError(`${title} — ${message}`);
+      }
       render();
     }
   }

@@ -184,40 +184,13 @@ export async function submitContactInquiry(data) {
     }
   } catch (err) {
     if (err.message.includes('permission denied')) throw err;
-    console.warn('Realtime Database write failed, trying fallback:', err);
+    console.warn('Realtime Database write failed, falling back to offline queue:', err);
   }
 
-  // 2. Fallback to Cloud Firestore REST API
-  if (!submissionSuccess) {
-    try {
-      const firestoreUrl = 'https://firestore.googleapis.com/v1/projects/contacts-of-pdfhome/databases/(default)/documents/contacts';
-      const firestorePayload = {
-        fields: {
-          name: { stringValue: payload.name },
-          email: { stringValue: payload.email },
-          subject: { stringValue: payload.subject },
-          message: { stringValue: payload.message },
-          createdAt: { stringValue: payload.createdAt },
-          timestamp: { integerValue: payload.timestamp.toString() },
-          status: { stringValue: 'unread' }
-        }
-      };
-
-      const fResponse = await fetch(firestoreUrl, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(firestorePayload)
-      });
-
-      if (fResponse.ok) {
-        const fData = await fResponse.json();
-        submissionSuccess = true;
-        submissionId = fData.name ? fData.name.split('/').pop() : 'firestore-ok';
-      }
-    } catch (fErr) {
-      console.warn('Firestore fallback failed:', fErr);
-    }
-  }
+  // NOTE: the unauthenticated Cloud Firestore fallback was removed here.
+  // There are no Firestore rules in this repo, so that endpoint must never
+  // be called. On RTDB failure the message is queued locally below, and
+  // permission-denied errors are surfaced to the user above.
 
   if (submissionSuccess) {
     recordSubmission();

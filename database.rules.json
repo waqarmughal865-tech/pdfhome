@@ -1,10 +1,1 @@
-{
-  "rules": {
-    "contacts": {
-      "$contactId": {
-        ".read": false,
-        ".write": "!data.exists() && newData.hasChildren(['name', 'email', 'message', 'timestamp']) && newData.child('name').isString() && newData.child('name').val().length >= 2 && newData.child('name').val().length <= 60 && newData.child('email').isString() && newData.child('email').val().length <= 100 && newData.child('email').val().contains('@') && newData.child('email').val().contains('.') && newData.child('message').isString() && newData.child('message').val().length >= 5 && newData.child('message').val().length <= 1000 && newData.child('timestamp').isNumber() && newData.child('timestamp').val() <= (now + 120000)"
-      }
-    }
-  }
-}
+{"rules":{"contacts":{"$contactId":{"$other":{".validate":false},".read":false,".write":"!data.exists() && newData.hasChildren(['name', 'email', 'message', 'timestamp'])","createdAt":{".validate":"!newData.exists() || (newData.isString() && newData.val().length <= 40)"},"email":{".validate":"newData.isString() && newData.val().length <= 100 && newData.val().contains('@') && newData.val().contains('.')"},"locale":{".validate":"!newData.exists() || (newData.isString() && newData.val().length <= 20)"},"message":{".validate":"newData.isString() && newData.val().length >= 5 && newData.val().length <= 1000"},"name":{".validate":"newData.isString() && newData.val().length >= 2 && newData.val().length <= 60"},"source":{".validate":"!newData.exists() || (newData.isString() && newData.val().length <= 60)"},"status":{".validate":"!newData.exists() || (newData.isString() && newData.val().length <= 20)"},"subject":{".validate":"!newData.exists() || (newData.isString() && newData.val().length <= 80)"},"timestamp":{".validate":"newData.isNumber() && newData.val() <= (now + 120000)"}}}}}
