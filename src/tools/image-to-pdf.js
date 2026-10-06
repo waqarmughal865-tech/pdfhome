@@ -8,6 +8,7 @@ import { validateFileType, checkFileSize, sanitizeFilename, formatFileSize, read
 import { downloadArrayBuffer } from '../utils/download.js';
 import { imagesToPDF } from '../pdf/engine.js';
 import { classifyError } from '../utils/error-handler.js';
+import { takePendingFile } from '../utils/pending-file.js';
 import Sortable from 'sortablejs';
 
 export function renderImageToPdf(container) {
@@ -358,4 +359,10 @@ export function renderImageToPdf(container) {
   }
 
   render();
+
+  // Smart-drop handoff: a file dropped on the homepage arrives preloaded here.
+  const smartFile = takePendingFile();
+  if (smartFile) {
+    handleFiles([smartFile]);
+  }
 }

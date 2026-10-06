@@ -15,6 +15,7 @@ import { downloadArrayBuffer } from '../utils/download.js';
 import { applyWatermark, applyPageNumbers, applyCrop, lockPDF, unlockPDF, isPDFEncrypted } from '../pdf/editor-engine.js';
 import { loadPDFDocument, generateThumbnail, renderPageToCanvas } from '../pdf/renderer.js';
 import { openSignatureModal } from '../components/SignatureModal.js';
+import { takePendingFile } from '../utils/pending-file.js';
 import { PDFDocument, degrees } from 'pdf-lib';
 import Sortable from 'sortablejs';
 
@@ -2546,4 +2547,10 @@ export function renderPages(container, options = {}) {
   }
 
   renderInitialShell();
+
+  // Smart-drop handoff: a file dropped on the homepage arrives preloaded here.
+  const smartFile = takePendingFile();
+  if (smartFile) {
+    handleFile(smartFile);
+  }
 }

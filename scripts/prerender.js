@@ -229,6 +229,21 @@ const prerenderedCards = TOOL_REGISTRY.filter(card => TOOL_SEO_DATA[card.id]);
           Sign, convert, merge, edit, and protect your PDF documents directly in your browser.
         </p>
 
+        <!-- Smart Drop: drop any file, we open the right tool -->
+        <div class="drop-zone hero-drop" id="hero-drop">
+          <div class="hero-drop__icon">${icon('upload', 40)}</div>
+          <p class="hero-drop__title">Drop any file here</p>
+          <p class="hero-drop__subtitle">PDF, image, Word, Excel or PowerPoint — we'll open the right tool automatically</p>
+          <label class="btn btn-primary btn-lg hero-drop__browse" for="hero-file-input">Choose file</label>
+          <input type="file" id="hero-file-input" accept=".pdf,.jpg,.jpeg,.png,.webp,.gif,.bmp,.docx,.doc,.xlsx,.xls,.pptx,.ppt" />
+          <p class="hero-drop__error" id="hero-drop-error" style="display:none"></p>
+        </div>
+        <div class="hero-trust">
+          <span class="hero-trust__item">${icon('lock', 14)} 100% private — files never leave your device</span>
+          <span class="hero-trust__item">${icon('zap', 14)} No sign-up needed</span>
+          <span class="hero-trust__item">${icon('check', 14)} Free forever</span>
+        </div>
+
         <!-- Live Instant Search Bar -->
         <div class="search-container">
           <div class="search-input-wrap">

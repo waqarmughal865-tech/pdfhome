@@ -1665,3 +1665,119 @@
 
 
 
+
+/* ── Hero smart drop ─────────────────────────────── */
+.hero-drop {
+  max-width: 640px;
+  margin: var(--space-8) auto var(--space-4);
+  padding: var(--space-10) var(--space-6);
+  border-width: 2px;
+  border-radius: var(--radius-2xl);
+  background:
+    radial-gradient(120% 140% at 50% 0%, rgba(99, 102, 241, 0.08), transparent 60%),
+    var(--color-bg-secondary);
+  transition: border-color var(--transition-base), box-shadow var(--transition-base), transform var(--transition-base);
+}
+
+.hero-drop:hover {
+  border-color: var(--color-accent);
+}
+
+.hero-drop.drop-zone--dragover {
+  border-color: var(--color-accent);
+  border-style: solid;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15), var(--shadow-lg);
+  transform: scale(1.01);
+}
+
+.hero-drop__icon {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto var(--space-3);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-accent));
+  box-shadow: var(--shadow-md);
+  animation: hero-float 3.2s ease-in-out infinite;
+}
+
+@keyframes hero-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+.hero-drop__title {
+  font-size: var(--text-xl);
+  font-weight: var(--weight-bold);
+  color: var(--color-text-primary);
+  margin-bottom: var(--space-1);
+}
+
+.hero-drop__subtitle {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-4);
+  max-width: 420px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.hero-drop__browse {
+  margin-bottom: var(--space-2);
+}
+
+.hero-drop__error {
+  font-size: var(--text-sm);
+  color: var(--color-danger, #ef4444);
+  margin-top: var(--space-2);
+}
+
+.hero-trust {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+  justify-content: center;
+  margin-bottom: var(--space-8);
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.hero-trust__item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.hero-trust__item svg {
+  color: var(--color-accent);
+}
+
+/* ── Shared drop-zone drag-over feedback (was a dead class) ── */
+.drop-zone--dragover {
+  border-color: var(--color-accent);
+  border-style: solid;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.12);
+}
+
+/* ── Tool card entrance (subtle, once) ── */
+@keyframes card-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.home__tools .tool-card {
+  animation: card-in 0.45s ease both;
+}
+
+.home__tools .tool-card:nth-child(3n+2) { animation-delay: 0.05s; }
+.home__tools .tool-card:nth-child(3n+3) { animation-delay: 0.1s; }
+
+@media (prefers-reduced-motion: reduce) {
+  .home__tools .tool-card,
+  .hero-drop__icon {
+    animation: none;
+  }
+}
