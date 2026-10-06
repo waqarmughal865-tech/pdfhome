@@ -5,7 +5,6 @@
 import { icon } from '../components/icons.js';
 import { escapeHtml } from '../utils/file-utils.js';
 import { renderAdSlot } from '../components/AdSlot.js';
-import { setPendingFile } from '../utils/pending-file.js';
 
 export const TOOL_REGISTRY = [
   {
@@ -295,21 +294,6 @@ export function renderHome(container) {
           Sign, convert, merge, edit, and protect your PDF documents directly in your browser.
         </p>
 
-        <!-- Smart Drop: drop any file, we open the right tool -->
-        <div class="drop-zone hero-drop" id="hero-drop">
-          <div class="hero-drop__icon">${icon('upload', 40)}</div>
-          <p class="hero-drop__title">Drop any file here</p>
-          <p class="hero-drop__subtitle">PDF, image, Word, Excel or PowerPoint — we'll open the right tool automatically</p>
-          <label class="btn btn-primary btn-lg hero-drop__browse" for="hero-file-input">Choose file</label>
-          <input type="file" id="hero-file-input" accept=".pdf,.jpg,.jpeg,.png,.webp,.gif,.bmp,.docx,.doc,.xlsx,.xls,.pptx,.ppt" />
-          <p class="hero-drop__error" id="hero-drop-error" style="display:none"></p>
-        </div>
-        <div class="hero-trust">
-          <span class="hero-trust__item">${icon('lock', 14)} 100% private — files never leave your device</span>
-          <span class="hero-trust__item">${icon('zap', 14)} No sign-up needed</span>
-          <span class="hero-trust__item">${icon('check', 14)} Free forever</span>
-        </div>
-
         <!-- Live Instant Search Bar -->
         <div class="search-container">
           <div class="search-input-wrap">
@@ -528,56 +512,4 @@ export function renderHome(container) {
       updateGrid();
     });
   });
-
-  // ── Smart Drop: route any supported file to the right tool ──
-  const heroDrop = container.querySelector('#hero-drop');
-  const heroInput = container.querySelector('#hero-file-input');
-  const heroError = container.querySelector('#hero-drop-error');
-  const SMART_ROUTES = [
-    { exts: ['pdf'], path: '/pages' },
-    { exts: ['jpg', 'jpeg', 'png', 'webp', 'gif', 'bmp'], path: '/jpg-to-pdf' },
-    { exts: ['xlsx', 'xls'], path: '/excel-to-pdf' },
-    { exts: ['pptx', 'ppt'], path: '/slides-to-pdf' },
-    { exts: ['docx', 'doc'], path: '/word-to-pdf' },
-  ];
-  function showHeroError(msg) {
-    if (!heroError) return;
-    heroError.textContent = msg;
-    heroError.style.display = 'block';
-    setTimeout(() => { heroError.style.display = 'none'; }, 5000);
-  }
-  function smartRoute(file) {
-    if (!file) return;
-    const ext = (file.name.split('.').pop() || '').toLowerCase();
-    const match = SMART_ROUTES.find(r => r.exts.includes(ext));
-    if (!match) {
-      showHeroError(`We don't handle .${ext || '?'} files yet — try a PDF, image, Word, Excel or PowerPoint file.`);
-      return;
-    }
-    setPendingFile(file);
-    // Navigate through the app's own link interceptor so nav state updates.
-    const a = document.createElement('a');
-    a.href = match.path;
-    a.style.display = 'none';
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  }
-  if (heroDrop && heroInput && !heroDrop.dataset.smartBound) {
-    heroDrop.dataset.smartBound = '1';
-    heroDrop.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      heroDrop.classList.add('drop-zone--dragover');
-    });
-    heroDrop.addEventListener('dragleave', () => heroDrop.classList.remove('drop-zone--dragover'));
-    heroDrop.addEventListener('drop', (e) => {
-      e.preventDefault();
-      heroDrop.classList.remove('drop-zone--dragover');
-      if (e.dataTransfer.files.length) smartRoute(e.dataTransfer.files[0]);
-    });
-    heroInput.addEventListener('change', () => {
-      if (heroInput.files.length) smartRoute(heroInput.files[0]);
-      heroInput.value = '';
-    });
-  }
 }

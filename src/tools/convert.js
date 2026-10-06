@@ -17,7 +17,6 @@ import { pdfToExcel, excelToPdf } from '../pdf/excel-converter.js';
 import { pdfToSlides, slidesToPdf } from '../pdf/slides-converter.js';
 import { convertPicturePdfToTextPdf } from '../pdf/ocr-engine.js';
 import { updateActiveNav } from '../components/Shell.js';
-import { takePendingFile } from '../utils/pending-file.js';
 
 const CATEGORIES = {
   word: {
@@ -635,9 +634,4 @@ export function renderConvert(container, initialMode = 'pdf-to-docx') {
 
   render();
 
-  // Smart-drop handoff: a file dropped on the homepage arrives preloaded here.
-  const smartFile = takePendingFile();
-  if (smartFile) {
-    handleFile(smartFile);
-  }
 }
