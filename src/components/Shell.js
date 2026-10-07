@@ -131,6 +131,7 @@ export function renderShell(appEl) {
               <li><a class="app-footer__link" href="/privacy">${icon('chevronRight', 12)} Privacy Policy</a></li>
               <li><a class="app-footer__link" href="/terms">${icon('chevronRight', 12)} Terms of Service</a></li>
               <li><a class="app-footer__link" href="/contact" data-open-contact>${icon('chevronRight', 12)} Contact Us</a></li>
+              <li><button type="button" class="app-footer__link" data-cookie-settings style="background:none; border:none; padding:0; cursor:pointer; font-family:inherit; color:inherit; text-align:left; display:flex; align-items:center; gap:var(--space-1)">${icon('chevronRight', 12)} Cookie Settings</button></li>
               <li><button type="button" class="app-footer__link" data-open-contact style="background:none; border:none; padding:0; cursor:pointer; font-family:inherit; color:inherit; text-align:left; display:flex; align-items:center; gap:var(--space-1)">${icon('chevronRight', 12)} Help & Support</button></li>
             </ul>
           </div>

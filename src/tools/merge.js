@@ -73,7 +73,7 @@ export function renderMerge(container) {
                 </div>
 
                 <button class="btn btn-primary btn-lg" id="merge-btn" style="width:100%" ${items.length < 2 ? 'disabled' : ''}>
-                  ${icon('merge', 18)} Merge ${items.length} Items into PDF
+                  ${icon('merge', 18)} ${items.length < 2 ? 'Add 2 or more files to merge' : `Merge ${items.length} Items into PDF`}
                 </button>
 
                 <p style="font-size:var(--text-xs); color:var(--color-text-tertiary); display:flex; align-items:center; justify-content:center; gap:var(--space-1); margin:0">

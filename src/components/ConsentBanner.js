@@ -154,6 +154,25 @@ function hideBanner() {
 }
 
 /**
+ * Re-open the consent banner on demand (e.g. from a "Cookie Settings" footer link).
+ * Exported for footer wiring; safe to call any time.
+ */
+export function showConsentBanner() {
+  hideBanner();
+  renderBanner();
+}
+
+// Global delegate listener: any element with data-cookie-settings re-opens the banner.
+if (typeof document !== 'undefined') {
+  document.addEventListener('click', (e) => {
+    const trigger = e.target.closest('[data-cookie-settings]');
+    if (!trigger) return;
+    e.preventDefault();
+    showConsentBanner();
+  });
+}
+
+/**
  * Boot the consent flow. Idempotent: safe to call multiple times.
  */
 export function initConsentBanner() {
