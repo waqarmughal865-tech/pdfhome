@@ -534,6 +534,64 @@ export const TOOL_SEO_DATA = {
       { q: 'Does converting add a watermark?', a: 'No, PDFHome never adds watermarks or branding to your converted documents.' }
     ],
     relatedTools: ['pdf-to-powerpoint', 'pdf-to-word', 'merge-pdf', 'compress-pdf']
+  },
+
+  'pages': {
+    slug: '/pages',
+    aliases: ['#/pages'],
+    name: 'Page Editor Workbench',
+    toolId: 'pages',
+    metaTitle: 'PDF Page Editor Online Free — Organize, Watermark & Protect Pages | PDFHome',
+    metaDescription: 'Edit PDF pages in one unified workbench: reorder, rotate, delete, crop, add page numbers, apply watermarks, and password-protect. Free, private, and fully in-browser.',
+    h1: 'PDF Page Editor Workbench',
+    intro: 'Open any PDF in the Page Editor Workbench to reorganize, enhance, and secure it without uploading anything. Reorder pages with drag and drop, rotate or delete unwanted sheets, crop margins, stamp page numbers, add text or image watermarks, and lock the file with a password — all in one continuous workspace that runs entirely in your browser.',
+    howTo: [
+      { step: 1, title: 'Open Your PDF', desc: 'Drop a PDF file into the workbench to load every page as a live thumbnail.' },
+      { step: 2, title: 'Edit Freely', desc: 'Reorder, rotate, delete, crop, number, watermark, or protect pages using the editing suite below the preview.' },
+      { step: 3, title: 'Save & Export', desc: 'Click "Save & Export PDF" to download your edited document instantly.' }
+    ],
+    features: [
+      { title: 'All-in-One Workspace', desc: 'Organize, crop, number, watermark, and protect pages without switching tools.' },
+      { title: 'Live Page Preview', desc: 'See every edit reflected instantly on a full-page preview before exporting.' },
+      { title: 'Total Privacy', desc: 'Documents are processed locally in your browser memory. Files never leave your device.' },
+      { title: 'Free & Unlimited', desc: 'No sign-up, no watermarks added, no page-count paywalls.' }
+    ],
+    faqs: [
+      { q: 'Is the PDF page editor really free?', a: 'Yes. Every editing feature in the workbench is 100% free with no account required.' },
+      { q: 'Are my files uploaded anywhere when I edit them?', a: 'No. All editing happens locally in your browser. Your documents never touch a server.' },
+      { q: 'Can I add page numbers and a watermark in one go?', a: 'Yes. The workbench combines page numbering, watermarks, cropping, rotation, deletion, and password protection in a single export.' },
+      { q: 'Will editing reduce my PDF quality?', a: 'No. Pages keep their original fonts, vectors, and image resolution through the editing workflow.' }
+    ],
+    relatedTools: ['merge-pdf', 'split-pdf', 'rotate-pdf', 'delete-pdf-pages']
+  },
+
+  'convert': {
+    slug: '/convert',
+    aliases: ['#/convert'],
+    name: 'Document Converter',
+    toolId: 'convert',
+    metaTitle: 'Online Document Converter — PDF to Word, Excel, PowerPoint & JPG | PDFHome',
+    metaDescription: 'Convert documents both ways in your browser: PDF to Word, Excel, PowerPoint, JPG and back again. Free, private, no sign-up, zero server uploads.',
+    h1: 'Online Document Converter',
+    intro: 'Convert between PDF and popular office formats without installing anything. Turn PDFs into editable Word documents, Excel spreadsheets, PowerPoint decks, or JPG images — or go the other way and create PDFs from Word, Excel, PowerPoint, and image files. Every conversion runs locally in your browser, so your documents stay private.',
+    howTo: [
+      { step: 1, title: 'Choose a Direction', desc: 'Pick whether you are converting from PDF to an office format, or creating a PDF from another file type.' },
+      { step: 2, title: 'Upload Your File', desc: 'Drop your document into the upload area. Files are read locally and never sent to a server.' },
+      { step: 3, title: 'Convert & Download', desc: 'Run the conversion and download your finished file instantly.' }
+    ],
+    features: [
+      { title: 'Two-Way Conversion', desc: 'PDF to Word, Excel, PowerPoint, and JPG — plus Word, Excel, PowerPoint, and images back to PDF.' },
+      { title: 'Private by Design', desc: 'Conversions execute in your browser. Sensitive documents never leave your device.' },
+      { title: 'No Software Needed', desc: 'Works in any modern browser on desktop and mobile. Nothing to install.' },
+      { title: 'Free Forever', desc: 'Unlimited conversions with no accounts, trials, or hidden fees.' }
+    ],
+    faqs: [
+      { q: 'Which formats can I convert?', a: 'PDF to Word (DOCX), Excel (XLSX), PowerPoint (PPTX), and JPG — plus Word, Excel, PowerPoint, and image files back to PDF.' },
+      { q: 'Is the document converter free?', a: 'Yes, all conversions are completely free with no registration or limits.' },
+      { q: 'Do my files get uploaded to a server?', a: 'No. PDFHome converts files entirely inside your web browser for maximum privacy.' },
+      { q: 'Will my Word document keep its formatting?', a: 'The converter preserves text, tables, and layout structure as faithfully as in-browser conversion allows.' }
+    ],
+    relatedTools: ['pdf-to-word', 'pdf-to-excel', 'pdf-to-powerpoint', 'jpg-to-pdf']
   }
 };
 
