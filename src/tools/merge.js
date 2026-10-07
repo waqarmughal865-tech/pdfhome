@@ -437,7 +437,12 @@ export function renderMerge(container) {
             entry.pageCount = 1;
           }
           render();
-        }).catch(() => {});
+        }).catch(() => {
+          // File couldn't be read at all: don't leave the queue stuck on
+          // "reading...". Merge will surface the real error on processing.
+          entry.pageCount = 1;
+          render();
+        });
       }
     }
     render();
