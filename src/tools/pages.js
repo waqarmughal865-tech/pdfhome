@@ -422,11 +422,23 @@ export function renderPages(container, options = {}) {
                         <div style="font-size:13px; font-weight:700">This PDF is locked</div>
                         <div style="font-size:11px; color:var(--color-text-secondary)">Enter the password if you have it — or just press Unlock to remove permissions (works without password for restriction-only PDFs).</div>
                         <div id="inline-unlock-error" style="display:none; font-size:11px; color:#ef4444; margin-top:4px"></div>
+                        <div id="dict-attack-progress" style="display:none; margin-top:8px">
+                          <div style="font-size:11px; color:var(--color-text-secondary); margin-bottom:4px">
+                            <span id="dict-attack-text">Trying common passwords…</span>
+                            <button id="dict-attack-cancel" class="btn btn-ghost btn-sm" style="margin-left:8px; padding:2px 8px; font-size:10px">Cancel</button>
+                          </div>
+                          <div style="height:6px; background:var(--color-bg-tertiary); border-radius:3px; overflow:hidden">
+                            <div id="dict-attack-bar" style="height:100%; width:0%; background:var(--color-primary); transition:width 0.2s"></div>
+                          </div>
+                        </div>
                       </div>
                       <input type="password" id="inline-unlock-pass" placeholder="PDF password (optional)" autocomplete="off"
                         style="padding:8px 12px; font-size:13px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-bg-primary); color:var(--color-text-primary); width:180px" />
                       <button id="inline-unlock-btn" class="btn btn-primary btn-sm" style="padding:8px 18px; font-size:12px; white-space:nowrap">
                         ${icon('unlock', 14)} Unlock
+                      </button>
+                      <button id="forgot-pass-btn" class="btn btn-ghost btn-sm" style="padding:8px 14px; font-size:11px; white-space:nowrap" title="Try 2000 most common passwords — only works for weak passwords">
+                        Forgot password?
                       </button>
                     </div>` : ''}
 
@@ -2428,6 +2440,103 @@ export function renderPages(container, options = {}) {
       container.querySelector('#inline-unlock-pass')?.addEventListener('keydown', (e) => {
         if (e.key === 'Enter') doInlineUnlock();
       });
+
+      // Forgot password? Dictionary attack with common passwords
+      const forgotBtn = container.querySelector('#forgot-pass-btn');
+      if (forgotBtn) {
+        forgotBtn.addEventListener('click', async () => {
+          const progressEl = container.querySelector('#dict-attack-progress');
+          const barEl = container.querySelector('#dict-attack-bar');
+          const textEl = container.querySelector('#dict-attack-text');
+          const errEl = container.querySelector('#inline-unlock-error');
+          if (!progressEl) return;
+
+          progressEl.style.display = 'block';
+          forgotBtn.disabled = true;
+          if (errEl) errEl.style.display = 'none';
+
+          let cancelled = false;
+          container.querySelector('#dict-attack-cancel')?.addEventListener('click', () => { cancelled = true; }, { once: true });
+
+          const commonPasswords = [
+            '123456','password','123456789','12345678','12345','1234567','1234567890',
+            'qwerty','abc123','111111','123123','admin','letmein','welcome','monkey',
+            'dragon','1234','123456a','654321','qwerty123','1q2w3e4r','admin123',
+            'password1','123321','qwertyuiop','123456q','password123','1qaz2wsx',
+            'mypass','mypassword','test123','test','123','pdf123','document','secret',
+            'changeme','default','user123','pass123','000000','1111','2222','3333',
+            '4444','5555','6666','7777','8888','9999','0000','1212','7777777',
+            '123qwe','qwe123','1q2w3e','qazwsx','zaq12wsx','!qaz2wsx','p@ssw0rd',
+            'p@ssword','pa$$word','passw0rd','trustno1','superman','batman',
+            'iloveyou','princess','football','baseball','sunshine','master',
+            'michael','shadow','jennifer','jordan','hunter','buster','soccer',
+            'harley','ranger','thomas','tigger','robert','daniel','andrew',
+            'williams','joshua','matthew','anthony','james','david','john',
+            'mary','smith','jones','taylor','brown','wilson','evans','thomas2',
+            'khan123','pakistan','pakistan123','lahore123','karachi123','islamabad',
+            'waqar123','ahmed123','mughal123','milky123','verse123','milkyverse',
+          ];
+
+          // Add number variations
+          const baseWords = ['password','admin','user','test','pdf','document','secret','qwerty','letmein','welcome'];
+          for (const w of baseWords) {
+            for (let i = 0; i <= 99; i++) {
+              commonPasswords.push(w + i);
+              if (i < 10) commonPasswords.push(w + '0' + i);
+            }
+            commonPasswords.push(w + '123', w + '1234', w + '12345', w + '!');
+            commonPasswords.push(w.charAt(0).toUpperCase() + w.slice(1) + '123');
+          }
+
+          const total = commonPasswords.length;
+          for (let i = 0; i < total; i++) {
+            if (cancelled) {
+              progressEl.style.display = 'none';
+              forgotBtn.disabled = false;
+              return;
+            }
+            const pw = commonPasswords[i];
+            if (textEl) textEl.textContent = `Trying ${i + 1} of ${total}… (${pw})`;
+            if (barEl) barEl.style.width = `${Math.round((i / total) * 100)}%`;
+
+            // Yield to UI every 10 attempts
+            if (i % 10 === 0) await new Promise(r => setTimeout(r, 0));
+
+            try {
+              const testDoc = await loadPDFDocument(pdfBuffer.slice(), { password: pw });
+              if (testDoc) {
+                // Found it! Unlock with this password
+                if (textEl) textEl.textContent = `Found! Password is: ${pw}`;
+                const decryptedBytes = await unlockPDF(pdfBuffer, pw);
+                pdfBuffer = decryptedBytes.slice(0);
+                pdfDoc = await loadPDFDocument(pdfBuffer);
+                pageCount = pdfDoc.numPages;
+                activePage = 1;
+                pageOrder = Array.from({ length: pageCount }, (_, i) => i + 1);
+                rotations = {};
+                if (typeof deletedPages !== 'undefined') deletedPages.clear();
+                pageRenderCache.clear();
+                thumbCache.clear();
+                isDocEncrypted = false;
+                unlockPassword = '';
+                await new Promise(r => setTimeout(r, 800));
+                renderInitialShell();
+                fitPageToViewport('fit-width');
+                return;
+              }
+            } catch (e) {
+              // Wrong password, continue
+            }
+          }
+
+          progressEl.style.display = 'none';
+          forgotBtn.disabled = false;
+          if (errEl) {
+            errEl.style.display = 'block';
+            errEl.textContent = `Tried ${total} common passwords — none worked. Your password is stronger than the common list. You'll need to remember it.`;
+          }
+        });
+      }
     }
     container.querySelector('#protect-submode-lock')?.addEventListener('click', () => {
       protectSubMode = 'lock';
