@@ -362,7 +362,8 @@ export function renderPages(container, options = {}) {
                         </button>
                       </div>
                       <div style="font-size:10px; color:var(--color-text-tertiary); margin-top:4px; text-align:center">
-                        Tip: Hold Ctrl and scroll, or pinch with two fingers to zoom
+                        Tip: Hold Ctrl and scroll, or pinch with two fingers to zoom<br>
+                        <span style="opacity:0.85">✋ Long-press the signature, then drag ↕ for size, ↔ for opacity</span>
                       </div>
                     </div>
 
@@ -1328,9 +1329,51 @@ export function renderPages(container, options = {}) {
     let startX = 0, startY = 0;
     let initialLeft = 0, initialTop = 0;
 
+    // Long-press gesture mode: hold 600ms, then drag vertically = size, horizontally = opacity
+    let longPressTimer = null;
+    let gestureMode = false;
+    let gestureStartX = 0, gestureStartY = 0;
+    let gestureStartScale = 0, gestureStartOpacity = 0;
+    let gestureIndicator = null;
+
+    const showGestureIndicator = (mode) => {
+      if (gestureIndicator) gestureIndicator.remove();
+      if (!mode) return;
+      gestureIndicator = document.createElement('div');
+      gestureIndicator.id = 'wm-gesture-indicator';
+      gestureIndicator.style.cssText = 'position:absolute; inset:-8px; border:2px dashed var(--color-primary); border-radius:8px; pointer-events:none; animation:wmGesturePulse 1s ease-in-out infinite; z-index:30';
+      const label = document.createElement('div');
+      label.style.cssText = 'position:absolute; top:-28px; left:50%; transform:translateX(-50%); background:var(--color-primary); color:#fff; font-size:10px; font-weight:700; padding:3px 10px; border-radius:12px; white-space:nowrap; pointer-events:none';
+      label.textContent = '↕ Size  •  ↔ Opacity';
+      gestureIndicator.appendChild(label);
+      wmEl.style.position = 'absolute';
+      wmEl.appendChild(gestureIndicator);
+    };
+
+    // Add pulse animation once
+    if (!document.getElementById('wm-gesture-style')) {
+      const st = document.createElement('style');
+      st.id = 'wm-gesture-style';
+      st.textContent = '@keyframes wmGesturePulse { 0%,100% { opacity:1 } 50% { opacity:0.4 } }';
+      document.head.appendChild(st);
+    }
+
+    const syncWmSliders = () => {
+      const sScale = container.querySelector('#wm-slider-scale');
+      const sOp = container.querySelector('#wm-slider-opacity');
+      const lScale = container.querySelector('#wm-lbl-scale');
+      const lOp = container.querySelector('#wm-lbl-opacity');
+      if (sScale) sScale.value = wmScale;
+      if (sOp) sOp.value = wmOpacity;
+      if (lScale) lScale.textContent = `${Math.round(wmScale * 100)}%`;
+      if (lOp) lOp.textContent = `${Math.round(wmOpacity * 100)}%`;
+      updateOverlays();
+    };
+
     const onPointerDown = (e) => {
       if (e.button !== 0) return;
       isDragging = true;
+      gestureMode = false;
       wmEl.setPointerCapture(e.pointerId);
       wmEl.style.cursor = 'grabbing';
 
@@ -1339,8 +1382,24 @@ export function renderPages(container, options = {}) {
 
       startX = e.clientX;
       startY = e.clientY;
+      gestureStartX = e.clientX;
+      gestureStartY = e.clientY;
       initialLeft = elRect.left - wrapRect.left;
       initialTop = elRect.top - wrapRect.top;
+
+      // Start long-press timer — if user holds without moving, enter gesture mode
+      clearTimeout(longPressTimer);
+      longPressTimer = setTimeout(() => {
+        if (!isDragging) return;
+        gestureMode = true;
+        gestureStartScale = wmScale;
+        gestureStartOpacity = wmOpacity;
+        gestureStartX = e.clientX;
+        gestureStartY = e.clientY;
+        showGestureIndicator(true);
+        // Haptic feedback on mobile
+        if (navigator.vibrate) navigator.vibrate(30);
+      }, 600);
 
       e.stopPropagation();
       e.preventDefault();
@@ -1349,9 +1408,25 @@ export function renderPages(container, options = {}) {
     const onPointerMove = (e) => {
       if (!isDragging) return;
 
-      const wrapRect = canvasWrap.getBoundingClientRect();
       const deltaX = e.clientX - startX;
       const deltaY = e.clientY - startY;
+
+      // If moved significantly before long-press fires, it's a normal move-drag
+      if (!gestureMode && Math.hypot(deltaX, deltaY) > 12) {
+        clearTimeout(longPressTimer);
+      }
+
+      if (gestureMode) {
+        // Gesture mode: vertical = size, horizontal = opacity
+        const gDeltaY = gestureStartY - e.clientY; // up = bigger
+        const gDeltaX = e.clientX - gestureStartX; // right = more opaque
+        wmScale = Math.max(0.1, Math.min(1.2, gestureStartScale + gDeltaY / 300));
+        wmOpacity = Math.max(0.05, Math.min(1, gestureStartOpacity + gDeltaX / 300));
+        syncWmSliders();
+        return;
+      }
+
+      const wrapRect = canvasWrap.getBoundingClientRect();
 
       let newLeft = initialLeft + deltaX;
       let newTop = initialTop + deltaY;
@@ -1382,6 +1457,13 @@ export function renderPages(container, options = {}) {
     const onPointerUp = (e) => {
       if (!isDragging) return;
       isDragging = false;
+      clearTimeout(longPressTimer);
+      if (gestureMode) {
+        gestureMode = false;
+        showGestureIndicator(false);
+        modified = true;
+        showEditedBadge();
+      }
       try { wmEl.releasePointerCapture(e.pointerId); } catch (err) {}
       wmEl.style.cursor = 'grab';
       modified = true;
