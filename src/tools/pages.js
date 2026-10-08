@@ -2432,6 +2432,7 @@ export function renderPages(container, options = {}) {
           if (errEl) {
             errEl.style.display = 'block';
             errEl.textContent = 'Wrong password. Please try again.';
+            setTimeout(() => errEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
           }
           pwInput?.select();
         }
@@ -2680,6 +2681,8 @@ export function renderPages(container, options = {}) {
         feedback.style.background = 'rgba(239, 68, 68, 0.1)';
         feedback.style.color = 'var(--color-danger)';
         feedback.innerHTML = `${icon('alertCircle', 14)} <span>${escapeHtml(err.message || 'Decryption failed. Please verify password.')}</span>`;
+        // Ensure the error is visible even in a tall panel
+        setTimeout(() => feedback.scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 50);
       }
       if (unlockBtn) {
         unlockBtn.disabled = false;
