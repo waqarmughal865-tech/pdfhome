@@ -359,6 +359,9 @@ export function renderPages(container, options = {}) {
                           ${icon('chevronLeft', 14)}<span>Hide Panel</span>
                         </button>
                       </div>
+                      <div style="font-size:10px; color:var(--color-text-tertiary); margin-top:4px; text-align:center">
+                        Tip: Ctrl + mouse wheel ya do ungli se pinch karke zoom karein
+                      </div>
                     </div>
 
                     <!-- Canvas Preview Viewport (Natural Document Display) -->
@@ -1963,24 +1966,59 @@ export function renderPages(container, options = {}) {
     }
 
     container.querySelector('#zoom-in-btn')?.addEventListener('click', () => {
-      previewZoom = Math.min(2.5, +(previewZoom + 0.15).toFixed(2));
-      const lbl = container.querySelector('#zoom-label');
-      if (lbl) lbl.textContent = `${Math.round(previewZoom * 100)}%`;
-      container.querySelector('#btn-fit-page')?.classList.remove('active');
-      container.querySelector('#btn-fit-width')?.classList.remove('active');
-      container.querySelector('#btn-zoom-100')?.classList.remove('active');
-      renderPreviewCanvas();
+      applyManualZoom(previewZoom + 0.15);
     });
 
     container.querySelector('#zoom-out-btn')?.addEventListener('click', () => {
-      previewZoom = Math.max(0.3, +(previewZoom - 0.15).toFixed(2));
+      applyManualZoom(Math.max(0.3, +(previewZoom - 0.15).toFixed(2)));
+    });
+
+    // Shared manual-zoom applier (buttons, wheel, pinch all use this)
+    function applyManualZoom(newZoom) {
+      previewZoom = Math.max(0.25, Math.min(3.0, +newZoom.toFixed(2)));
       const lbl = container.querySelector('#zoom-label');
       if (lbl) lbl.textContent = `${Math.round(previewZoom * 100)}%`;
       container.querySelector('#btn-fit-page')?.classList.remove('active');
       container.querySelector('#btn-fit-width')?.classList.remove('active');
       container.querySelector('#btn-zoom-100')?.classList.remove('active');
       renderPreviewCanvas();
-    });
+    }
+
+    // Ctrl/Cmd + mouse wheel → zoom (plain wheel still scrolls normally)
+    const previewViewport = container.querySelector('#preview-viewport');
+    if (previewViewport) {
+      previewViewport.addEventListener('wheel', (e) => {
+        if (!pdfDoc || !(e.ctrlKey || e.metaKey)) return;
+        e.preventDefault();
+        const delta = e.deltaY < 0 ? 0.12 : -0.12;
+        applyManualZoom(previewZoom + delta);
+      }, { passive: false });
+
+      // Two-finger pinch → zoom (touchscreens)
+      let pinchDist = 0;
+      previewViewport.addEventListener('touchstart', (e) => {
+        if (e.touches.length === 2) {
+          pinchDist = Math.hypot(
+            e.touches[0].clientX - e.touches[1].clientX,
+            e.touches[0].clientY - e.touches[1].clientY
+          );
+        }
+      }, { passive: true });
+      previewViewport.addEventListener('touchmove', (e) => {
+        if (!pdfDoc || e.touches.length !== 2 || !pinchDist) return;
+        e.preventDefault();
+        const newDist = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        const ratio = newDist / pinchDist;
+        if (Math.abs(ratio - 1) > 0.03) {
+          applyManualZoom(previewZoom * ratio);
+          pinchDist = newDist;
+        }
+      }, { passive: false });
+      previewViewport.addEventListener('touchend', () => { pinchDist = 0; }, { passive: true });
+    }
 
     // Signature Studio Popup triggers
     container.querySelector('#btn-open-sig-modal')?.addEventListener('click', () => {
