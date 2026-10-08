@@ -358,7 +358,7 @@ export async function applyCrop(pdfBuffer, options = {}) {
  * @param {string} password
  * @returns {Promise<Uint8Array>}
  */
-export async function lockPDF(pdfBuffer, password) {
+export async function lockPDF(pdfBuffer, password, options = {}) {
   if (!password || password.trim().length === 0) {
     throw new Error('Please specify a password to lock the document.');
   }
@@ -368,10 +368,24 @@ export async function lockPDF(pdfBuffer, password) {
   const doc = await PDFDocument.load(bytes.slice(), { ignoreEncryption: true });
   const cleanBytes = await doc.save({ useObjectStreams: true });
 
-  // Encrypt with standard 128-bit RC4 PDF encryption
-  const encrypted = await encryptPDF(cleanBytes, password.trim(), {
-    ownerPassword: password.trim(),
-    userPassword: password.trim(),
+  const pw = password.trim();
+  if (options.lockType === 'permissions') {
+    // Permissions-only: opens without a password, but actions are restricted
+    // until the owner password is supplied.
+    const perms = options.permissions || {};
+    const encrypted = await encryptPDF(cleanBytes, '', {
+      ownerPassword: pw,
+      allowPrinting: !perms.blockPrinting,
+      allowCopying: !perms.blockCopying,
+      allowModifying: !perms.blockModifying,
+    });
+    return new Uint8Array(encrypted);
+  }
+
+  // Default: password required to open (user + owner password)
+  const encrypted = await encryptPDF(cleanBytes, pw, {
+    ownerPassword: pw,
+    userPassword: pw,
   });
 
   return new Uint8Array(encrypted);

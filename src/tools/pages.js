@@ -67,6 +67,8 @@ export function renderPages(container, options = {}) {
   // Protect state
   let protectSubMode = 'lock'; // 'lock' | 'unlock'
   let protectPassword = '';
+  let lockType = 'open'; // 'open' = password to open | 'permissions' = restrict actions, no open password
+  let lockPerms = { blockPrinting: true, blockCopying: true, blockModifying: true };
   let protectConfirm = '';
   let unlockPassword = '';
   let isDocEncrypted = false;
@@ -853,18 +855,44 @@ export function renderPages(container, options = {}) {
         </div>
 
         <!-- 1. LOCK PDF SUB-PANEL -->
-        <div id="protect-box-lock" style="display:${protectSubMode === 'lock' ? 'grid' : 'none'}; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:var(--space-4); align-items:center">
+        <div id="protect-box-lock" style="display:${protectSubMode === 'lock' ? 'grid' : 'none'}; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:var(--space-4); align-items:start">
           <div style="display:flex; flex-direction:column; gap:10px">
             <span style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--color-text-secondary)">
-              Set Document Encryption Password
+              Lock Type
             </span>
+            <div class="segmented-control" style="display:inline-flex; background:var(--color-bg-tertiary); border:1px solid var(--color-border); border-radius:var(--radius-sm); padding:2px; align-self:flex-start">
+              <button class="seg-btn ${lockType === 'open' ? 'active' : ''}" id="locktype-open" style="border:none; padding:5px 12px; font-size:11px; border-radius:4px; cursor:pointer">
+                🔑 Password to Open
+              </button>
+              <button class="seg-btn ${lockType === 'permissions' ? 'active' : ''}" id="locktype-permissions" style="border:none; padding:5px 12px; font-size:11px; border-radius:4px; cursor:pointer">
+                🚫 Restrict Permissions
+              </button>
+            </div>
+            <div id="locktype-open-desc" style="display:${lockType === 'open' ? 'block' : 'none'}; font-size:11px; color:var(--color-text-secondary)">
+              Anyone opening the PDF must enter this password.
+            </div>
+            <div id="locktype-perm-desc" style="display:${lockType === 'permissions' ? 'block' : 'none'}; font-size:11px; color:var(--color-text-secondary)">
+              PDF opens freely, but the checked actions are blocked until the owner password is entered.
+            </div>
             <div>
-              <label style="font-size:11px; font-weight:600; color:var(--color-text-secondary)">Password:</label>
+              <label style="font-size:11px; font-weight:600; color:var(--color-text-secondary)">${lockType === 'open' ? 'Password:' : 'Owner Password:'}</label>
               <input type="password" id="protect-pass-val" value="${protectPassword}" placeholder="Enter strong password" class="form-input" style="font-size:12px; padding:6px 8px" />
             </div>
             <div>
               <label style="font-size:11px; font-weight:600; color:var(--color-text-secondary)">Confirm Password:</label>
               <input type="password" id="protect-confirm-val" value="${protectConfirm}" placeholder="Repeat password" class="form-input" style="font-size:12px; padding:6px 8px" />
+            </div>
+            <div id="lock-perms-box" style="display:${lockType === 'permissions' ? 'flex' : 'none'}; flex-direction:column; gap:6px; padding:10px 12px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-bg-primary)">
+              <span style="font-size:11px; font-weight:700; color:var(--color-text-secondary)">BLOCK THESE ACTIONS:</span>
+              <label style="font-size:12px; display:flex; align-items:center; gap:8px; cursor:pointer">
+                <input type="checkbox" id="lockperm-print" ${lockPerms.blockPrinting ? 'checked' : ''} /> Block printing
+              </label>
+              <label style="font-size:12px; display:flex; align-items:center; gap:8px; cursor:pointer">
+                <input type="checkbox" id="lockperm-copy" ${lockPerms.blockCopying ? 'checked' : ''} /> Block text/image copying
+              </label>
+              <label style="font-size:12px; display:flex; align-items:center; gap:8px; cursor:pointer">
+                <input type="checkbox" id="lockperm-modify" ${lockPerms.blockModifying ? 'checked' : ''} /> Block editing
+              </label>
             </div>
           </div>
 
@@ -873,7 +901,7 @@ export function renderPages(container, options = {}) {
               ${icon('lock', 16)} 128-bit Standard Encryption
             </div>
             <p style="margin:0">
-              Protects the exported document. When you click <strong>Save & Export PDF</strong> in the sidebar, the resulting file will be encrypted and will require this password to view, edit, or print.
+              Protects the exported document. When you click <strong>Save & Export PDF</strong> in the sidebar, the resulting file will be encrypted with your chosen lock type.
             </p>
           </div>
         </div>
@@ -2415,6 +2443,25 @@ export function renderPages(container, options = {}) {
       if (btnUnlock) btnUnlock.classList.add('active');
     });
 
+    // Lock type switcher: password-to-open vs permissions-only
+    const syncLockTypeUI = () => {
+      const btnOpen = container.querySelector('#locktype-open');
+      const btnPerm = container.querySelector('#locktype-permissions');
+      if (btnOpen) btnOpen.classList.toggle('active', lockType === 'open');
+      if (btnPerm) btnPerm.classList.toggle('active', lockType === 'permissions');
+      const dOpen = container.querySelector('#locktype-open-desc');
+      const dPerm = container.querySelector('#locktype-perm-desc');
+      const pBox = container.querySelector('#lock-perms-box');
+      if (dOpen) dOpen.style.display = lockType === 'open' ? 'block' : 'none';
+      if (dPerm) dPerm.style.display = lockType === 'permissions' ? 'block' : 'none';
+      if (pBox) pBox.style.display = lockType === 'permissions' ? 'flex' : 'none';
+    };
+    container.querySelector('#locktype-open')?.addEventListener('click', () => { lockType = 'open'; syncLockTypeUI(); });
+    container.querySelector('#locktype-permissions')?.addEventListener('click', () => { lockType = 'permissions'; syncLockTypeUI(); });
+    container.querySelector('#lockperm-print')?.addEventListener('change', (e) => { lockPerms.blockPrinting = e.target.checked; });
+    container.querySelector('#lockperm-copy')?.addEventListener('change', (e) => { lockPerms.blockCopying = e.target.checked; });
+    container.querySelector('#lockperm-modify')?.addEventListener('change', (e) => { lockPerms.blockModifying = e.target.checked; });
+
     container.querySelector('#protect-pass-val')?.addEventListener('input', (e) => {
       protectPassword = e.target.value;
       modified = true;
@@ -2652,7 +2699,14 @@ export function renderPages(container, options = {}) {
         if (protectPassword !== protectConfirm) {
           throw new Error('Passwords do not match. Please verify password and confirmation.');
         }
-        currentBuffer = await lockPDF(currentBuffer, protectPassword.trim());
+        currentBuffer = await lockPDF(currentBuffer, protectPassword.trim(), {
+          lockType,
+          permissions: {
+            blockPrinting: lockPerms.blockPrinting,
+            blockCopying: lockPerms.blockCopying,
+            blockModifying: lockPerms.blockModifying,
+          },
+        });
       }
 
       const outName = `${getBasename(file.name)}_edited.pdf`;
