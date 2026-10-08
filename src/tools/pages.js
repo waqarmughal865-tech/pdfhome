@@ -855,8 +855,8 @@ export function renderPages(container, options = {}) {
         </div>
 
         <!-- 1. LOCK PDF SUB-PANEL -->
-        <div id="protect-box-lock" style="display:${protectSubMode === 'lock' ? 'grid' : 'none'}; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:var(--space-4); align-items:start">
-          <div style="display:flex; flex-direction:column; gap:10px">
+        <div id="protect-box-lock" style="display:${protectSubMode === 'lock' ? 'block' : 'none'}">
+          <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:var(--space-3)">
             <span style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--color-text-secondary)">
               Lock Type
             </span>
@@ -876,11 +876,11 @@ export function renderPages(container, options = {}) {
             </div>
             <div>
               <label style="font-size:11px; font-weight:600; color:var(--color-text-secondary)">${lockType === 'open' ? 'Password:' : 'Owner Password:'}</label>
-              <input type="password" id="protect-pass-val" value="${protectPassword}" placeholder="Enter strong password" class="form-input" style="font-size:12px; padding:6px 8px" />
+              <input type="password" id="protect-pass-val" value="${protectPassword}" placeholder="Enter strong password" class="form-input" style="font-size:12px; padding:6px 8px; width:100%; box-sizing:border-box" />
             </div>
             <div>
               <label style="font-size:11px; font-weight:600; color:var(--color-text-secondary)">Confirm Password:</label>
-              <input type="password" id="protect-confirm-val" value="${protectConfirm}" placeholder="Repeat password" class="form-input" style="font-size:12px; padding:6px 8px" />
+              <input type="password" id="protect-confirm-val" value="${protectConfirm}" placeholder="Repeat password" class="form-input" style="font-size:12px; padding:6px 8px; width:100%; box-sizing:border-box" />
             </div>
             <div id="lock-perms-box" style="display:${lockType === 'permissions' ? 'flex' : 'none'}; flex-direction:column; gap:6px; padding:10px 12px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-bg-primary)">
               <span style="font-size:11px; font-weight:700; color:var(--color-text-secondary)">BLOCK THESE ACTIONS:</span>
@@ -907,7 +907,7 @@ export function renderPages(container, options = {}) {
         </div>
 
         <!-- 2. UNLOCK PDF SUB-PANEL -->
-        <div id="protect-box-unlock" style="display:${protectSubMode === 'unlock' ? 'grid' : 'none'}; grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); gap:var(--space-4); align-items:center">
+        <div id="protect-box-unlock" style="display:${protectSubMode === 'unlock' ? 'block' : 'none'}">
           <div style="display:flex; flex-direction:column; gap:10px">
             <span style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--color-text-secondary)">
               Decrypt & Strip Password Protection
@@ -2426,7 +2426,7 @@ export function renderPages(container, options = {}) {
       const unlockBox = container.querySelector('#protect-box-unlock');
       const btnLock = container.querySelector('#protect-submode-lock');
       const btnUnlock = container.querySelector('#protect-submode-unlock');
-      if (lockBox) lockBox.style.display = 'grid';
+      if (lockBox) lockBox.style.display = 'block';
       if (unlockBox) unlockBox.style.display = 'none';
       if (btnLock) btnLock.classList.add('active');
       if (btnUnlock) btnUnlock.classList.remove('active');
@@ -2439,7 +2439,7 @@ export function renderPages(container, options = {}) {
       const btnLock = container.querySelector('#protect-submode-lock');
       const btnUnlock = container.querySelector('#protect-submode-unlock');
       if (lockBox) lockBox.style.display = 'none';
-      if (unlockBox) unlockBox.style.display = 'grid';
+      if (unlockBox) unlockBox.style.display = 'block';
       if (btnLock) btnLock.classList.remove('active');
       if (btnUnlock) btnUnlock.classList.add('active');
     });
