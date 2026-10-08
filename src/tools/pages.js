@@ -2489,7 +2489,8 @@ export function renderPages(container, options = {}) {
           protectSubMode = 'unlock';
           activeTab = 'protect';
           renderInitialShell();
-          showError('This PDF is password-protected. Enter the password under "Password Lock → Unlock PDF" below to decrypt and edit.');
+          // Show an immediate password prompt so the user isn't left hunting for the unlock field
+          promptForPDFPassword();
           return;
         }
         throw docErr;
@@ -2623,6 +2624,82 @@ export function renderPages(container, options = {}) {
       errorEl.className = 'status-msg status-msg--error';
       errorEl.innerHTML = `${icon('alertCircle', 16)} <span>${msg}</span>`;
     }
+  }
+
+  // Immediate password prompt when a locked PDF is uploaded — unlocks in place
+  // so the user can continue with any tool (crop, watermark, etc.)
+  function promptForPDFPassword() {
+    // Remove any existing prompt
+    container.querySelector('#pdf-password-modal')?.remove();
+
+    const modal = document.createElement('div');
+    modal.id = 'pdf-password-modal';
+    modal.style.cssText = 'position:fixed; inset:0; z-index:9999; display:flex; align-items:center; justify-content:center; background:rgba(0,0,0,0.55); backdrop-filter:blur(4px)';
+    modal.innerHTML = `
+      <div style="background:var(--color-bg-secondary, #1e1e2e); border:1px solid var(--color-border, #333); border-radius:16px; padding:28px; width:min(400px, 90vw); box-shadow:0 20px 60px rgba(0,0,0,0.4)">
+        <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px">
+          <span style="font-size:24px">🔒</span>
+          <h3 style="margin:0; font-size:18px; font-weight:700">Password Required</h3>
+        </div>
+        <p style="margin:0 0 16px; font-size:13px; color:var(--color-text-secondary); line-height:1.5">
+          This PDF is locked. Enter its password to unlock it — then you can use crop, watermark, and all other tools on it.
+        </p>
+        <div id="pdf-pw-error" style="display:none; margin-bottom:12px; padding:8px 12px; border-radius:8px; background:rgba(239,68,68,0.12); color:#ef4444; font-size:12px"></div>
+        <input type="password" id="pdf-pw-input" placeholder="Enter PDF password" autocomplete="off"
+          style="width:100%; padding:10px 14px; font-size:14px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-bg-primary); color:var(--color-text-primary); margin-bottom:14px; box-sizing:border-box" />
+        <div style="display:flex; gap:10px; justify-content:flex-end">
+          <button id="pdf-pw-cancel" class="btn btn-ghost" style="padding:8px 18px">Cancel</button>
+          <button id="pdf-pw-unlock" class="btn btn-primary" style="padding:8px 22px">Unlock PDF</button>
+        </div>
+        <p style="margin:12px 0 0; font-size:11px; color:var(--color-text-tertiary); text-align:center">🔐 Everything stays in your browser — the password never leaves your device.</p>
+      </div>`;
+    document.body.appendChild(modal);
+
+    const input = modal.querySelector('#pdf-pw-input');
+    const errEl = modal.querySelector('#pdf-pw-error');
+    input.focus();
+
+    const close = () => modal.remove();
+
+    modal.querySelector('#pdf-pw-cancel').addEventListener('click', close);
+    modal.addEventListener('click', (e) => { if (e.target === modal) close(); });
+
+    const doUnlock = async () => {
+      const pw = input.value;
+      if (!pw) { input.focus(); return; }
+      const btn = modal.querySelector('#pdf-pw-unlock');
+      btn.disabled = true;
+      btn.textContent = 'Unlocking…';
+      errEl.style.display = 'none';
+      try {
+        const decryptedBytes = await unlockPDF(pdfBuffer, pw);
+        // Load the unlocked document into the editor
+        pdfBuffer = decryptedBytes.slice(0);
+        pdfDoc = await loadPDFDocument(pdfBuffer);
+        pageCount = pdfDoc.numPages;
+        activePage = 1;
+        pageOrder = Array.from({ length: pageCount }, (_, i) => i + 1);
+        rotations = {};
+        if (typeof deletedPages !== 'undefined') deletedPages.clear();
+        pageRenderCache.clear();
+        thumbCache.clear();
+        isDocEncrypted = false;
+        unlockPassword = '';
+        close();
+        // Re-render the full workbench with the unlocked document
+        renderInitialShell();
+        fitPageToViewport('fit-width');
+      } catch (err) {
+        btn.disabled = false;
+        btn.textContent = 'Unlock PDF';
+        errEl.style.display = 'block';
+        errEl.textContent = 'Wrong password. Please try again.';
+        input.select();
+      }
+    };
+
+    modal.querySelector('#pdf-pw-unlock').addEventListener('click', doUnlock);
+    input.addEventListener('keydown', (e) => { if (e.key === 'Enter') doUnlock(); });
   }
 
   renderInitialShell();
