@@ -217,6 +217,16 @@ const routes = {
     });
     const { renderContact } = await import('./components/Legal.js');
     renderContact(container);
+  },
+
+  '/about': async (container) => {
+    updateSimpleSeo({
+      title: 'About Us — PDFHome',
+      description: 'Learn about PDFHome: free, privacy-first PDF tools that run 100% in your browser. No uploads, no accounts, no watermarks.',
+      slug: '/about'
+    });
+    const { renderAbout } = await import('./components/Legal.js');
+    renderAbout(container);
   }
 };
 

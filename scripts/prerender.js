@@ -179,6 +179,7 @@ function buildShellHtml(mainContentHtml, currentPath = '/') {
             <ul class="app-footer__list">
               <li><a class="app-footer__link" href="/privacy">${icon('chevronRight', 12)} Privacy Policy</a></li>
               <li><a class="app-footer__link" href="/terms">${icon('chevronRight', 12)} Terms of Service</a></li>
+              <li><a class="app-footer__link" href="/about">${icon('chevronRight', 12)} About Us</a></li>
               <li><a class="app-footer__link" href="/contact">${icon('chevronRight', 12)} Contact Us</a></li>
               <li><button type="button" class="app-footer__link" data-cookie-settings style="background:none; border:none; padding:0; cursor:pointer; font-family:inherit; color:inherit; text-align:left; display:flex; align-items:center; gap:var(--space-1)">${icon('chevronRight', 12)} Cookie Settings</button></li>
             </ul>
@@ -932,7 +933,60 @@ const contactHtml = createPageHtml({
 writeHtmlFile(path.resolve(DIST_DIR, 'contact', 'index.html'), contactHtml);
 console.log('  ✓ Pre-rendered: /contact (dist/contact/index.html)');
 
-// 6. Custom 404 Page
+// 6. About Us (/about)
+const aboutHtml = createPageHtml({
+  title: 'About Us — PDFHome',
+  description: 'Learn about PDFHome: free, privacy-first PDF tools that run 100% in your browser. No uploads, no accounts, no watermarks.',
+  canonicalUrl: `${DOMAIN}/about`,
+  mainContentHtml: `
+    <div class="legal-page" style="max-width:860px; margin:0 auto; padding:var(--space-8) var(--space-4)">
+      <div class="tool-page__header" style="margin-bottom:var(--space-8)">
+        <a class="tool-page__back" href="/" title="Back to Home">${icon('chevronLeft')}</a>
+        <div>
+          <h1 class="tool-page__title">About PDFHome</h1>
+          <p style="font-size:var(--text-sm); color:var(--color-text-secondary); margin-top:4px">
+            Free PDF tools that respect your privacy — everything runs in your browser.
+          </p>
+        </div>
+      </div>
+      <div class="legal-page__content" style="background:var(--color-bg-secondary); border:1px solid var(--color-border); border-radius:var(--radius-xl); padding:var(--space-8); display:flex; flex-direction:column; gap:var(--space-6); line-height:1.7; color:var(--color-text-secondary); font-size:var(--text-sm)">
+        <section>
+          <h2 style="font-size:var(--text-xl); font-weight:var(--weight-bold); color:var(--color-text-primary); margin-bottom:var(--space-3)">What is PDFHome?</h2>
+          <p>
+            PDFHome is a free collection of PDF utilities that work entirely inside your web browser. Merge PDFs, split pages, compress files, convert to and from Word, Excel, PowerPoint and images, add page numbers, watermarks, passwords, digital signatures, and more — without installing software or creating an account.
+          </p>
+          <p style="margin-top:var(--space-3)">
+            Most online PDF tools upload your documents to a remote server for processing. PDFHome was built on a different principle: <strong>your files never leave your device.</strong> Every operation runs locally in your browser's memory using modern web technology, and nothing is transmitted, stored, or seen by us.
+          </p>
+        </section>
+        <section style="border-top:1px solid var(--color-border); padding-top:var(--space-6)">
+          <h2 style="font-size:var(--text-xl); font-weight:var(--weight-bold); color:var(--color-text-primary); margin-bottom:var(--space-3)">Why privacy-first?</h2>
+          <p>
+            PDFs often contain sensitive information — contracts, financial records, medical documents, legal filings, and personal identification. Uploading those files to a stranger's server just to merge two pages is an unnecessary risk. PDFHome eliminates that risk by design: there is no server-side processing, no file storage, and no document retention because your files are never sent anywhere.
+          </p>
+        </section>
+        <section style="border-top:1px solid var(--color-border); padding-top:var(--space-6)">
+          <h2 style="font-size:var(--text-xl); font-weight:var(--weight-bold); color:var(--color-text-primary); margin-bottom:var(--space-3)">How PDFHome is supported</h2>
+          <p>
+            PDFHome is free and will remain free. The site is supported by unobtrusive advertising. Ads are only loaded after you accept our cookie-consent banner — if you decline, the tools work exactly the same with no ads. You can change your choice at any time using the "Cookie Settings" link in the footer. Read our <a href="/privacy" style="color:var(--color-accent)">Privacy Policy</a> for full details.
+          </p>
+        </section>
+        <section style="border-top:1px solid var(--color-border); padding-top:var(--space-6)">
+          <h2 style="font-size:var(--text-xl); font-weight:var(--weight-bold); color:var(--color-text-primary); margin-bottom:var(--space-3)">Get in touch</h2>
+          <p>
+            Found a bug, have a feature request, or need help? Reach us through the <a href="/contact" style="color:var(--color-accent)">Contact &amp; Support desk</a>.
+          </p>
+        </section>
+      </div>
+    </div>
+  `,
+  currentPath: '/about',
+  customSchemaJson: buildLegalSchemaJson('About Us', `${DOMAIN}/about`)
+});
+writeHtmlFile(path.resolve(DIST_DIR, 'about', 'index.html'), aboutHtml);
+console.log('  ✓ Pre-rendered: /about (dist/about/index.html)');
+
+// 7. Custom 404 Page
 const notFoundHtml = createPageHtml({
   title: '404 — Page Not Found | PDFHome',
   description: 'The requested page was not found on PDFHome. Browse our free online PDF tools including merge, split, compress, and convert.',
@@ -961,4 +1015,4 @@ const notFoundHtml = createPageHtml({
 writeHtmlFile(path.resolve(DIST_DIR, '404.html'), notFoundHtml);
 console.log('  ✓ Pre-rendered: /404 (dist/404.html)');
 
-console.log(`\n🎉 Success: ${toolCount + 5} routes pre-rendered with complete static HTML, metadata, and structured data!`);
+console.log(`\n🎉 Success: ${toolCount + 6} routes pre-rendered with complete static HTML, metadata, and structured data!`);
