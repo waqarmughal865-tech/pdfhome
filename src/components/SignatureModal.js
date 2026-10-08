@@ -13,6 +13,8 @@
  * - Full Undo & Redo Stroke History Stack (with Ctrl+Z / Ctrl+Y shortcuts)
  * - Smooth Quadratic Bézier spline interpolation
  * - Automatic transparent whitespace bounding-box trimmer
+ * - Type-to-Sign mode: type a name, pick from 4 handwriting fonts, live preview
+ * - Saved signatures: remembers your signature in localStorage for one-click reuse
  * - Full-screen on mobile viewports for maximum touch/stylus drawing space
  */
 
@@ -75,11 +77,21 @@ export function openSignatureModal({
           </div>
           <div>
             <h2 class="sig-modal-title" id="sig-studio-title">Digital Signature Studio</h2>
-            <p class="sig-modal-sub">Draw your signature with stylus, finger, or mouse. Choose pen styles & ink colors.</p>
+            <p class="sig-modal-sub">Draw your signature, or type it in a handwriting style.</p>
           </div>
         </div>
         <button class="sig-modal-close-btn" id="sig-btn-close" title="Close (Esc)" aria-label="Close">
           ${icon('x', 20)}
+        </button>
+      </div>
+
+      <!-- Mode Tabs: Draw / Type -->
+      <div class="sig-mode-tabs" role="tablist" aria-label="Signature input mode">
+        <button type="button" class="sig-mode-tab active" id="sig-tab-draw" role="tab" aria-selected="true">
+          ${icon('penTool', 14)} Draw
+        </button>
+        <button type="button" class="sig-mode-tab" id="sig-tab-type" role="tab" aria-selected="false">
+          ${icon('edit', 14)} Type
         </button>
       </div>
 
@@ -139,6 +151,24 @@ export function openSignatureModal({
         <canvas class="sig-studio-canvas" id="sig-studio-canvas"></canvas>
         <div class="sig-guide-line"></div>
         <span class="sig-guide-label">Sign above this line</span>
+      </div>
+
+      <!-- Type-to-Sign Panel (hidden by default) -->
+      <div class="sig-type-panel" id="sig-type-panel" style="display:none">
+        <div class="sig-type-input-wrap">
+          <label for="sig-type-name" class="sig-type-label">Type your full name</label>
+          <input type="text" id="sig-type-name" class="sig-type-input" placeholder="e.g. Waqar Ahmed" maxlength="60" autocomplete="off" />
+        </div>
+        <div class="sig-type-fonts" id="sig-type-fonts" role="radiogroup" aria-label="Handwriting style">
+          <!-- font options injected by JS -->
+        </div>
+        <div class="sig-type-preview-wrap">
+          <canvas class="sig-type-preview" id="sig-type-preview"></canvas>
+        </div>
+        <div class="sig-type-size-wrap">
+          <label for="sig-type-size" class="sig-type-label">Size</label>
+          <input type="range" id="sig-type-size" min="40" max="120" value="72" />
+        </div>
       </div>
 
       <!-- Modal Footer -->
@@ -553,8 +583,189 @@ export function openSignatureModal({
     if (e.target === modalEl) closeModal();
   });
 
+  // ── Type-to-Sign mode ──
+  const TYPE_FONTS = [
+    { id: 'caveat', label: 'Casual', family: "'Caveat', cursive", gf: 'Caveat:wght@600' },
+    { id: 'dancing', label: 'Elegant', family: "'Dancing Script', cursive", gf: 'Dancing+Script:wght@600' },
+    { id: 'vibes', label: 'Formal', family: "'Great Vibes', cursive", gf: 'Great+Vibes' },
+    { id: 'satisfy', label: 'Smooth', family: "'Satisfy', cursive", gf: 'Satisfy' },
+  ];
+  let sigMode = 'draw'; // 'draw' | 'type'
+  let typeFont = TYPE_FONTS[0];
+  let typeSize = 72;
+  let fontsLoaded = false;
+
+  const tabDraw = modalEl.querySelector('#sig-tab-draw');
+  const tabType = modalEl.querySelector('#sig-tab-type');
+  const drawViewport = modalEl.querySelector('#sig-canvas-viewport');
+  const drawToolbar = modalEl.querySelector('.sig-modal-toolbar');
+  const typePanel = modalEl.querySelector('#sig-type-panel');
+  const typeInput = modalEl.querySelector('#sig-type-name');
+  const typeFontsEl = modalEl.querySelector('#sig-type-fonts');
+  const typePreview = modalEl.querySelector('#sig-type-preview');
+  const typeSizeInput = modalEl.querySelector('#sig-type-size');
+  const typeCtx = typePreview.getContext('2d');
+
+  function loadTypeFonts() {
+    if (fontsLoaded) return;
+    fontsLoaded = true;
+    const link = document.createElement('link');
+    link.rel = 'stylesheet';
+    link.href = 'https://fonts.googleapis.com/css2?' + TYPE_FONTS.map(f => `family=${f.gf}`).join('&') + '&display=swap';
+    document.head.appendChild(link);
+    // Re-render previews once fonts arrive
+    if (document.fonts && document.fonts.ready) {
+      document.fonts.ready.then(() => { renderTypePreview(); renderFontOptions(); });
+    }
+  }
+
+  function renderFontOptions() {
+    typeFontsEl.innerHTML = TYPE_FONTS.map(f => `
+      <button type="button" class="sig-type-font ${f.id === typeFont.id ? 'active' : ''}"
+              data-font="${f.id}" role="radio" aria-checked="${f.id === typeFont.id}"
+              style="font-family: ${f.family}" title="${f.label}">
+        ${escapeName(typeInput.value.trim() || 'Signature')}
+        <small>${f.label}</small>
+      </button>
+    `).join('');
+    typeFontsEl.querySelectorAll('[data-font]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        typeFont = TYPE_FONTS.find(f => f.id === btn.dataset.font) || TYPE_FONTS[0];
+        renderFontOptions();
+        renderTypePreview();
+      });
+    });
+  }
+
+  function escapeName(s) {
+    return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  }
+
+  function renderTypePreview() {
+    const name = typeInput.value.trim() || 'Your Signature';
+    const dpr = Math.min(window.devicePixelRatio || 1, 2.5);
+    const W = 560, H = 140;
+    typePreview.width = W * dpr;
+    typePreview.height = H * dpr;
+    typePreview.style.width = W + 'px';
+    typePreview.style.height = H + 'px';
+    typeCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    typeCtx.clearRect(0, 0, W, H);
+    typeCtx.fillStyle = currentColor;
+    typeCtx.textAlign = 'center';
+    typeCtx.textBaseline = 'middle';
+    typeCtx.font = `${typeSize}px ${typeFont.family}`;
+    typeCtx.fillText(name, W / 2, H / 2 + 4);
+  }
+
+  async function generateTypedBlob() {
+    const name = typeInput.value.trim();
+    if (!name) return null;
+    // Ensure font is loaded before rasterizing
+    try {
+      if (document.fonts) await document.fonts.load(`${typeSize}px ${typeFont.family}`, name);
+    } catch (e) { /* fall back to whatever rendered */ }
+    const dpr = 3;
+    const pad = 20;
+    const meas = document.createElement('canvas').getContext('2d');
+    meas.font = `${typeSize}px ${typeFont.family}`;
+    const tw = Math.ceil(meas.measureText(name).width);
+    const W = tw + pad * 2, H = typeSize + pad * 2;
+    const c = document.createElement('canvas');
+    c.width = W * dpr; c.height = H * dpr;
+    const x = c.getContext('2d');
+    x.scale(dpr, dpr);
+    x.fillStyle = currentColor;
+    x.textAlign = 'center';
+    x.textBaseline = 'middle';
+    x.font = `${typeSize}px ${typeFont.family}`;
+    x.fillText(name, W / 2, H / 2);
+    return new Promise(res => c.toBlob(res, 'image/png'));
+  }
+
+  function setSigMode(mode) {
+    sigMode = mode;
+    const isDraw = mode === 'draw';
+    tabDraw.classList.toggle('active', isDraw);
+    tabType.classList.toggle('active', !isDraw);
+    tabDraw.setAttribute('aria-selected', isDraw);
+    tabType.setAttribute('aria-selected', !isDraw);
+    drawViewport.style.display = isDraw ? '' : 'none';
+    drawToolbar.style.display = isDraw ? '' : 'none';
+    typePanel.style.display = isDraw ? 'none' : 'flex';
+    if (!isDraw) {
+      loadTypeFonts();
+      renderFontOptions();
+      renderTypePreview();
+      setTimeout(() => typeInput.focus(), 60);
+    } else {
+      setTimeout(resizeCanvas, 40);
+    }
+  }
+
+  tabDraw.addEventListener('click', () => setSigMode('draw'));
+  tabType.addEventListener('click', () => setSigMode('type'));
+  typeInput.addEventListener('input', () => { renderFontOptions(); renderTypePreview(); });
+  typeSizeInput.addEventListener('input', () => { typeSize = +typeSizeInput.value; renderTypePreview(); });
+
+  // ── Saved signature (localStorage) ──
+  const SAVED_KEY = 'pdfhome-saved-signature-v1';
+  function getSavedSignature() {
+    try {
+      return JSON.parse(localStorage.getItem(SAVED_KEY) || 'null');
+    } catch (e) { return null; }
+  }
+  // Show "use saved" chip in footer if one exists
+  const saved = getSavedSignature();
+  if (saved && saved.dataUrl) {
+    const chip = document.createElement('button');
+    chip.type = 'button';
+    chip.className = 'sig-saved-chip';
+    chip.title = 'Use your saved signature';
+    chip.innerHTML = `<img src="${saved.dataUrl}" alt="Saved signature" /><span>Use saved signature</span>`;
+    chip.addEventListener('click', async () => {
+      try {
+        const res = await fetch(saved.dataUrl);
+        const blob = await res.blob();
+        onSave({ blob, inkColor: saved.inkColor || currentColor, penStyle: saved.penStyle || 'saved' });
+        closeModal();
+      } catch (e) { /* ignore */ }
+    });
+    modalEl.querySelector('.sig-footer-left').appendChild(chip);
+  }
+
+  async function persistSignature(blob, inkColor, penStyle) {
+    try {
+      const reader = new FileReader();
+      const dataUrl = await new Promise((res, rej) => {
+        reader.onload = () => res(reader.result);
+        reader.onerror = rej;
+        reader.readAsDataURL(blob);
+      });
+      // Keep it small: localStorage limit ~5MB; signature PNGs are tiny
+      if (typeof dataUrl === 'string' && dataUrl.length < 1500000) {
+        localStorage.setItem(SAVED_KEY, JSON.stringify({ dataUrl, inkColor, penStyle }));
+      }
+    } catch (e) { /* storage unavailable — non-fatal */ }
+  }
+
   // Apply Action
   modalEl.querySelector('#sig-btn-apply').addEventListener('click', async () => {
+    if (sigMode === 'type') {
+      const name = typeInput.value.trim();
+      if (!name) {
+        alert('Please type your name first.');
+        typeInput.focus();
+        return;
+      }
+      const blob = await generateTypedBlob();
+      if (blob) {
+        onSave({ blob, inkColor: currentColor, penStyle: 'typed:' + typeFont.id });
+        persistSignature(blob, currentColor, 'typed:' + typeFont.id);
+        closeModal();
+      }
+      return;
+    }
     if (strokes.length === 0) {
       alert('Please draw a signature before applying.');
       return;
@@ -566,6 +777,7 @@ export function openSignatureModal({
         inkColor: currentColor,
         penStyle: currentPen
       });
+      persistSignature(blob, currentColor, currentPen);
       closeModal();
     }
   });
