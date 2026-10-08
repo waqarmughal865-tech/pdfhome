@@ -1033,11 +1033,11 @@
 }
 
 .editor-workspace-split--side #worksite-editor-box {
-  position: sticky;
-  top: 80px;
-  max-height: calc(100vh - 120px);
-  overflow-y: auto;
-  scrollbar-width: thin;
+  /* No sticky/fixed height — let the panel grow naturally so no content is cut off.
+     The page scrolls instead of trapping content in a small scroll box. */
+  position: static;
+  max-height: none;
+  overflow-y: visible;
 }
 
 .editor-workspace-split--side .editor-grid-2col {
