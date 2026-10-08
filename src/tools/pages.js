@@ -1374,8 +1374,12 @@ export function renderPages(container, options = {}) {
       if (e.button !== 0) return;
       isDragging = true;
       gestureMode = false;
+      // Block the browser's native long-press menu (save image, etc.)
+      e.preventDefault();
       wmEl.setPointerCapture(e.pointerId);
       wmEl.style.cursor = 'grabbing';
+      wmEl.style.webkitTouchCallout = 'none';
+      wmEl.style.userSelect = 'none';
 
       const wrapRect = canvasWrap.getBoundingClientRect();
       const elRect = wmEl.getBoundingClientRect();
@@ -1474,6 +1478,17 @@ export function renderPages(container, options = {}) {
     wmEl.addEventListener('pointermove', onPointerMove);
     wmEl.addEventListener('pointerup', onPointerUp);
     wmEl.addEventListener('pointercancel', onPointerUp);
+    // Block native long-press context menu (save image / copy) on the signature
+    wmEl.addEventListener('contextmenu', (e) => e.preventDefault());
+    wmEl.style.webkitTouchCallout = 'none';
+    wmEl.style.userSelect = 'none';
+    // Also block it on the preview canvas so long-press gestures work cleanly
+    const previewCanvas = container.querySelector('#main-preview-canvas');
+    if (previewCanvas) {
+      previewCanvas.addEventListener('contextmenu', (e) => e.preventDefault());
+      previewCanvas.style.webkitTouchCallout = 'none';
+      previewCanvas.style.userSelect = 'none';
+    }
   }
 
   function bindCropDragging() {

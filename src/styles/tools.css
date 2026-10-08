@@ -1745,3 +1745,16 @@
 @media (prefers-reduced-motion: reduce) {
   .tool-layout, .sidebar-toggle-btn, .sidebar-toggle-btn svg { transition: none; }
 }
+
+/* Block native long-press menus on interactive preview elements */
+#draggable-watermark,
+#main-preview-canvas,
+#canvas-container {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: pan-x pan-y;
+}
+#draggable-watermark {
+  touch-action: none;
+}
