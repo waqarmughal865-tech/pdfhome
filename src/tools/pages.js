@@ -352,6 +352,12 @@ export function renderPages(container, options = {}) {
                         <button class="btn btn-ghost btn-sm" id="zoom-in-btn" title="Zoom In" style="padding:4px 6px">
                           ${icon('plus', 14)}
                         </button>
+
+                        <div style="width:1px; height:18px; background:var(--color-border); margin:0 2px"></div>
+
+                        <button class="sidebar-toggle-btn" id="sidebar-toggle" title="Hide panel for bigger preview">
+                          ${icon('chevronLeft', 14)}<span>Hide Panel</span>
+                        </button>
                       </div>
                     </div>
 
@@ -1918,6 +1924,24 @@ export function renderPages(container, options = {}) {
 
     container.querySelector('#btn-zoom-100')?.addEventListener('click', () => {
       fitPageToViewport('zoom-100');
+    });
+
+    // Sidebar collapse toggle — auto-adjusts preview to use full width
+    container.querySelector('#sidebar-toggle')?.addEventListener('click', () => {
+      const layout = container.querySelector('.tool-layout');
+      const btn = container.querySelector('#sidebar-toggle');
+      if (!layout) return;
+      const collapsed = layout.classList.toggle('sidebar-collapsed');
+      if (btn) {
+        btn.querySelector('span').textContent = collapsed ? 'Show Panel' : 'Hide Panel';
+        btn.title = collapsed ? 'Show side panel' : 'Hide panel for bigger preview';
+      }
+      // Re-fit preview to the new available width after layout settles
+      setTimeout(() => {
+        const activeMode = container.querySelector('#btn-fit-page')?.classList.contains('active') ? 'fit-page'
+          : container.querySelector('#btn-zoom-100')?.classList.contains('active') ? 'zoom-100' : 'fit-width';
+        fitPageToViewport(activeMode);
+      }, 120);
     });
 
     container.querySelector('#zoom-in-btn')?.addEventListener('click', () => {
