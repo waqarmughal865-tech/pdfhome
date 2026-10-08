@@ -335,7 +335,7 @@ export function renderHome(container) {
       </div>
 
       <!-- Feature Highlights & User Engagement Cards -->
-      <section class="home-features" style="margin-top:var(--space-12); display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:var(--space-4)">
+      <section class="home-features reveal" style="margin-top:var(--space-12); display:grid; grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); gap:var(--space-4)">
         <div class="feature-card" style="background:var(--color-bg-secondary); border:1px solid var(--color-border); border-radius:var(--radius-xl); padding:var(--space-5); display:flex; flex-direction:column; gap:var(--space-2)">
           <div style="width:38px; height:38px; border-radius:var(--radius-lg); background:rgba(99,102,241,0.1); color:var(--color-primary); display:flex; align-items:center; justify-content:center">
             ${icon('zap', 20)}
@@ -368,7 +368,7 @@ export function renderHome(container) {
       </section>
 
       <!-- Homepage FAQ Section for SEO -->
-      <section class="seo-faq-section" style="margin-top:var(--space-12)" aria-labelledby="home-faq-title">
+      <section class="seo-faq-section reveal" style="margin-top:var(--space-12)" aria-labelledby="home-faq-title">
         <h2 id="home-faq-title" class="seo-section-title" style="text-align:center">Frequently Asked Questions</h2>
         <p style="text-align:center; color:var(--color-text-secondary); font-size:var(--text-sm); max-width:600px; margin:0 auto var(--space-6)">
           Everything you need to know about our privacy-first, zero-upload PDF tools.

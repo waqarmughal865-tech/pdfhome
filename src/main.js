@@ -322,6 +322,13 @@ async function navigate() {
 
   try {
     await handler(contentEl);
+    // Subtle page-enter motion so route changes feel smooth, not jarring
+    if (contentEl && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      contentEl.classList.remove('page-enter');
+      void contentEl.offsetWidth; // restart animation
+      contentEl.classList.add('page-enter');
+    }
+    watchReveals();
     setTimeout(refreshAds, 80);
   } catch (err) {
     console.error('Route navigation error:', err);
@@ -408,8 +415,9 @@ function setupLinkInterceptor() {
 function init() {
   const appEl = document.getElementById('app');
   contentEl = renderShell(appEl);
-  
+
   setupLinkInterceptor();
+  setupScrollReveals();
 
   window.addEventListener('popstate', navigate);
   window.addEventListener('hashchange', navigate);
@@ -422,6 +430,29 @@ function init() {
       document.documentElement.classList.remove('no-transitions');
     }, 60);
   });
+}
+
+/**
+ * Subtle scroll-triggered reveals for homepage sections.
+ * Elements with .reveal fade up once when they enter the viewport.
+ * Respects prefers-reduced-motion via CSS.
+ */
+let revealObserver = null;
+function setupScrollReveals() {
+  if (!('IntersectionObserver' in window)) return;
+  revealObserver = new IntersectionObserver((entries) => {
+    for (const entry of entries) {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('reveal-visible');
+        revealObserver.unobserve(entry.target);
+      }
+    }
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+}
+
+function watchReveals() {
+  if (!revealObserver) return;
+  document.querySelectorAll('.reveal:not(.reveal-visible)').forEach((el) => revealObserver.observe(el));
 }
 
 // Boot when DOM is ready
