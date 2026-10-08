@@ -80,6 +80,9 @@ export function openSignatureModal({
             <p class="sig-modal-sub">Draw your signature, or type it in a handwriting style.</p>
           </div>
         </div>
+        <button class="sig-modal-close-btn" id="sig-btn-expand" title="Fullscreen (F11)" aria-label="Toggle fullscreen">
+          ${icon('maximize', 20)}
+        </button>
         <button class="sig-modal-close-btn" id="sig-btn-close" title="Close (Esc)" aria-label="Close">
           ${icon('x', 20)}
         </button>
@@ -620,6 +623,18 @@ export function openSignatureModal({
 
   modalEl.querySelector('#sig-btn-close').addEventListener('click', closeModal);
   modalEl.querySelector('#sig-btn-cancel').addEventListener('click', closeModal);
+
+  // Fullscreen toggle
+  const cardEl = modalEl.querySelector('.sig-modal-card');
+  const expandBtn = modalEl.querySelector('#sig-btn-expand');
+  function toggleFullscreen() {
+    cardEl.classList.toggle('sig-fullscreen');
+    const isFull = cardEl.classList.contains('sig-fullscreen');
+    expandBtn.title = isFull ? 'Exit fullscreen (Esc)' : 'Fullscreen';
+    expandBtn.style.color = isFull ? 'var(--color-accent)' : '';
+    setTimeout(resizeCanvas, 60);
+  }
+  expandBtn.addEventListener('click', toggleFullscreen);
   modalEl.addEventListener('click', (e) => {
     if (e.target === modalEl) closeModal();
   });

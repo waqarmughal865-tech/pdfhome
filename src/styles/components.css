@@ -1469,12 +1469,23 @@
   border-radius: var(--radius-2xl, 18px);
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
   width: 100%;
-  max-width: 860px;
-  max-height: 94vh;
+  max-width: 1080px;
+  max-height: 96vh;
+  height: 720px;
   overflow: hidden;
   display: flex;
   flex-direction: column;
   animation: modalSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: max-width var(--transition-base), height var(--transition-base), border-radius var(--transition-base);
+}
+
+/* Fullscreen mode — immersive full-page drawing experience */
+.sig-modal-card.sig-fullscreen {
+  max-width: 100vw;
+  max-height: 100vh;
+  height: 100vh;
+  border-radius: 0;
+  border: none;
 }
 
 @media (max-width: 640px) {
@@ -1718,7 +1729,7 @@
   flex: 1;
   position: relative;
   background: #ffffff;
-  min-height: 280px;
+  min-height: 380px;
   display: flex;
   align-items: center;
   justify-content: center;
