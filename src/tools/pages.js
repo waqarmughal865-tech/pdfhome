@@ -412,6 +412,22 @@ export function renderPages(container, options = {}) {
                       </div>
                     </div>
 
+                    ${isDocEncrypted && !pdfDoc ? `
+                    <!-- Inline Unlock Banner: unlock without leaving the current tool -->
+                    <div id="inline-unlock-banner" style="margin:var(--space-3) var(--space-4) 0; padding:12px 16px; border:1px solid rgba(239,68,68,0.35); background:rgba(239,68,68,0.07); border-radius:12px; display:flex; align-items:center; gap:12px; flex-wrap:wrap">
+                      <span style="font-size:20px">🔒</span>
+                      <div style="flex:1; min-width:180px">
+                        <div style="font-size:13px; font-weight:700">This PDF is locked</div>
+                        <div style="font-size:11px; color:var(--color-text-secondary)">Enter the password to unlock it and keep working — no need to switch tools.</div>
+                        <div id="inline-unlock-error" style="display:none; font-size:11px; color:#ef4444; margin-top:4px"></div>
+                      </div>
+                      <input type="password" id="inline-unlock-pass" placeholder="PDF password" autocomplete="off"
+                        style="padding:8px 12px; font-size:13px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-bg-primary); color:var(--color-text-primary); width:180px" />
+                      <button id="inline-unlock-btn" class="btn btn-primary btn-sm" style="padding:8px 18px; font-size:12px; white-space:nowrap">
+                        ${icon('unlock', 14)} Unlock
+                      </button>
+                    </div>` : ''}
+
                     <!-- Tab Panels (Kept in DOM, toggled via display for 0 lag) -->
                     <div id="tab-panel-watermark" class="tab-panel" style="padding:var(--space-4); display:${activeTab === 'watermark' ? 'block' : 'none'}">
                       ${getWatermarkPanelHtml()}
@@ -2333,6 +2349,48 @@ export function renderPages(container, options = {}) {
     });
 
     // PASSWORD LOCK & UNLOCK SUB-MODES
+
+    // Inline unlock banner (visible on any tab when a locked PDF is loaded)
+    const inlineUnlockBtn = container.querySelector('#inline-unlock-btn');
+    if (inlineUnlockBtn) {
+      const doInlineUnlock = async () => {
+        const pwInput = container.querySelector('#inline-unlock-pass');
+        const errEl = container.querySelector('#inline-unlock-error');
+        const pw = pwInput ? pwInput.value : '';
+        if (!pw) { pwInput?.focus(); return; }
+        inlineUnlockBtn.disabled = true;
+        inlineUnlockBtn.innerHTML = `${icon('loader', 14)} Unlocking…`;
+        if (errEl) errEl.style.display = 'none';
+        try {
+          const decryptedBytes = await unlockPDF(pdfBuffer, pw);
+          pdfBuffer = decryptedBytes.slice(0);
+          pdfDoc = await loadPDFDocument(pdfBuffer);
+          pageCount = pdfDoc.numPages;
+          activePage = 1;
+          pageOrder = Array.from({ length: pageCount }, (_, i) => i + 1);
+          rotations = {};
+          if (typeof deletedPages !== 'undefined') deletedPages.clear();
+          pageRenderCache.clear();
+          thumbCache.clear();
+          isDocEncrypted = false;
+          unlockPassword = '';
+          renderInitialShell();
+          fitPageToViewport('fit-width');
+        } catch (err) {
+          inlineUnlockBtn.disabled = false;
+          inlineUnlockBtn.innerHTML = `${icon('unlock', 14)} Unlock`;
+          if (errEl) {
+            errEl.style.display = 'block';
+            errEl.textContent = 'Wrong password. Please try again.';
+          }
+          pwInput?.select();
+        }
+      };
+      inlineUnlockBtn.addEventListener('click', doInlineUnlock);
+      container.querySelector('#inline-unlock-pass')?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') doInlineUnlock();
+      });
+    }
     container.querySelector('#protect-submode-lock')?.addEventListener('click', () => {
       protectSubMode = 'lock';
       const lockBox = container.querySelector('#protect-box-lock');
@@ -2487,10 +2545,10 @@ export function renderPages(container, options = {}) {
         const msg = (docErr.message || '').toLowerCase();
         if (msg.includes('password') || docErr.name === 'PasswordException' || docErr.code === 1) {
           isDocEncrypted = true;
-          protectSubMode = 'unlock';
-          activeTab = 'protect';
+          // Stay on the user's current tab — the inline unlock banner lets them
+          // unlock without leaving their tool
           renderInitialShell();
-          showError('This PDF is password-protected. Enter the password in the "Unlock PDF" panel below and click "Decrypt & Remove Password".');
+          showError('This PDF is password-protected. Enter the password in the unlock banner above to continue.');
           return;
         }
         throw docErr;
