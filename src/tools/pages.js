@@ -1623,8 +1623,8 @@ export function renderPages(container, options = {}) {
       const maxAvailableH = Math.max(260, vH - 32);
 
       if (mode === 'fit-width') {
-        // Naturally scale the PDF so it fills the available viewport width nicely
-        const targetW = Math.min(maxAvailableW, Math.max(260, Math.min(780, maxAvailableW)));
+        // Use the full available viewport width (no artificial cap) so text stays readable
+        const targetW = Math.max(260, maxAvailableW);
         previewZoom = Math.max(0.25, Math.min(2.5, +(targetW / baseViewport.width).toFixed(2)));
       } else if (mode === 'zoom-100') {
         previewZoom = 1.0;
@@ -1936,13 +1936,34 @@ export function renderPages(container, options = {}) {
         btn.querySelector('span').textContent = collapsed ? 'Show Panel' : 'Hide Panel';
         btn.title = collapsed ? 'Show side panel' : 'Hide panel for bigger preview';
       }
-      // Re-fit preview to the new available width after layout settles
+      // Re-fit after the CSS grid transition completes (200ms) + buffer
       setTimeout(() => {
         const activeMode = container.querySelector('#btn-fit-page')?.classList.contains('active') ? 'fit-page'
           : container.querySelector('#btn-zoom-100')?.classList.contains('active') ? 'zoom-100' : 'fit-width';
         fitPageToViewport(activeMode);
-      }, 120);
+      }, 280);
     });
+
+    // Auto re-fit preview when the viewport resizes (window resize, layout changes)
+    if ('ResizeObserver' in window) {
+      let resizeTimer = null;
+      const viewportEl = container.querySelector('#preview-viewport');
+      if (viewportEl) {
+        new ResizeObserver(() => {
+          clearTimeout(resizeTimer);
+          resizeTimer = setTimeout(() => {
+            if (!container.isConnected) return;
+            const activeMode = container.querySelector('#btn-fit-page')?.classList.contains('active') ? 'fit-page'
+              : container.querySelector('#btn-zoom-100')?.classList.contains('active') ? 'zoom-100' : 'fit-width';
+            // Only auto-fit in fit modes, not manual zoom
+            if (container.querySelector('#btn-fit-width')?.classList.contains('active') ||
+                container.querySelector('#btn-fit-page')?.classList.contains('active')) {
+              fitPageToViewport(activeMode);
+            }
+          }, 250);
+        }).observe(viewportEl);
+      }
+    }
 
     container.querySelector('#zoom-in-btn')?.addEventListener('click', () => {
       previewZoom = Math.min(2.5, +(previewZoom + 0.15).toFixed(2));
