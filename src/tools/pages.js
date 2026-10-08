@@ -420,10 +420,10 @@ export function renderPages(container, options = {}) {
                       <span style="font-size:20px">🔒</span>
                       <div style="flex:1; min-width:180px">
                         <div style="font-size:13px; font-weight:700">This PDF is locked</div>
-                        <div style="font-size:11px; color:var(--color-text-secondary)">Enter the password to unlock it and keep working — no need to switch tools.</div>
+                        <div style="font-size:11px; color:var(--color-text-secondary)">Enter the password if you have it — or just press Unlock to remove permissions (works without password for restriction-only PDFs).</div>
                         <div id="inline-unlock-error" style="display:none; font-size:11px; color:#ef4444; margin-top:4px"></div>
                       </div>
-                      <input type="password" id="inline-unlock-pass" placeholder="PDF password" autocomplete="off"
+                      <input type="password" id="inline-unlock-pass" placeholder="PDF password (optional)" autocomplete="off"
                         style="padding:8px 12px; font-size:13px; border:1px solid var(--color-border); border-radius:8px; background:var(--color-bg-primary); color:var(--color-text-primary); width:180px" />
                       <button id="inline-unlock-btn" class="btn btn-primary btn-sm" style="padding:8px 18px; font-size:12px; white-space:nowrap">
                         ${icon('unlock', 14)} Unlock
@@ -915,8 +915,9 @@ export function renderPages(container, options = {}) {
             <div>
               <label style="font-size:11px; font-weight:600; color:var(--color-text-secondary)">Current Document Password:</label>
               <div style="position:relative; display:flex; align-items:center">
-                <input type="password" id="unlock-pass-val" value="${unlockPassword}" placeholder="Enter password to decrypt" class="form-input" style="font-size:12px; padding:6px 8px; width:100%" />
+                <input type="password" id="unlock-pass-val" value="${unlockPassword}" placeholder="Enter password (or leave empty for permissions-only PDFs)" class="form-input" style="font-size:12px; padding:6px 8px; width:100%" />
               </div>
+              <div style="font-size:10px; color:var(--color-text-tertiary); margin-top:4px">No password needed if the PDF opens but has printing/copying restrictions — just press the button.</div>
             </div>
             <div style="display:flex; gap:8px; align-items:center">
               <button class="btn btn-primary btn-sm" id="btn-unlock-pdf" style="font-size:12px; padding:6px 14px">
@@ -2385,7 +2386,7 @@ export function renderPages(container, options = {}) {
         const pwInput = container.querySelector('#inline-unlock-pass');
         const errEl = container.querySelector('#inline-unlock-error');
         const pw = pwInput ? pwInput.value : '';
-        if (!pw) { pwInput?.focus(); return; }
+        // Empty password is fine — removes permissions-only locks without a password
         inlineUnlockBtn.disabled = true;
         inlineUnlockBtn.innerHTML = `${icon('loader', 14)} Unlocking…`;
         if (errEl) errEl.style.display = 'none';
