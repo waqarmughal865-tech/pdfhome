@@ -1657,13 +1657,10 @@ export function renderPages(container, options = {}) {
     if (!previewBox || !editorBox) return;
 
     if (editorLayoutMode === 'bottom') {
-      const cssW = parseFloat(canvas.style.width) || canvas.width || 600;
-      const maxAvailableW = worksiteEl ? (worksiteEl.clientWidth || window.innerWidth) : window.innerWidth;
-
-      // Snugly fit ONLY the preview card to the PDF canvas width + header padding (e.g. 36px)
-      // so the preview wraps the PDF cleanly, while the tools section stays full width
-      const idealCardW = Math.min(maxAvailableW, Math.max(320, Math.round(cssW + 36)));
-      previewBox.style.maxWidth = `${idealCardW}px`;
+      // Let the preview card use the full available width — constraining it to
+      // the canvas width created a shrink feedback loop (each re-fit measured
+      // a smaller viewport and reduced zoom further).
+      previewBox.style.maxWidth = '100%';
       previewBox.style.width = '100%';
       previewBox.style.margin = '0 auto';
 
