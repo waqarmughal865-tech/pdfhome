@@ -916,15 +916,6 @@ export function renderPages(container, options = {}) {
               </label>
             </div>
           </div>
-
-          <div style="background:var(--color-bg-primary); padding:var(--space-3); border-radius:var(--radius-md); border:1px solid var(--color-border); font-size:11px; color:var(--color-text-secondary); display:flex; flex-direction:column; gap:6px">
-            <div style="display:flex; align-items:center; gap:6px; color:var(--color-primary); font-weight:600">
-              ${icon('lock', 16)} 128-bit Standard Encryption
-            </div>
-            <p style="margin:0">
-              Protects the exported document. When you click <strong>Save & Export PDF</strong> in the sidebar, the resulting file will be encrypted with your chosen lock type.
-            </p>
-          </div>
         </div>
 
         <!-- 2. UNLOCK PDF SUB-PANEL -->
