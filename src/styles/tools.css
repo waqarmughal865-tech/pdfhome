@@ -1758,3 +1758,13 @@
 #draggable-watermark {
   touch-action: none;
 }
+
+/* Fullscreen preview mode */
+#worksite-preview-box:fullscreen {
+  background: var(--color-bg-tertiary);
+  padding: 20px;
+  overflow: auto;
+}
+#worksite-preview-box:fullscreen .preview-viewport {
+  min-height: calc(100vh - 140px);
+}

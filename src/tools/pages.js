@@ -360,10 +360,13 @@ export function renderPages(container, options = {}) {
                         <button class="sidebar-toggle-btn" id="sidebar-toggle" title="Hide panel for bigger preview">
                           ${icon('chevronLeft', 14)}<span>Hide Panel</span>
                         </button>
+                        <button class="sidebar-toggle-btn" id="preview-fullscreen-btn" title="Open preview in fullscreen for precise adjustments">
+                          ${icon('maximize', 14)}<span>Fullscreen</span>
+                        </button>
                       </div>
                       <div style="font-size:10px; color:var(--color-text-tertiary); margin-top:4px; text-align:center">
                         Tip: Hold Ctrl and scroll, or pinch with two fingers to zoom<br>
-                        <span style="opacity:0.85">✋ Long-press the signature, then drag ↕ for size, ↔ for opacity</span>
+                        <span style="opacity:0.85">✋ Drag the signature to move it — use corner handles to resize, top ⟳ handle to rotate</span>
                       </div>
                     </div>
 
@@ -1218,6 +1221,14 @@ export function renderPages(container, options = {}) {
               <div style="position:absolute; top:-18px; left:0; font-size:9px; font-weight:700; background:${isExcluded ? '#ef4444' : '#6366f1'}; color:#fff; padding:1px 6px; border-radius:3px; white-space:nowrap; pointer-events:none">
                 ${isExcluded ? 'Excluded on Page ' + activePage : 'Drag to Move'}
               </div>
+              <!-- Resize corner handles -->
+              <div class="wm-handle wm-handle-nw" data-handle="nw" style="position:absolute; top:-7px; left:-7px; width:14px; height:14px; background:#fff; border:2px solid #6366f1; border-radius:3px; cursor:nwse-resize; z-index:31"></div>
+              <div class="wm-handle wm-handle-ne" data-handle="ne" style="position:absolute; top:-7px; right:-7px; width:14px; height:14px; background:#fff; border:2px solid #6366f1; border-radius:3px; cursor:nesw-resize; z-index:31"></div>
+              <div class="wm-handle wm-handle-sw" data-handle="sw" style="position:absolute; bottom:-7px; left:-7px; width:14px; height:14px; background:#fff; border:2px solid #6366f1; border-radius:3px; cursor:nesw-resize; z-index:31"></div>
+              <div class="wm-handle wm-handle-se" data-handle="se" style="position:absolute; bottom:-7px; right:-7px; width:14px; height:14px; background:#fff; border:2px solid #6366f1; border-radius:3px; cursor:nwse-resize; z-index:31"></div>
+              <!-- Rotate handle above -->
+              <div class="wm-handle wm-handle-rotate" data-handle="rotate" style="position:absolute; top:-32px; left:50%; transform:translateX(-50%); width:20px; height:20px; background:#6366f1; border:2px solid #fff; border-radius:50%; cursor:grab; z-index:31; display:flex; align-items:center; justify-content:center; font-size:11px; color:#fff; box-shadow:0 1px 4px rgba(0,0,0,0.3)">⟳</div>
+              <div style="position:absolute; top:-14px; left:50%; transform:translateX(-50%); width:2px; height:12px; background:#6366f1; z-index:30; pointer-events:none"></div>
             </div>
           `;
           bindWatermarkDragging();
@@ -1329,51 +1340,11 @@ export function renderPages(container, options = {}) {
     let startX = 0, startY = 0;
     let initialLeft = 0, initialTop = 0;
 
-    // Long-press gesture mode: hold 600ms, then drag vertically = size, horizontally = opacity
-    let longPressTimer = null;
-    let gestureMode = false;
-    let gestureStartX = 0, gestureStartY = 0;
-    let gestureStartScale = 0, gestureStartOpacity = 0;
-    let gestureIndicator = null;
-
-    const showGestureIndicator = (mode) => {
-      if (gestureIndicator) gestureIndicator.remove();
-      if (!mode) return;
-      gestureIndicator = document.createElement('div');
-      gestureIndicator.id = 'wm-gesture-indicator';
-      gestureIndicator.style.cssText = 'position:absolute; inset:-8px; border:2px dashed var(--color-primary); border-radius:8px; pointer-events:none; animation:wmGesturePulse 1s ease-in-out infinite; z-index:30';
-      const label = document.createElement('div');
-      label.style.cssText = 'position:absolute; top:-28px; left:50%; transform:translateX(-50%); background:var(--color-primary); color:#fff; font-size:10px; font-weight:700; padding:3px 10px; border-radius:12px; white-space:nowrap; pointer-events:none';
-      label.textContent = '↕ Size  •  ↔ Opacity';
-      gestureIndicator.appendChild(label);
-      wmEl.style.position = 'absolute';
-      wmEl.appendChild(gestureIndicator);
-    };
-
-    // Add pulse animation once
-    if (!document.getElementById('wm-gesture-style')) {
-      const st = document.createElement('style');
-      st.id = 'wm-gesture-style';
-      st.textContent = '@keyframes wmGesturePulse { 0%,100% { opacity:1 } 50% { opacity:0.4 } }';
-      document.head.appendChild(st);
-    }
-
-    const syncWmSliders = () => {
-      const sScale = container.querySelector('#wm-slider-scale');
-      const sOp = container.querySelector('#wm-slider-opacity');
-      const lScale = container.querySelector('#wm-lbl-scale');
-      const lOp = container.querySelector('#wm-lbl-opacity');
-      if (sScale) sScale.value = wmScale;
-      if (sOp) sOp.value = wmOpacity;
-      if (lScale) lScale.textContent = `${Math.round(wmScale * 100)}%`;
-      if (lOp) lOp.textContent = `${Math.round(wmOpacity * 100)}%`;
-      updateOverlays();
-    };
-
     const onPointerDown = (e) => {
+      // Ignore if the press started on a handle (handles have their own logic)
+      if (e.target.closest('.wm-handle')) return;
       if (e.button !== 0) return;
       isDragging = true;
-      gestureMode = false;
       // Block the browser's native long-press menu (save image, etc.)
       e.preventDefault();
       wmEl.setPointerCapture(e.pointerId);
@@ -1386,51 +1357,18 @@ export function renderPages(container, options = {}) {
 
       startX = e.clientX;
       startY = e.clientY;
-      gestureStartX = e.clientX;
-      gestureStartY = e.clientY;
       initialLeft = elRect.left - wrapRect.left;
       initialTop = elRect.top - wrapRect.top;
 
-      // Start long-press timer — if user holds without moving, enter gesture mode
-      clearTimeout(longPressTimer);
-      longPressTimer = setTimeout(() => {
-        if (!isDragging) return;
-        gestureMode = true;
-        gestureStartScale = wmScale;
-        gestureStartOpacity = wmOpacity;
-        gestureStartX = e.clientX;
-        gestureStartY = e.clientY;
-        showGestureIndicator(true);
-        // Haptic feedback on mobile
-        if (navigator.vibrate) navigator.vibrate(30);
-      }, 600);
-
       e.stopPropagation();
-      e.preventDefault();
     };
 
     const onPointerMove = (e) => {
       if (!isDragging) return;
 
+      const wrapRect = canvasWrap.getBoundingClientRect();
       const deltaX = e.clientX - startX;
       const deltaY = e.clientY - startY;
-
-      // If moved significantly before long-press fires, it's a normal move-drag
-      if (!gestureMode && Math.hypot(deltaX, deltaY) > 12) {
-        clearTimeout(longPressTimer);
-      }
-
-      if (gestureMode) {
-        // Gesture mode: vertical = size, horizontal = opacity
-        const gDeltaY = gestureStartY - e.clientY; // up = bigger
-        const gDeltaX = e.clientX - gestureStartX; // right = more opaque
-        wmScale = Math.max(0.1, Math.min(1.2, gestureStartScale + gDeltaY / 300));
-        wmOpacity = Math.max(0.05, Math.min(1, gestureStartOpacity + gDeltaX / 300));
-        syncWmSliders();
-        return;
-      }
-
-      const wrapRect = canvasWrap.getBoundingClientRect();
 
       let newLeft = initialLeft + deltaX;
       let newTop = initialTop + deltaY;
@@ -1461,13 +1399,6 @@ export function renderPages(container, options = {}) {
     const onPointerUp = (e) => {
       if (!isDragging) return;
       isDragging = false;
-      clearTimeout(longPressTimer);
-      if (gestureMode) {
-        gestureMode = false;
-        showGestureIndicator(false);
-        modified = true;
-        showEditedBadge();
-      }
       try { wmEl.releasePointerCapture(e.pointerId); } catch (err) {}
       wmEl.style.cursor = 'grab';
       modified = true;
@@ -1489,6 +1420,64 @@ export function renderPages(container, options = {}) {
       previewCanvas.style.webkitTouchCallout = 'none';
       previewCanvas.style.userSelect = 'none';
     }
+
+    // ── Corner resize + rotate handles ──
+    const handles = wmEl.querySelectorAll('.wm-handle');
+    handles.forEach(handle => {
+      handle.addEventListener('pointerdown', (e) => {
+        e.stopPropagation();
+        e.preventDefault();
+        const handleType = handle.getAttribute('data-handle');
+        handle.setPointerCapture(e.pointerId);
+
+        const rect = wmEl.getBoundingClientRect();
+        const centerX = rect.left + rect.width / 2;
+        const centerY = rect.top + rect.height / 2;
+        const startDist = Math.hypot(e.clientX - centerX, e.clientY - centerY);
+        const startScale = wmScale;
+        const startAngle = Math.atan2(e.clientY - centerY, e.clientX - centerX) * 180 / Math.PI;
+        const startRotation = wmRotation;
+
+        const onHandleMove = (ev) => {
+          if (handleType === 'rotate') {
+            const ang = Math.atan2(ev.clientY - centerY, ev.clientX - centerX) * 180 / Math.PI;
+            let newRot = (startRotation + (ang - startAngle)) % 360;
+            if (newRot < 0) newRot += 360;
+            wmRotation = Math.round(newRot);
+            const rotSlider = container.querySelector('#wm-slider-rotation');
+            const rotLbl = container.querySelector('#wm-lbl-rotation');
+            if (rotSlider) rotSlider.value = wmRotation;
+            if (rotLbl) rotLbl.textContent = `${wmRotation}°`;
+          } else {
+            // Resize: scale by distance from center
+            const dist = Math.hypot(ev.clientX - centerX, ev.clientY - centerY);
+            if (startDist > 0) {
+              wmScale = Math.max(0.1, Math.min(1.2, startScale * (dist / startDist)));
+              const sScale = container.querySelector('#wm-slider-scale');
+              const lScale = container.querySelector('#wm-lbl-scale');
+              if (sScale) sScale.value = wmScale;
+              if (lScale) lScale.textContent = `${Math.round(wmScale * 100)}%`;
+            }
+          }
+          updateOverlays();
+        };
+
+        const onHandleUp = () => {
+          handle.removeEventListener('pointermove', onHandleMove);
+          handle.removeEventListener('pointerup', onHandleUp);
+          handle.removeEventListener('pointercancel', onHandleUp);
+          try { handle.releasePointerCapture(e.pointerId); } catch (err) {}
+          modified = true;
+          showEditedBadge();
+          // Re-bind to refresh handle positions after transform change
+          updateOverlays();
+        };
+
+        handle.addEventListener('pointermove', onHandleMove);
+        handle.addEventListener('pointerup', onHandleUp);
+        handle.addEventListener('pointercancel', onHandleUp);
+      });
+    });
   }
 
   function bindCropDragging() {
@@ -2096,6 +2085,33 @@ export function renderPages(container, options = {}) {
           : container.querySelector('#btn-zoom-100')?.classList.contains('active') ? 'zoom-100' : 'fit-width';
         fitPageToViewport(activeMode);
       }, 280);
+    });
+
+    // Fullscreen preview for precise adjustments
+    container.querySelector('#preview-fullscreen-btn')?.addEventListener('click', () => {
+      const previewBox = container.querySelector('#worksite-preview-box');
+      if (!previewBox) return;
+      if (document.fullscreenElement) {
+        document.exitFullscreen();
+      } else {
+        previewBox.requestFullscreen?.().then(() => {
+          setTimeout(() => {
+            const activeMode = container.querySelector('#btn-fit-page')?.classList.contains('active') ? 'fit-page'
+              : container.querySelector('#btn-zoom-100')?.classList.contains('active') ? 'zoom-100' : 'fit-width';
+            fitPageToViewport(activeMode);
+          }, 300);
+        }).catch(() => {});
+      }
+    });
+    // Re-fit when exiting fullscreen
+    document.addEventListener('fullscreenchange', () => {
+      if (!document.fullscreenElement) {
+        setTimeout(() => {
+          const activeMode = container.querySelector('#btn-fit-page')?.classList.contains('active') ? 'fit-page'
+            : container.querySelector('#btn-zoom-100')?.classList.contains('active') ? 'zoom-100' : 'fit-width';
+          if (container.isConnected) fitPageToViewport(activeMode);
+        }, 300);
+      }
     });
 
     // Auto re-fit preview when the viewport resizes (window resize, layout changes)
