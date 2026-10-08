@@ -236,6 +236,62 @@ export function openSignatureModal({
   }
 
   // Render stroke with appropriate pen style & curve smoothing
+  // ── Variable-width stroke renderer (fountain pen) ──
+  // Builds a smooth filled outline from per-point widths instead of stroking
+  // separate segments — this eliminates the beaded "dots" artifact.
+  function renderVariableWidthStroke(targetCtx, pts, color, baseWidth) {
+    if (!pts || pts.length === 0) return;
+    targetCtx.save();
+    targetCtx.fillStyle = color;
+
+    if (pts.length === 1) {
+      const r = (pts[0].w || baseWidth || 2) / 2;
+      targetCtx.beginPath();
+      targetCtx.arc(pts[0].x, pts[0].y, r, 0, Math.PI * 2);
+      targetCtx.fill();
+      targetCtx.restore();
+      return;
+    }
+
+    // Smooth widths with a 3-point moving average to avoid abrupt steps
+    const rawW = pts.map(p => p.w || baseWidth || 2);
+    const sw = rawW.map((w, i) => {
+      const a = rawW[Math.max(0, i - 1)];
+      const b = rawW[Math.min(rawW.length - 1, i + 1)];
+      return (a + w + b) / 3;
+    });
+
+    const left = [], right = [];
+    for (let i = 0; i < pts.length; i++) {
+      const p = pts[i];
+      const pPrev = pts[Math.max(0, i - 1)];
+      const pNext = pts[Math.min(pts.length - 1, i + 1)];
+      let dx = pNext.x - pPrev.x, dy = pNext.y - pPrev.y;
+      const len = Math.hypot(dx, dy);
+      if (len < 0.01) { dx = 1; dy = 0; } else { dx /= len; dy /= len; }
+      const nx = -dy, ny = dx;
+      const hw = sw[i] / 2;
+      left.push([p.x + nx * hw, p.y + ny * hw]);
+      right.push([p.x - nx * hw, p.y - ny * hw]);
+    }
+
+    targetCtx.beginPath();
+    targetCtx.moveTo(left[0][0], left[0][1]);
+    for (let i = 1; i < left.length; i++) targetCtx.lineTo(left[i][0], left[i][1]);
+    for (let i = right.length - 1; i >= 0; i--) targetCtx.lineTo(right[i][0], right[i][1]);
+    targetCtx.closePath();
+    targetCtx.fill();
+
+    // Round caps at both ends
+    for (const idx of [0, pts.length - 1]) {
+      const p = pts[idx];
+      targetCtx.beginPath();
+      targetCtx.arc(p.x, p.y, sw[idx] / 2, 0, Math.PI * 2);
+      targetCtx.fill();
+    }
+    targetCtx.restore();
+  }
+
   function renderSingleStroke(targetCtx, stroke) {
     const pts = stroke.points;
     if (!pts || pts.length === 0) return;
@@ -267,27 +323,10 @@ export function openSignatureModal({
     }
 
     if (stroke.pen === 'fountain') {
-      // Fountain Pen: Dynamic variable stroke with Catmull-Rom / velocity tapering
-      for (let i = 0; i < pts.length - 1; i++) {
-        const p0 = pts[i];
-        const p1 = pts[i + 1];
-        const midX = (p0.x + p1.x) / 2;
-        const midY = (p0.y + p1.y) / 2;
-
-        targetCtx.beginPath();
-        targetCtx.moveTo(p0.x, p0.y);
-        targetCtx.quadraticCurveTo(p0.x, p0.y, midX, midY);
-        targetCtx.lineWidth = p0.w || stroke.width;
-        targetCtx.stroke();
-      }
-      // Last segment
-      const last = pts[pts.length - 1];
-      const prev = pts[pts.length - 2];
-      targetCtx.beginPath();
-      targetCtx.moveTo(prev.x, prev.y);
-      targetCtx.lineTo(last.x, last.y);
-      targetCtx.lineWidth = last.w || stroke.width;
-      targetCtx.stroke();
+      // Fountain Pen: smooth variable-width filled outline (no dot artifacts)
+      targetCtx.restore();
+      renderVariableWidthStroke(targetCtx, pts, stroke.color, stroke.width);
+      return;
     } else {
       // Smooth Quadratic Bézier curves for Ballpoint, Gel & Marker
       targetCtx.beginPath();
@@ -395,13 +434,15 @@ export function openSignatureModal({
     }
 
     if (currentPen === 'fountain') {
-      const midX = (prevPt.x + pt.x) / 2;
-      const midY = (prevPt.y + pt.y) / 2;
-      ctx.beginPath();
-      ctx.moveTo(prevPt.x, prevPt.y);
-      ctx.quadraticCurveTo(prevPt.x, prevPt.y, midX, midY);
-      ctx.lineWidth = prevPt.w || currentWidth;
-      ctx.stroke();
+      // Redraw the whole in-progress stroke with the smooth variable-width
+      // renderer (incremental segments caused the dot/bead artifact)
+      ctx.save();
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.scale(dpr, dpr);
+      for (const s of strokes) renderSingleStroke(ctx, s);
+      renderVariableWidthStroke(ctx, pts, currentStroke.color, currentStroke.width);
+      ctx.restore();
     } else {
       ctx.beginPath();
       ctx.moveTo(prevPt.x, prevPt.y);
@@ -589,6 +630,12 @@ export function openSignatureModal({
     { id: 'dancing', label: 'Elegant', family: "'Dancing Script', cursive", gf: 'Dancing+Script:wght@600' },
     { id: 'vibes', label: 'Formal', family: "'Great Vibes', cursive", gf: 'Great+Vibes' },
     { id: 'satisfy', label: 'Smooth', family: "'Satisfy', cursive", gf: 'Satisfy' },
+    { id: 'homemade', label: 'Natural', family: "'Homemade Apple', cursive", gf: 'Homemade+Apple' },
+    { id: 'kalam', label: 'Handprint', family: "'Kalam', cursive", gf: 'Kalam:wght@400' },
+    { id: 'shadows', label: 'Neat', family: "'Shadows Into Light', cursive", gf: 'Shadows+Into+Light' },
+    { id: 'pacifico', label: 'Bold Script', family: "'Pacifico', cursive", gf: 'Pacifico' },
+    { id: 'allura', label: 'Calligraphy', family: "'Allura', cursive", gf: 'Allura' },
+    { id: 'alexbrush', label: 'Brush', family: "'Alex Brush', cursive", gf: 'Alex+Brush' },
   ];
   let sigMode = 'draw'; // 'draw' | 'type'
   let typeFont = TYPE_FONTS[0];
