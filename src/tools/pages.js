@@ -836,6 +836,15 @@ export function renderPages(container, options = {}) {
   }
 
   function getProtectPanelHtml() {
+    // When a locked PDF is uploaded but not yet unlocked, the inline banner
+    // at the top handles unlocking — don't show duplicate panels here.
+    if (isDocEncrypted && !pdfDoc) {
+      return `
+      <div style="display:flex; flex-direction:column; gap:var(--space-3); padding:var(--space-4); text-align:center; color:var(--color-text-secondary)">
+        <span style="font-size:32px">🔒</span>
+        <p style="margin:0; font-size:13px">This PDF is locked. Use the unlock banner at the top to enter the password and continue.</p>
+      </div>`;
+    }
     return `
       <div style="display:flex; flex-direction:column; gap:var(--space-3)">
         <!-- Mode Switcher: Lock PDF vs Unlock PDF -->
@@ -2596,7 +2605,6 @@ export function renderPages(container, options = {}) {
           // Stay on the user's current tab — the inline unlock banner lets them
           // unlock without leaving their tool
           renderInitialShell();
-          showError('This PDF is password-protected. Enter the password in the unlock banner above to continue.');
           return;
         }
         throw docErr;
