@@ -591,7 +591,18 @@ export function openSignatureModal({
       0, 0, cropW, cropH
     );
 
-    return new Promise(res => croppedCanvas.toBlob(res, 'image/png'));
+    // Upscale 3x for crisp display when the signature is shown larger
+    // in the page preview overlay (avoids blurry/pixelated appearance)
+    const SCALE = 3;
+    const hiCanvas = document.createElement('canvas');
+    hiCanvas.width = cropW * SCALE;
+    hiCanvas.height = cropH * SCALE;
+    const hiCtx = hiCanvas.getContext('2d');
+    hiCtx.imageSmoothingEnabled = true;
+    hiCtx.imageSmoothingQuality = 'high';
+    hiCtx.drawImage(croppedCanvas, 0, 0, hiCanvas.width, hiCanvas.height);
+
+    return new Promise(res => hiCanvas.toBlob(res, 'image/png'));
   }
 
   // Keyboard Shortcuts (Esc, Ctrl+Z, Ctrl+Y)
