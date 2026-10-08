@@ -360,7 +360,7 @@ export function renderPages(container, options = {}) {
                         </button>
                       </div>
                       <div style="font-size:10px; color:var(--color-text-tertiary); margin-top:4px; text-align:center">
-                        Tip: Ctrl + mouse wheel ya do ungli se pinch karke zoom karein
+                        Tip: Hold Ctrl and scroll, or pinch with two fingers to zoom
                       </div>
                     </div>
 
