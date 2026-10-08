@@ -343,14 +343,14 @@ export function renderPages(container, options = {}) {
                           100%
                         </button>
 
-                        <button class="btn btn-ghost btn-sm" id="zoom-out-btn" title="Zoom Out" style="padding:4px 6px">
-                          ${icon('minus', 14)}
+                        <button class="btn btn-ghost btn-sm" id="zoom-out-btn" title="Zoom Out (−)" style="padding:6px 10px; font-size:14px; font-weight:700">
+                          −
                         </button>
-                        <span style="font-size:11px; font-weight:600; color:var(--color-text-secondary); min-width:38px; text-align:center" id="zoom-label">
+                        <span style="font-size:12px; font-weight:700; color:var(--color-text-primary); min-width:48px; text-align:center" id="zoom-label">
                           ${Math.round(previewZoom * 100)}%
                         </span>
-                        <button class="btn btn-ghost btn-sm" id="zoom-in-btn" title="Zoom In" style="padding:4px 6px">
-                          ${icon('plus', 14)}
+                        <button class="btn btn-ghost btn-sm" id="zoom-in-btn" title="Zoom In (+)" style="padding:6px 10px; font-size:14px; font-weight:700">
+                          +
                         </button>
 
                         <div style="width:1px; height:18px; background:var(--color-border); margin:0 2px"></div>
