@@ -2104,30 +2104,39 @@ export function renderPages(container, options = {}) {
       }, 280);
     });
 
-    // Fullscreen preview for precise adjustments
+    // Fullscreen preview for precise adjustments (CSS-based, reliable)
     container.querySelector('#preview-fullscreen-btn')?.addEventListener('click', () => {
       const previewBox = container.querySelector('#worksite-preview-box');
+      const btn = container.querySelector('#preview-fullscreen-btn');
       if (!previewBox) return;
-      if (document.fullscreenElement) {
-        document.exitFullscreen();
-      } else {
-        previewBox.requestFullscreen?.().then(() => {
+      const isFullscreen = previewBox.classList.toggle('preview-fullscreen-active');
+      if (btn) {
+        btn.querySelector('span').textContent = isFullscreen ? 'Exit Fullscreen' : 'Fullscreen';
+      }
+      // Prevent body scroll when in fullscreen
+      document.body.style.overflow = isFullscreen ? 'hidden' : '';
+      // Re-fit after the layout settles
+      setTimeout(() => {
+        const activeMode = container.querySelector('#btn-fit-page')?.classList.contains('active') ? 'fit-page'
+          : container.querySelector('#btn-zoom-100')?.classList.contains('active') ? 'zoom-100' : 'fit-width';
+        fitPageToViewport(activeMode);
+      }, 100);
+    });
+    // ESC to exit fullscreen
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        const previewBox = container.querySelector('#worksite-preview-box');
+        if (previewBox?.classList.contains('preview-fullscreen-active')) {
+          previewBox.classList.remove('preview-fullscreen-active');
+          document.body.style.overflow = '';
+          const btn = container.querySelector('#preview-fullscreen-btn');
+          if (btn) btn.querySelector('span').textContent = 'Fullscreen';
           setTimeout(() => {
             const activeMode = container.querySelector('#btn-fit-page')?.classList.contains('active') ? 'fit-page'
               : container.querySelector('#btn-zoom-100')?.classList.contains('active') ? 'zoom-100' : 'fit-width';
-            fitPageToViewport(activeMode);
-          }, 300);
-        }).catch(() => {});
-      }
-    });
-    // Re-fit when exiting fullscreen
-    document.addEventListener('fullscreenchange', () => {
-      if (!document.fullscreenElement) {
-        setTimeout(() => {
-          const activeMode = container.querySelector('#btn-fit-page')?.classList.contains('active') ? 'fit-page'
-            : container.querySelector('#btn-zoom-100')?.classList.contains('active') ? 'zoom-100' : 'fit-width';
-          if (container.isConnected) fitPageToViewport(activeMode);
-        }, 300);
+            if (container.isConnected) fitPageToViewport(activeMode);
+          }, 100);
+        }
       }
     });
 

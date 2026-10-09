@@ -1759,12 +1759,24 @@
   touch-action: none;
 }
 
-/* Fullscreen preview mode */
-#worksite-preview-box:fullscreen {
-  background: var(--color-bg-tertiary);
-  padding: 20px;
-  overflow: auto;
+/* Fullscreen preview mode (CSS-based) */
+.preview-fullscreen-active {
+  position: fixed !important;
+  inset: 0 !important;
+  z-index: 9000 !important;
+  background: var(--color-bg-tertiary) !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+  max-width: none !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-height: 100vh !important;
+  display: flex !important;
+  flex-direction: column !important;
+  overflow: hidden !important;
 }
-#worksite-preview-box:fullscreen .preview-viewport {
-  min-height: calc(100vh - 140px);
+.preview-fullscreen-active .preview-viewport {
+  flex: 1 !important;
+  min-height: 0 !important;
+  overflow: auto !important;
 }
