@@ -2113,8 +2113,9 @@ export function renderPages(container, options = {}) {
       if (btn) {
         btn.querySelector('span').textContent = isFullscreen ? 'Exit Fullscreen' : 'Fullscreen';
       }
-      // Prevent body scroll when in fullscreen
+      // Lock page scroll when in fullscreen (both html and body)
       document.body.style.overflow = isFullscreen ? 'hidden' : '';
+      document.documentElement.style.overflow = isFullscreen ? 'hidden' : '';
       // Re-fit after the layout settles
       setTimeout(() => {
         const activeMode = container.querySelector('#btn-fit-page')?.classList.contains('active') ? 'fit-page'
@@ -2129,6 +2130,7 @@ export function renderPages(container, options = {}) {
         if (previewBox?.classList.contains('preview-fullscreen-active')) {
           previewBox.classList.remove('preview-fullscreen-active');
           document.body.style.overflow = '';
+          document.documentElement.style.overflow = '';
           const btn = container.querySelector('#preview-fullscreen-btn');
           if (btn) btn.querySelector('span').textContent = 'Fullscreen';
           setTimeout(() => {
