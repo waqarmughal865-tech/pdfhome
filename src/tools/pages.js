@@ -1269,7 +1269,7 @@ export function renderPages(container, options = {}) {
     // 3. Crop overlay
     if (cropContainer) {
       cropContainer.innerHTML = '';
-      const canvas = container.querySelector('#main-preview-canvas');
+      const canvas = document.querySelector('#main-preview-canvas');
       const canvasW = (canvas && (canvas.offsetWidth || canvas.width)) || 600;
       const canvasH = (canvas && (canvas.offsetHeight || canvas.height)) || 800;
       const cur = getCurrentCrop();
@@ -1424,7 +1424,7 @@ export function renderPages(container, options = {}) {
     wmEl.style.webkitTouchCallout = 'none';
     wmEl.style.userSelect = 'none';
     // Also block it on the preview canvas so long-press gestures work cleanly
-    const previewCanvas = container.querySelector('#main-preview-canvas');
+    const previewCanvas = document.querySelector('#main-preview-canvas');
     if (previewCanvas) {
       previewCanvas.addEventListener('contextmenu', (e) => e.preventDefault());
       previewCanvas.style.webkitTouchCallout = 'none';
@@ -1500,7 +1500,7 @@ export function renderPages(container, options = {}) {
   function bindCropDragging() {
     const cropBox = container.querySelector('#interactive-crop-box');
     const canvasWrap = container.querySelector('#canvas-container');
-    const canvas = container.querySelector('#main-preview-canvas');
+    const canvas = document.querySelector('#main-preview-canvas');
     if (!cropBox || !canvasWrap || !canvas) return;
 
     const maskTop = container.querySelector('#crop-mask-top');
@@ -1766,8 +1766,8 @@ export function renderPages(container, options = {}) {
 
   async function fitPageToViewport(mode = 'fit-width') {
     if (!pdfDoc) return;
-    const viewportEl = container.querySelector('#preview-viewport');
-    const worksiteEl = container.querySelector('#pages-worksite');
+    const viewportEl = document.querySelector('#preview-viewport');
+    const worksiteEl = document.querySelector('#pages-worksite');
     if (!viewportEl) return;
 
     try {
@@ -1798,12 +1798,12 @@ export function renderPages(container, options = {}) {
         previewZoom = Math.max(0.25, Math.min(2.5, +(Math.min(scaleW, scaleH)).toFixed(2)));
       }
 
-      const zoomLabel = container.querySelector('#zoom-label');
+      const zoomLabel = document.querySelector('#zoom-label');
       if (zoomLabel) zoomLabel.textContent = `${Math.round(previewZoom * 100)}%`;
 
-      container.querySelector('#btn-fit-width')?.classList.toggle('active', mode === 'fit-width');
-      container.querySelector('#btn-fit-page')?.classList.toggle('active', mode === 'fit-page');
-      container.querySelector('#btn-zoom-100')?.classList.toggle('active', mode === 'zoom-100');
+      document.querySelector('#btn-fit-width')?.classList.toggle('active', mode === 'fit-width');
+      document.querySelector('#btn-fit-page')?.classList.toggle('active', mode === 'fit-page');
+      document.querySelector('#btn-zoom-100')?.classList.toggle('active', mode === 'zoom-100');
 
       renderPreviewCanvas();
     } catch (e) {
@@ -1814,8 +1814,8 @@ export function renderPages(container, options = {}) {
   // Helper: dynamically adjust workspace preview width to the PDF size
   function updateWorkspaceBoxSizing(canvas) {
     if (!canvas) return;
-    const worksiteEl = container.querySelector('#pages-worksite');
-    const previewBox = container.querySelector('#worksite-preview-box');
+    const worksiteEl = document.querySelector('#pages-worksite');
+    const previewBox = document.querySelector('#worksite-preview-box');
     const editorBox = container.querySelector('#worksite-editor-box');
     if (!previewBox || !editorBox) return;
 
@@ -1843,7 +1843,7 @@ export function renderPages(container, options = {}) {
   // --- CANVAS RENDERING WITH HIGH-DPI RETINA & BITMAP CACHE ---
 
   async function renderPreviewCanvas() {
-    const canvas = container.querySelector('#main-preview-canvas');
+    const canvas = document.querySelector('#main-preview-canvas');
     const loading = container.querySelector('#preview-loading-indicator');
     if (!canvas || !pdfDoc) return;
 
@@ -2056,7 +2056,7 @@ export function renderPages(container, options = {}) {
       window.addEventListener('resize', () => {
         clearTimeout(window._pdfPagesResizeTimer);
         window._pdfPagesResizeTimer = setTimeout(() => {
-          const v = container.querySelector('#preview-viewport');
+          const v = document.querySelector('#preview-viewport');
           if (v && v.clientWidth > 50) {
             fitPageToViewport(editorLayoutMode === 'side' ? 'fit-page' : 'fit-width');
           }
@@ -2074,22 +2074,22 @@ export function renderPages(container, options = {}) {
     });
 
     // Full-Page Fit and Zoom controls
-    container.querySelector('#btn-fit-width')?.addEventListener('click', () => {
+    document.querySelector('#btn-fit-width')?.addEventListener('click', () => {
       fitPageToViewport('fit-width');
     });
 
-    container.querySelector('#btn-fit-page')?.addEventListener('click', () => {
+    document.querySelector('#btn-fit-page')?.addEventListener('click', () => {
       fitPageToViewport('fit-page');
     });
 
-    container.querySelector('#btn-zoom-100')?.addEventListener('click', () => {
+    document.querySelector('#btn-zoom-100')?.addEventListener('click', () => {
       fitPageToViewport('zoom-100');
     });
 
     // Sidebar collapse toggle — auto-adjusts preview to use full width
-    container.querySelector('#sidebar-toggle')?.addEventListener('click', () => {
+    document.querySelector('#sidebar-toggle')?.addEventListener('click', () => {
       const layout = container.querySelector('.tool-layout');
-      const btn = container.querySelector('#sidebar-toggle');
+      const btn = document.querySelector('#sidebar-toggle');
       if (!layout) return;
       const collapsed = layout.classList.toggle('sidebar-collapsed');
       if (btn) {
@@ -2098,14 +2098,15 @@ export function renderPages(container, options = {}) {
       }
       // Re-fit after the CSS grid transition completes (200ms) + buffer
       setTimeout(() => {
-        const activeMode = container.querySelector('#btn-fit-page')?.classList.contains('active') ? 'fit-page'
-          : container.querySelector('#btn-zoom-100')?.classList.contains('active') ? 'zoom-100' : 'fit-width';
+        const activeMode = document.querySelector('#btn-fit-page')?.classList.contains('active') ? 'fit-page'
+          : document.querySelector('#btn-zoom-100')?.classList.contains('active') ? 'zoom-100' : 'fit-width';
         fitPageToViewport(activeMode);
       }, 280);
     });
 
     // Fullscreen preview for precise adjustments — moves preview to body level for reliability
     let fullscreenPlaceholder = null;
+    const fullscreenBtn = container.querySelector('#preview-fullscreen-btn');
     const exitFullscreen = () => {
       const previewBox = document.querySelector('#worksite-preview-box.preview-fullscreen-active');
       if (!previewBox) return;
@@ -2118,21 +2119,19 @@ export function renderPages(container, options = {}) {
         fullscreenPlaceholder.remove();
         fullscreenPlaceholder = null;
       }
-      const btn = container.querySelector('#preview-fullscreen-btn');
-      if (btn?.querySelector('span')) btn.querySelector('span').textContent = 'Fullscreen';
+      if (fullscreenBtn?.querySelector('span')) fullscreenBtn.querySelector('span').textContent = 'Fullscreen';
       setTimeout(() => {
         try {
-          const activeMode = container.querySelector('#btn-fit-page')?.classList.contains('active') ? 'fit-page'
-            : container.querySelector('#btn-zoom-100')?.classList.contains('active') ? 'zoom-100' : 'fit-width';
+          const activeMode = document.querySelector('#btn-fit-page')?.classList.contains('active') ? 'fit-page'
+            : document.querySelector('#btn-zoom-100')?.classList.contains('active') ? 'zoom-100' : 'fit-width';
           if (container.isConnected) fitPageToViewport(activeMode);
         } catch (err) {}
       }, 100);
     };
 
-    container.querySelector('#preview-fullscreen-btn')?.addEventListener('click', () => {
+    fullscreenBtn?.addEventListener('click', () => {
       try {
-        const previewBox = container.querySelector('#worksite-preview-box');
-        const btn = container.querySelector('#preview-fullscreen-btn');
+        const previewBox = document.querySelector('#worksite-preview-box');
         if (!previewBox) return;
 
         if (previewBox.classList.contains('preview-fullscreen-active')) {
@@ -2150,7 +2149,7 @@ export function renderPages(container, options = {}) {
         document.body.appendChild(previewBox);
         previewBox.classList.add('preview-fullscreen-active');
 
-        if (btn?.querySelector('span')) btn.querySelector('span').textContent = 'Exit Fullscreen';
+        if (fullscreenBtn?.querySelector('span')) fullscreenBtn.querySelector('span').textContent = 'Exit Fullscreen';
 
         // Lock page scroll
         document.body.style.overflow = 'hidden';
@@ -2159,8 +2158,8 @@ export function renderPages(container, options = {}) {
         // Re-fit after layout settles
         setTimeout(() => {
           try {
-            const activeMode = container.querySelector('#btn-fit-page')?.classList.contains('active') ? 'fit-page'
-              : container.querySelector('#btn-zoom-100')?.classList.contains('active') ? 'zoom-100' : 'fit-width';
+            const activeMode = document.querySelector('#btn-fit-page')?.classList.contains('active') ? 'fit-page'
+              : document.querySelector('#btn-zoom-100')?.classList.contains('active') ? 'zoom-100' : 'fit-width';
             fitPageToViewport(activeMode);
           } catch (err) {}
         }, 100);
@@ -2178,17 +2177,17 @@ export function renderPages(container, options = {}) {
     // Auto re-fit preview when the viewport resizes (window resize, layout changes)
     if ('ResizeObserver' in window) {
       let resizeTimer = null;
-      const viewportEl = container.querySelector('#preview-viewport');
+      const viewportEl = document.querySelector('#preview-viewport');
       if (viewportEl) {
         new ResizeObserver(() => {
           clearTimeout(resizeTimer);
           resizeTimer = setTimeout(() => {
             if (!container.isConnected) return;
-            const activeMode = container.querySelector('#btn-fit-page')?.classList.contains('active') ? 'fit-page'
-              : container.querySelector('#btn-zoom-100')?.classList.contains('active') ? 'zoom-100' : 'fit-width';
+            const activeMode = document.querySelector('#btn-fit-page')?.classList.contains('active') ? 'fit-page'
+              : document.querySelector('#btn-zoom-100')?.classList.contains('active') ? 'zoom-100' : 'fit-width';
             // Only auto-fit in fit modes, not manual zoom
-            if (container.querySelector('#btn-fit-width')?.classList.contains('active') ||
-                container.querySelector('#btn-fit-page')?.classList.contains('active')) {
+            if (document.querySelector('#btn-fit-width')?.classList.contains('active') ||
+                document.querySelector('#btn-fit-page')?.classList.contains('active')) {
               fitPageToViewport(activeMode);
             }
           }, 250);
@@ -2207,16 +2206,16 @@ export function renderPages(container, options = {}) {
     // Shared manual-zoom applier (buttons, wheel, pinch all use this)
     function applyManualZoom(newZoom) {
       previewZoom = Math.max(0.25, Math.min(3.0, +newZoom.toFixed(2)));
-      const lbl = container.querySelector('#zoom-label');
+      const lbl = document.querySelector('#zoom-label');
       if (lbl) lbl.textContent = `${Math.round(previewZoom * 100)}%`;
-      container.querySelector('#btn-fit-page')?.classList.remove('active');
-      container.querySelector('#btn-fit-width')?.classList.remove('active');
-      container.querySelector('#btn-zoom-100')?.classList.remove('active');
+      document.querySelector('#btn-fit-page')?.classList.remove('active');
+      document.querySelector('#btn-fit-width')?.classList.remove('active');
+      document.querySelector('#btn-zoom-100')?.classList.remove('active');
       renderPreviewCanvas();
     }
 
     // Ctrl/Cmd + mouse wheel → zoom (plain wheel still scrolls normally)
-    const previewViewport = container.querySelector('#preview-viewport');
+    const previewViewport = document.querySelector('#preview-viewport');
     if (previewViewport) {
       previewViewport.addEventListener('wheel', (e) => {
         if (!pdfDoc || !(e.ctrlKey || e.metaKey)) return;
@@ -2279,8 +2278,8 @@ export function renderPages(container, options = {}) {
     window.addEventListener('resize', () => {
       clearTimeout(resizeTimer);
       resizeTimer = setTimeout(() => {
-        const fitBtn = container.querySelector('#btn-fit-page');
-        const fitWBtn = container.querySelector('#btn-fit-width');
+        const fitBtn = document.querySelector('#btn-fit-page');
+        const fitWBtn = document.querySelector('#btn-fit-width');
         if (fitBtn && fitBtn.classList.contains('active')) {
           fitPageToViewport('fit-page');
         } else if (fitWBtn && fitWBtn.classList.contains('active')) {
