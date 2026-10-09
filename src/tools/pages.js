@@ -2104,42 +2104,75 @@ export function renderPages(container, options = {}) {
       }, 280);
     });
 
-    // Fullscreen preview for precise adjustments (CSS-based, reliable)
-    container.querySelector('#preview-fullscreen-btn')?.addEventListener('click', () => {
-      const previewBox = container.querySelector('#worksite-preview-box');
-      const btn = container.querySelector('#preview-fullscreen-btn');
+    // Fullscreen preview for precise adjustments — moves preview to body level for reliability
+    let fullscreenPlaceholder = null;
+    const exitFullscreen = () => {
+      const previewBox = document.querySelector('#worksite-preview-box.preview-fullscreen-active');
       if (!previewBox) return;
-      const isFullscreen = previewBox.classList.toggle('preview-fullscreen-active');
-      if (btn) {
-        btn.querySelector('span').textContent = isFullscreen ? 'Exit Fullscreen' : 'Fullscreen';
+      previewBox.classList.remove('preview-fullscreen-active');
+      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      // Move preview back to its original position
+      if (fullscreenPlaceholder && fullscreenPlaceholder.parentNode) {
+        fullscreenPlaceholder.parentNode.insertBefore(previewBox, fullscreenPlaceholder);
+        fullscreenPlaceholder.remove();
+        fullscreenPlaceholder = null;
       }
-      // Lock page scroll when in fullscreen (both html and body)
-      document.body.style.overflow = isFullscreen ? 'hidden' : '';
-      document.documentElement.style.overflow = isFullscreen ? 'hidden' : '';
-      // Re-fit after the layout settles
+      const btn = container.querySelector('#preview-fullscreen-btn');
+      if (btn?.querySelector('span')) btn.querySelector('span').textContent = 'Fullscreen';
       setTimeout(() => {
-        const activeMode = container.querySelector('#btn-fit-page')?.classList.contains('active') ? 'fit-page'
-          : container.querySelector('#btn-zoom-100')?.classList.contains('active') ? 'zoom-100' : 'fit-width';
-        fitPageToViewport(activeMode);
+        try {
+          const activeMode = container.querySelector('#btn-fit-page')?.classList.contains('active') ? 'fit-page'
+            : container.querySelector('#btn-zoom-100')?.classList.contains('active') ? 'zoom-100' : 'fit-width';
+          if (container.isConnected) fitPageToViewport(activeMode);
+        } catch (err) {}
       }, 100);
-    });
-    // ESC to exit fullscreen
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
+    };
+
+    container.querySelector('#preview-fullscreen-btn')?.addEventListener('click', () => {
+      try {
         const previewBox = container.querySelector('#worksite-preview-box');
-        if (previewBox?.classList.contains('preview-fullscreen-active')) {
-          previewBox.classList.remove('preview-fullscreen-active');
-          document.body.style.overflow = '';
-          document.documentElement.style.overflow = '';
-          const btn = container.querySelector('#preview-fullscreen-btn');
-          if (btn) btn.querySelector('span').textContent = 'Fullscreen';
-          setTimeout(() => {
+        const btn = container.querySelector('#preview-fullscreen-btn');
+        if (!previewBox) return;
+
+        if (previewBox.classList.contains('preview-fullscreen-active')) {
+          exitFullscreen();
+          return;
+        }
+
+        // Remember original position with a placeholder
+        fullscreenPlaceholder = document.createElement('div');
+        fullscreenPlaceholder.id = 'fullscreen-placeholder';
+        fullscreenPlaceholder.style.display = 'none';
+        previewBox.parentNode.insertBefore(fullscreenPlaceholder, previewBox);
+
+        // Move to body level so position:fixed works reliably
+        document.body.appendChild(previewBox);
+        previewBox.classList.add('preview-fullscreen-active');
+
+        if (btn?.querySelector('span')) btn.querySelector('span').textContent = 'Exit Fullscreen';
+
+        // Lock page scroll
+        document.body.style.overflow = 'hidden';
+        document.documentElement.style.overflow = 'hidden';
+
+        // Re-fit after layout settles
+        setTimeout(() => {
+          try {
             const activeMode = container.querySelector('#btn-fit-page')?.classList.contains('active') ? 'fit-page'
               : container.querySelector('#btn-zoom-100')?.classList.contains('active') ? 'zoom-100' : 'fit-width';
-            if (container.isConnected) fitPageToViewport(activeMode);
-          }, 100);
-        }
+            fitPageToViewport(activeMode);
+          } catch (err) {}
+        }, 100);
+      } catch (err) {
+        // If anything fails, ensure we're not stuck
+        exitFullscreen();
       }
+    });
+
+    // ESC to exit fullscreen
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') exitFullscreen();
     });
 
     // Auto re-fit preview when the viewport resizes (window resize, layout changes)
