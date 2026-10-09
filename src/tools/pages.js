@@ -1221,13 +1221,23 @@ export function renderPages(container, options = {}) {
               <div style="position:absolute; top:-18px; left:0; font-size:9px; font-weight:700; background:${isExcluded ? '#ef4444' : '#6366f1'}; color:#fff; padding:1px 6px; border-radius:3px; white-space:nowrap; pointer-events:none">
                 ${isExcluded ? 'Excluded on Page ' + activePage : 'Drag to Move'}
               </div>
-              <!-- Resize corner handles -->
-              <div class="wm-handle wm-handle-nw" data-handle="nw" style="position:absolute; top:-7px; left:-7px; width:14px; height:14px; background:#fff; border:2px solid #6366f1; border-radius:3px; cursor:nwse-resize; z-index:31"></div>
-              <div class="wm-handle wm-handle-ne" data-handle="ne" style="position:absolute; top:-7px; right:-7px; width:14px; height:14px; background:#fff; border:2px solid #6366f1; border-radius:3px; cursor:nesw-resize; z-index:31"></div>
-              <div class="wm-handle wm-handle-sw" data-handle="sw" style="position:absolute; bottom:-7px; left:-7px; width:14px; height:14px; background:#fff; border:2px solid #6366f1; border-radius:3px; cursor:nesw-resize; z-index:31"></div>
-              <div class="wm-handle wm-handle-se" data-handle="se" style="position:absolute; bottom:-7px; right:-7px; width:14px; height:14px; background:#fff; border:2px solid #6366f1; border-radius:3px; cursor:nwse-resize; z-index:31"></div>
-              <!-- Rotate handle above -->
-              <div class="wm-handle wm-handle-rotate" data-handle="rotate" style="position:absolute; top:-32px; left:50%; transform:translateX(-50%); width:20px; height:20px; background:#6366f1; border:2px solid #fff; border-radius:50%; cursor:grab; z-index:31; display:flex; align-items:center; justify-content:center; font-size:11px; color:#fff; box-shadow:0 1px 4px rgba(0,0,0,0.3)">⟳</div>
+              <!-- Resize corner handles (larger touch targets) -->
+              <div class="wm-handle wm-handle-nw" data-handle="nw" style="position:absolute; top:-12px; left:-12px; width:24px; height:24px; z-index:31; cursor:nwse-resize; touch-action:none">
+                <div style="position:absolute; top:5px; left:5px; width:14px; height:14px; background:#fff; border:2px solid #6366f1; border-radius:3px; pointer-events:none"></div>
+              </div>
+              <div class="wm-handle wm-handle-ne" data-handle="ne" style="position:absolute; top:-12px; right:-12px; width:24px; height:24px; z-index:31; cursor:nesw-resize; touch-action:none">
+                <div style="position:absolute; top:5px; right:5px; width:14px; height:14px; background:#fff; border:2px solid #6366f1; border-radius:3px; pointer-events:none"></div>
+              </div>
+              <div class="wm-handle wm-handle-sw" data-handle="sw" style="position:absolute; bottom:-12px; left:-12px; width:24px; height:24px; z-index:31; cursor:nesw-resize; touch-action:none">
+                <div style="position:absolute; bottom:5px; left:5px; width:14px; height:14px; background:#fff; border:2px solid #6366f1; border-radius:3px; pointer-events:none"></div>
+              </div>
+              <div class="wm-handle wm-handle-se" data-handle="se" style="position:absolute; bottom:-12px; right:-12px; width:24px; height:24px; z-index:31; cursor:nwse-resize; touch-action:none">
+                <div style="position:absolute; bottom:5px; right:5px; width:14px; height:14px; background:#fff; border:2px solid #6366f1; border-radius:3px; pointer-events:none"></div>
+              </div>
+              <!-- Rotate handle above (larger touch target) -->
+              <div class="wm-handle wm-handle-rotate" data-handle="rotate" style="position:absolute; top:-40px; left:50%; transform:translateX(-50%); width:32px; height:32px; z-index:31; cursor:grab; touch-action:none">
+                <div style="width:22px; height:22px; margin:5px auto; background:#6366f1; border:2px solid #fff; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:12px; color:#fff; box-shadow:0 1px 4px rgba(0,0,0,0.3); pointer-events:none">⟳</div>
+              </div>
               <div style="position:absolute; top:-14px; left:50%; transform:translateX(-50%); width:2px; height:12px; background:#6366f1; z-index:30; pointer-events:none"></div>
             </div>
           `;
@@ -1444,6 +1454,11 @@ export function renderPages(container, options = {}) {
             let newRot = (startRotation + (ang - startAngle)) % 360;
             if (newRot < 0) newRot += 360;
             wmRotation = Math.round(newRot);
+            // Update transform directly (don't recreate element mid-drag)
+            const curTransform = wmEl.style.transform;
+            // Preserve positioning transform, update only rotation
+            const baseTransform = curTransform.replace(/rotate\([^)]*\)/, '').trim();
+            wmEl.style.transform = `${baseTransform} rotate(${wmRotation}deg)`.trim();
             const rotSlider = container.querySelector('#wm-slider-rotation');
             const rotLbl = container.querySelector('#wm-lbl-rotation');
             if (rotSlider) rotSlider.value = wmRotation;
@@ -1457,9 +1472,11 @@ export function renderPages(container, options = {}) {
               const lScale = container.querySelector('#wm-lbl-scale');
               if (sScale) sScale.value = wmScale;
               if (lScale) lScale.textContent = `${Math.round(wmScale * 100)}%`;
+              // Update max-width directly for live resize feedback
+              wmEl.style.maxWidth = `${Math.round(wmScale * 70)}%`;
             }
           }
-          updateOverlays();
+          // Note: no updateOverlays() here — it would destroy the element mid-drag
         };
 
         const onHandleUp = () => {
