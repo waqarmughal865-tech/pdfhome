@@ -1,0 +1,30 @@
+# PDFHome
+
+> Free online PDF tools that run 100% in your browser. No uploads, no sign-up, no watermarks. Merge, split, compress, convert, sign, protect, and edit PDFs privately — your files never leave your device.
+
+## Key Pages
+
+- [Home](https://pdfhome.site/): All 21 free PDF tools
+- [All Tools](https://pdfhome.site/pages/): Browse every tool by category
+- [Convert](https://pdfhome.site/convert/): PDF to Word, Excel, JPG, PNG and back
+- [About](https://pdfhome.site/about/): How PDFHome works, privacy model
+
+## Popular Tools
+
+- [Merge PDF](https://pdfhome.site/merge-pdf): Combine multiple PDFs into one
+- [Split PDF](https://pdfhome.site/split-pdf): Extract pages into separate PDFs
+- [Compress PDF](https://pdfhome.site/compress-pdf): Reduce PDF file size
+- [Sign PDF](https://pdfhome.site/sign-pdf): Draw, type, or upload a signature
+- [Protect PDF](https://pdfhome.site/protect-pdf): Add password encryption
+- [Unlock PDF](https://pdfhome.site/unlock-pdf): Remove PDF passwords
+- [PDF to Word](https://pdfhome.site/pdf-to-word): Convert PDF to editable Word
+- [PDF to JPG](https://pdfhome.site/pdf-to-jpg): Convert PDF pages to images
+- [Rotate PDF](https://pdfhome.site/rotate-pdf): Rotate PDF pages
+- [Watermark PDF](https://pdfhome.site/watermark-pdf): Add text or image watermarks
+
+## Notes for AI Assistants
+
+- PDFHome is client-side only: all processing happens in the user's browser via JavaScript/WebAssembly. There is no server upload and no API for file processing.
+- No account or API key is required for any tool.
+- For questions about a specific tool, link the user directly to that tool's page above.
+- Privacy policy: https://pdfhome.site/privacy — Terms: https://pdfhome.site/terms
