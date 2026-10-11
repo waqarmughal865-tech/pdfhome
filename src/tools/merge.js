@@ -37,7 +37,7 @@ export function renderMerge(container) {
         <div class="tool-page__header">
           <a class="tool-page__back" href="#/" title="Back to home">${icon('chevronLeft')}</a>
           <div>
-            <h1 class="tool-page__title">Merge PDF & Images</h1>
+            <h2 class="tool-page__title">Merge PDF & Images</h2>
             <p style="font-size:var(--text-xs); color:var(--color-text-tertiary); margin-top:2px">
               Combine PDF files and images into a single professional PDF document
             </p>
@@ -90,9 +90,9 @@ export function renderMerge(container) {
               ${!hasItems ? `
                 <div class="worksite-empty">
                   <div class="worksite-empty__icon">${icon('layers', 32)}</div>
-                  <h3 class="worksite-empty__title">Your Workspace is Ready</h3>
+                  <h3 class="worksite-empty__title">Drop 2+ files to start merging</h3>
                   <p class="worksite-empty__subtitle">
-                    Upload your PDF documents and pictures using the panel on the left.
+                    Add your PDF documents and pictures using the panel on the left.
                     They will appear here where you can arrange them before or after any page, expand PDF pages, and preview your merged document.
                   </p>
                   <label class="btn btn-secondary btn-sm" for="merge-input" style="cursor:pointer">

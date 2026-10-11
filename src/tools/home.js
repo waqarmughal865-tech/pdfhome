@@ -327,6 +327,13 @@ export function renderHome(container) {
           <span id="home-stats-text"></span>
           <button class="btn btn-ghost btn-sm" id="btn-stats-clear" style="font-size:11px">Reset filter</button>
         </div>
+
+        <!-- Primary CTA: start the most popular task instantly -->
+        <div style="display:flex; flex-wrap:wrap; gap:var(--space-2); justify-content:center; margin-top:var(--space-5)">
+          <a href="/merge-pdf" class="btn btn-primary btn-lg">Merge PDF Now</a>
+          <a href="/pdf-to-word" class="btn btn-secondary btn-lg">PDF to Word</a>
+          <a href="/compress-pdf" class="btn btn-secondary btn-lg">Compress PDF</a>
+        </div>
       </div>
 
       <!-- Tools Grid -->
@@ -374,7 +381,7 @@ export function renderHome(container) {
           Everything you need to know about our privacy-first, zero-upload PDF tools.
         </p>
         <div class="seo-faq-list">
-          <details class="seo-faq-item" open>
+          <details class="seo-faq-item">
             <summary class="seo-faq-question">What is PDFHome and how does it process files?</summary>
             <div class="seo-faq-answer">
               PDFHome is a comprehensive, client-side PDF utility suite. All operations—including merging, splitting, compressing, e-signing, and converting to Word/Excel—execute directly within your web browser using HTML5 Canvas, WebAssembly, and modern JavaScript engines.

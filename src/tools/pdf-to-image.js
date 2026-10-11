@@ -25,7 +25,7 @@ export function renderPdfToImage(container) {
         <div class="tool-page__header">
           <a class="tool-page__back" href="#/" title="Back to home">${icon('chevronLeft')}</a>
           <div>
-            <h1 class="tool-page__title">PDF to Image</h1>
+            <h2 class="tool-page__title">PDF to Image</h2>
             <p style="font-size:var(--text-xs); color:var(--color-text-tertiary); margin-top:2px">
               Extract high-resolution JPG or PNG images from individual pages or entire documents
             </p>

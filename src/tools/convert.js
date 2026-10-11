@@ -160,7 +160,7 @@ export function renderConvert(container, initialMode = 'pdf-to-docx') {
         <div class="tool-page__header">
           <a class="tool-page__back" href="#/" title="Back to home">${icon('chevronLeft')}</a>
           <div>
-            <h1 class="tool-page__title">${cfg.title}</h1>
+            <h2 class="tool-page__title">${cfg.title}</h2>
             <p style="font-size:var(--text-xs); color:var(--color-text-tertiary); margin-top:2px">
               ${cfg.subtitle}
             </p>

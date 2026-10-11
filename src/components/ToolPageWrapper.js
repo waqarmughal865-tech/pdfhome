@@ -33,7 +33,13 @@ export function renderToolPage(container, seoKey, renderToolCallback) {
     return;
   }
 
-  // 2. Build Related Tools cards
+  // 2. Build Related Tools cards (truncate at word boundary, never mid-word)
+  const truncateWords = (text, maxLen) => {
+    if (!text || text.length <= maxLen) return text || '';
+    const cut = text.slice(0, maxLen);
+    const lastSpace = cut.lastIndexOf(' ');
+    return (lastSpace > maxLen * 0.5 ? cut.slice(0, lastSpace) : cut).trimEnd() + '…';
+  };
   const relatedCardsHtml = (seoData.relatedTools || [])
     .map(relKey => {
       const relTool = TOOL_SEO_DATA[relKey];
@@ -44,7 +50,7 @@ export function renderToolPage(container, seoKey, renderToolCallback) {
             <span class="related-tool-card__icon">${icon('fileText', 20)}</span>
             <span class="related-tool-card__name">${relTool.name}</span>
           </div>
-          <p class="related-tool-card__desc">${relTool.metaDescription.slice(0, 110)}...</p>
+          <p class="related-tool-card__desc">${truncateWords(relTool.metaDescription, 110)}</p>
           <span class="related-tool-card__link">Use tool ${icon('chevronRight', 14)}</span>
         </a>
       `;
@@ -78,7 +84,7 @@ export function renderToolPage(container, seoKey, renderToolCallback) {
   // 5. Build FAQs HTML
   const faqsHtml = (seoData.faqs || [])
     .map((faq, idx) => `
-      <details class="seo-faq-item" ${idx === 0 ? 'open' : ''}>
+      <details class="seo-faq-item">
         <summary class="seo-faq-item__question">
           <span>${faq.q}</span>
           <span class="seo-faq-item__chevron">${icon('chevronDown', 16)}</span>

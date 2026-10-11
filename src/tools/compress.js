@@ -65,7 +65,7 @@ export function renderCompress(container) {
         <div class="tool-page__header">
           <a class="tool-page__back" href="#/" title="Back to home">${icon('chevronLeft')}</a>
           <div>
-            <h1 class="tool-page__title">Compress PDF</h1>
+            <h2 class="tool-page__title">Compress PDF</h2>
             <p style="font-size:var(--text-xs); color:var(--color-text-tertiary); margin-top:2px">
               Reduce PDF file size while keeping text and graphics crisp and legible
             </p>

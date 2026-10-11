@@ -170,14 +170,14 @@ export function renderPages(container, options = {}) {
         <div class="tool-page__header">
           <a class="tool-page__back" href="#/" title="Back to home">${icon('chevronLeft')}</a>
           <div>
-            <h1 class="tool-page__title">${options.title || (
+            <h2 class="tool-page__title">${options.title || (
               activeTab === 'watermark' && wmType === 'draw' ? 'Sign PDF — Digital Signature' :
               activeTab === 'watermark' ? 'Watermark PDF — Text & Image Stamps' :
               activeTab === 'crop' ? 'Crop PDF — Custom Margins & Trim' :
               activeTab === 'numbers' ? 'Number PDF Pages — Headers & Footers' :
               activeTab === 'protect' ? 'Protect PDF — Password Encryption' :
               activeTab === 'organize' ? 'Organize & Rotate PDF Pages' : 'Page Editor'
-            )}</h1>
+            )}</h2>
             <p style="font-size:var(--text-xs); color:var(--color-text-tertiary); margin-top:2px">
               ${options.subtitle || (
                 activeTab === 'watermark' && wmType === 'draw' ? 'Draw, stamp, or place transparent signatures with 9-point grid alignment' :
