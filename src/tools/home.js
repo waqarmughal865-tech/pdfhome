@@ -125,6 +125,28 @@ export const TOOL_REGISTRY = [
     keywords: ['pdf to image', 'pdf to jpg', 'pdf to png', 'extract pictures from pdf', 'convert pdf to pictures', 'rasterize', 'export photos']
   },
   {
+    id: 'pdf-to-text',
+    name: 'PDF to Text',
+    desc: 'Extract selectable text from any PDF into a clean, editable .txt file instantly',
+    category: 'convert',
+    iconClass: 'docx',
+    iconName: 'fileText',
+    path: '/pdf-to-text',
+    badge: 'New',
+    keywords: ['pdf to text', 'extract text from pdf', 'pdf to txt', 'copy text from pdf', 'pdf text extractor', 'get text from pdf']
+  },
+  {
+    id: 'extract-images',
+    name: 'Extract Images',
+    desc: 'Pull embedded photos and illustrations out of any PDF as original-quality PNGs',
+    category: 'core',
+    iconClass: 'pdf-to-image',
+    iconName: 'image',
+    path: '/extract-images',
+    badge: 'New',
+    keywords: ['extract images from pdf', 'pdf image extractor', 'save images from pdf', 'get pictures from pdf', 'pdf to png images', 'embedded images']
+  },
+  {
     id: 'image-to-pdf',
     name: 'JPG / Image to PDF',
     desc: 'Convert JPG, PNG, and WebP pictures into a clean, uniform PDF document',

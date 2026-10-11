@@ -623,6 +623,66 @@ export const TOOL_SEO_DATA = {
       { q: 'What is the maximum file size for conversion?', a: 'Because conversion happens locally in your browser, there are no server upload limits. Large documents work fine as long as your device has enough available memory.' }
     ],
     relatedTools: ['pdf-to-word', 'pdf-to-excel', 'pdf-to-powerpoint', 'jpg-to-pdf']
+  },
+
+  'pdf-to-text': {
+    slug: '/pdf-to-text',
+    aliases: ['#/pdf-to-text'],
+    name: 'PDF to Text',
+    toolId: 'pdf-to-text',
+    metaTitle: 'PDF to Text Converter Free — Extract Text from PDF Online | PDFHome',
+    metaDescription: 'Extract selectable text from any PDF into a clean .txt file online. Free, instant, client-side PDF to text extractor — no OCR needed, zero server uploads.',
+    h1: 'Convert PDF to Text Online Free',
+    intro: 'Pull the readable text straight out of your PDF documents. Upload a report, ebook, or article and get a clean plain-text file in seconds — perfect for quoting, editing, or feeding text into other apps. Unlike OCR, which re-reads scanned images, this tool extracts the real embedded text layer, so it is instant and 100% accurate. Everything happens in your browser; your files are never uploaded.',
+    howTo: [
+      { step: 1, title: 'Upload PDF File', desc: 'Select the PDF document you want to extract text from.' },
+      { step: 2, title: 'Extract Text', desc: 'Click "Extract Text" — the embedded text layer is read instantly, page by page.' },
+      { step: 3, title: 'Download or Copy', desc: 'Preview the extracted text, then download it as a .txt file or copy it to your clipboard.' }
+    ],
+    features: [
+      { title: 'Instant Extraction', desc: 'Reads the embedded text layer directly — no slow AI re-reading, results in seconds.' },
+      { title: '100% Accurate Text', desc: 'Copies the real document text exactly, including punctuation and line breaks.' },
+      { title: 'Word & Character Counts', desc: 'See live statistics for the extracted text before you download.' },
+      { title: 'Private by Design', desc: 'Your documents never leave your browser. Confidential files stay confidential.' }
+    ],
+    faqs: [
+      { q: 'What is the difference between PDF to Text and OCR?', a: 'PDF to Text extracts the real text already embedded in your PDF — it is instant and perfectly accurate. OCR is for scanned or photographed PDFs that contain no text layer; it uses AI to recognize letters from images, which is slower. If your PDF has selectable text, use PDF to Text.' },
+      { q: 'Will the extracted text keep its formatting?', a: 'You get clean plain text with sensible line breaks. Complex layouts like multi-column pages are linearized into reading order. For formatted output, convert to Word instead.' },
+      { q: 'Can I extract text from a scanned PDF?', a: 'Scanned PDFs are pictures of text with no embedded text layer, so this tool will return little or nothing. Run scanned documents through the OCR tool first to recognize the text, then extract it.' },
+      { q: 'Is there a page limit?', a: 'No. Because extraction happens locally in your browser, there are no server limits — even hundred-page documents work, as long as your device has enough memory.' },
+      { q: 'Are my files uploaded anywhere?', a: 'No. The entire extraction runs inside your web browser. Your PDFs never leave your device.' }
+    ],
+    relatedTools: ['ocr-pdf', 'pdf-to-word', 'pdf-to-excel', 'merge-pdf']
+  },
+
+  'extract-images': {
+    slug: '/extract-images',
+    aliases: ['#/extract-images'],
+    name: 'Extract Images',
+    toolId: 'extract-images',
+    metaTitle: 'Extract Images from PDF Free — Save Embedded Pictures Online | PDFHome',
+    metaDescription: 'Pull embedded photos, illustrations, and diagrams out of any PDF as original-quality PNG files. Free client-side PDF image extractor with ZIP download.',
+    h1: 'Extract Images from PDF Online Free',
+    intro: 'Every picture inside your PDF — book illustrations, photos, diagrams, charts, logos — saved as individual image files. Upload a document, scan it, and download each embedded image as a crisp PNG, or grab them all at once as a ZIP archive. Ideal for recovering images from ebooks, reports, and presentations. All processing happens locally in your browser; nothing is ever uploaded.',
+    howTo: [
+      { step: 1, title: 'Upload PDF File', desc: 'Select the PDF containing the images you want to recover.' },
+      { step: 2, title: 'Scan for Images', desc: 'Click "Extract Images" — every embedded picture is found and thumbnailed.' },
+      { step: 3, title: 'Download Images', desc: 'Click any thumbnail to save that PNG, or download everything together as a ZIP file.' }
+    ],
+    features: [
+      { title: 'Original Quality PNGs', desc: 'Images are saved at their embedded resolution — no re-compression quality loss.' },
+      { title: 'Smart Deduplication', desc: 'The same picture reused across pages is listed once, not twenty times.' },
+      { title: 'One-Click ZIP Archive', desc: 'Download dozens of extracted images in a single organized ZIP file.' },
+      { title: 'Fully Private', desc: 'Scanning and extraction run entirely in your browser. Your files never leave your device.' }
+    ],
+    faqs: [
+      { q: 'What is the difference between Extract Images and PDF to JPG?', a: 'Extract Images pulls out the original pictures embedded inside the PDF (like illustrations in a book) at their native quality. PDF to JPG renders whole pages as new images — useful when you want a picture of the entire page including its text.' },
+      { q: 'What image format do I get?', a: 'PNG, at the image\'s original embedded resolution. PNG preserves full quality with no compression artifacts.' },
+      { q: 'Why were some tiny images skipped?', a: 'Decorative icons and UI elements under 32 pixels are filtered out automatically so you only get meaningful pictures. Page-render alternatives are available via PDF to JPG.' },
+      { q: 'My PDF has no embedded images — what now?', a: 'Some PDFs contain only text or vector graphics with no extractable pictures. If you still need page pictures, use the PDF to JPG tool to render each page as an image.' },
+      { q: 'Are my files uploaded to a server?', a: 'No. The scan and extraction happen completely inside your web browser. Your documents never leave your device.' }
+    ],
+    relatedTools: ['pdf-to-jpg', 'pdf-to-text', 'compress-pdf', 'split-pdf']
   }
 };
 

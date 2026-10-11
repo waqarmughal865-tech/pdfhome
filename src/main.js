@@ -71,6 +71,16 @@ const routes = {
     renderImageToPdf(mount);
   }),
 
+  '/pdf-to-text': (container) => renderToolPage(container, 'pdf-to-text', async (mount) => {
+    const { renderPdfToText } = await import('./tools/pdf-to-text.js');
+    renderPdfToText(mount);
+  }),
+
+  '/extract-images': (container) => renderToolPage(container, 'extract-images', async (mount) => {
+    const { renderExtractImages } = await import('./tools/extract-images.js');
+    renderExtractImages(mount);
+  }),
+
   '/ocr-pdf': (container) => renderToolPage(container, 'ocr-pdf', async (mount) => {
     const { renderConvert } = await import('./tools/convert.js');
     renderConvert(mount, 'ocr-pdf');
