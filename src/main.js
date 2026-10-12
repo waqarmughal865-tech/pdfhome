@@ -267,6 +267,17 @@ const routes = {
     });
     const { renderAbout } = await import('./components/Legal.js');
     renderAbout(container);
+  },
+
+  // Blog & Guides
+  '/blog': async (container) => {
+    updateSimpleSeo({
+      title: 'PDF Guides & How-Tos — PDFHome Blog',
+      description: 'Practical PDF guides written by humans: how to unlock, redact, merge, compress, and convert PDFs — free tips with no fluff.',
+      slug: '/blog'
+    });
+    const { renderBlogList } = await import('./blog/blog.js');
+    renderBlogList(container);
   }
 };
 
@@ -315,6 +326,34 @@ async function navigate() {
   }
 
   const handler = routes[path] || null;
+
+  // Dynamic blog article routes: /blog/<slug>
+  if (!handler && path.startsWith('/blog/')) {
+    const slug = path.slice('/blog/'.length).split('/')[0];
+    if (slug) {
+      updateActiveNav('/blog');
+      try {
+        const { renderArticle, getArticle } = await import('./blog/blog.js');
+        const article = getArticle(slug);
+        if (article) {
+          updateSimpleSeo({
+            title: article.metaTitle,
+            description: article.metaDescription,
+            slug: path
+          });
+          if (contentEl && !isInitialNav) {
+            contentEl.innerHTML = `<div style="display:flex; justify-content:center; align-items:center; min-height:40vh;"><div class="spinner" style="width:32px; height:32px; border:3px solid var(--color-border); border-top-color:var(--color-primary); border-radius:50%; animation:spin 0.8s linear infinite;"></div></div>`;
+          }
+          await renderArticle(contentEl, slug);
+          window.scrollTo({ top: 0, behavior: 'instant' });
+          isInitialNav = false;
+          return;
+        }
+      } catch (err) {
+        console.error('Blog article load error:', err);
+      }
+    }
+  }
 
   // Show 404 for unknown routes instead of silently falling back to home
   if (!handler) {

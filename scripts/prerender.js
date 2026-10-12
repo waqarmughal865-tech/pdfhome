@@ -16,6 +16,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DOMAIN, TOOL_SEO_DATA } from '../src/seo/seo-metadata.js';
 import { TOOL_REGISTRY } from '../src/tools/home.js';
+import { ARTICLES } from '../src/blog/articles.js';
 import { icon } from '../src/components/icons.js';
 import { renderAdSlot } from '../src/components/AdSlot.js';
 
@@ -770,6 +771,154 @@ for (const [key, seoData] of Object.entries(TOOL_SEO_DATA)) {
   writeHtmlFile(outPath, toolPageHtml);
   toolCount++;
   console.log(`  ✓ Pre-rendered: ${seoData.slug} (dist/${cleanSlug}/index.html)`);
+}
+
+// 2b. Blog list (/blog) + articles (/blog/<slug>) with Article schema
+function escapeHtmlAttr(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function buildArticleSchemaJson(a, canonicalUrl) {
+  const graph = [
+    WEBSITE_SCHEMA_NODE,
+    ORG_SCHEMA_NODE,
+    {
+      '@type': 'BreadcrumbList',
+      'itemListElement': [
+        { '@type': 'ListItem', 'position': 1, 'name': 'Home', 'item': `${DOMAIN}/` },
+        { '@type': 'ListItem', 'position': 2, 'name': 'Guides', 'item': `${DOMAIN}/blog` },
+        { '@type': 'ListItem', 'position': 3, 'name': a.title, 'item': canonicalUrl }
+      ]
+    },
+    {
+      '@type': 'Article',
+      'headline': a.title,
+      'description': a.metaDescription,
+      'url': canonicalUrl,
+      'datePublished': a.publishDate,
+      'dateModified': a.publishDate,
+      'author': { '@type': 'Organization', 'name': 'PDFHome', 'url': `${DOMAIN}/` },
+      'publisher': { '@type': 'Organization', 'name': 'PDFHome', 'url': `${DOMAIN}/` },
+      'mainEntityOfPage': { '@type': 'WebPage', '@id': canonicalUrl }
+    }
+  ];
+  if (a.faqs && a.faqs.length) {
+    graph.push({
+      '@type': 'FAQPage',
+      'mainEntity': a.faqs.map(f => ({
+        '@type': 'Question',
+        'name': f.q,
+        'acceptedAnswer': { '@type': 'Answer', 'text': f.a }
+      }))
+    });
+  }
+  return JSON.stringify({ '@context': 'https://schema.org', '@graph': graph });
+}
+
+function buildArticleCardHtml(a) {
+  return `
+    <a class="tool-card" href="/blog/${a.slug}">
+      <div class="tool-card__header">
+        <div class="tool-card__icon tool-card__icon--pdf-to-word">${icon('fileText', 22)}</div>
+        <span class="tool-card__badge">Guide</span>
+      </div>
+      <h3 class="tool-card__title">${escapeHtmlAttr(a.title)}</h3>
+      <p class="tool-card__desc">${escapeHtmlAttr(a.excerpt)}</p>
+      <div class="tool-card__meta"><span>${a.readTime}</span></div>
+    </a>`;
+}
+
+// Blog index
+{
+  const blogListHtml = createPageHtml({
+    title: 'PDF Guides & How-Tos — PDFHome Blog',
+    description: 'Practical PDF guides written by humans: how to unlock, redact, merge, compress, and convert PDFs — free tips with no fluff.',
+    canonicalUrl: `${DOMAIN}/blog`,
+    currentPath: '/blog',
+    mainContentHtml: `
+      <div class="tool-page">
+        <div class="tool-page__header">
+          <div>
+            <h1 class="tool-page__title">Guides & How-Tos</h1>
+            <p style="font-size:var(--text-sm); color:var(--color-text-secondary); margin-top:4px">
+              Practical PDF guides written by humans, for humans — no fluff.
+            </p>
+          </div>
+        </div>
+        <div class="tool-page__body">
+          <div class="tools-grid">
+            ${ARTICLES.map(buildArticleCardHtml).join('')}
+          </div>
+        </div>
+      </div>`
+  });
+  writeHtmlFile(path.resolve(DIST_DIR, 'blog', 'index.html'), blogListHtml);
+  toolCount++;
+  console.log(`  ✓ Pre-rendered: /blog (dist/blog/index.html)`);
+}
+
+// Individual articles
+for (const a of ARTICLES) {
+  const canonicalUrl = `${DOMAIN}/blog/${a.slug}`;
+  const related = ARTICLES.filter(x => x.slug !== a.slug).slice(0, 3);
+  const articleHtml = createPageHtml({
+    title: a.metaTitle,
+    description: a.metaDescription,
+    canonicalUrl,
+    currentPath: `/blog/${a.slug}`,
+    customSchemaJson: buildArticleSchemaJson(a, canonicalUrl),
+    mainContentHtml: `
+      <div class="tool-page">
+        <div class="tool-page__header">
+          <div>
+            <p style="font-size:var(--text-xs); color:var(--color-text-tertiary); margin:0 0 4px">
+              <a href="/" style="color:var(--color-text-tertiary)">Home</a> ·
+              <a href="/blog" style="color:var(--color-text-tertiary)">Guides</a>
+            </p>
+            <h1 class="tool-page__title" style="font-size:var(--text-2xl)">${escapeHtmlAttr(a.h1)}</h1>
+            <p style="font-size:var(--text-xs); color:var(--color-text-tertiary); margin-top:6px">
+              ${a.readTime} · Updated ${a.publishDate}
+            </p>
+          </div>
+        </div>
+        <div class="tool-page__body">
+          <article class="article-body" style="max-width:760px; margin:0 auto; line-height:1.75; color:var(--color-text-secondary); font-size:var(--text-md)">
+            ${a.intro.map(p => `<p style="margin-bottom:var(--space-4)">${p}</p>`).join('')}
+            ${a.sections.map(s => `
+              <h2 style="font-size:var(--text-xl); font-weight:var(--weight-bold); color:var(--color-text-primary); margin:var(--space-8) 0 var(--space-4)">${escapeHtmlAttr(s.heading)}</h2>
+              ${s.body.map(p => `<p style="margin-bottom:var(--space-4)">${p}</p>`).join('')}
+            `).join('')}
+            ${a.toolSlug ? `
+              <div style="margin:var(--space-10) 0; padding:var(--space-6); background:var(--color-bg-secondary); border:1px solid var(--color-border); border-radius:var(--radius-xl); text-align:center">
+                <h3 style="font-size:var(--text-lg); font-weight:var(--weight-bold); color:var(--color-text-primary); margin:0 0 var(--space-2)">Try it right now — free</h3>
+                <p style="margin:0 0 var(--space-4); font-size:var(--text-sm)">No signup, no uploads, runs entirely in your browser.</p>
+                <a href="${a.toolSlug}" class="btn btn-primary btn-lg">Open ${escapeHtmlAttr(a.toolName)} →</a>
+              </div>
+            ` : ''}
+            ${a.faqs && a.faqs.length ? `
+              <h2 style="font-size:var(--text-xl); font-weight:var(--weight-bold); color:var(--color-text-primary); margin:var(--space-8) 0 var(--space-4)">Common questions</h2>
+              <div class="seo-faq">
+                ${a.faqs.map(f => `
+                  <details class="seo-faq-item">
+                    <summary class="seo-faq-question">${escapeHtmlAttr(f.q)}</summary>
+                    <div class="seo-faq-answer">${f.a}</div>
+                  </details>
+                `).join('')}
+              </div>
+            ` : ''}
+            ${related.length ? `
+              <h2 style="font-size:var(--text-xl); font-weight:var(--weight-bold); color:var(--color-text-primary); margin:var(--space-10) 0 var(--space-4)">Keep reading</h2>
+              <div class="tools-grid" style="grid-template-columns:repeat(auto-fill, minmax(220px, 1fr))">
+                ${related.map(buildArticleCardHtml).join('')}
+              </div>
+            ` : ''}
+          </article>
+        </div>
+      </div>`
+  });
+  writeHtmlFile(path.resolve(DIST_DIR, 'blog', a.slug, 'index.html'), articleHtml);
+  toolCount++;
+  console.log(`  ✓ Pre-rendered: /blog/${a.slug} (dist/blog/${a.slug}/index.html)`);
 }
 
 // 3. Privacy Policy (/privacy)
