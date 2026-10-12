@@ -19,13 +19,12 @@ export function renderPdfToText(container) {
 
   async function handleFile(selectedFile) {
     if (!selectedFile) return;
-    const typeCheck = validateFileType(selectedFile, [PDF_MIME]);
-    if (!typeCheck.valid) {
-      showError(typeCheck.message || 'Please select a valid PDF file.');
+    if (!validateFileType(selectedFile, [PDF_MIME])) {
+      showError('Please select a valid PDF file.');
       return;
     }
     const sizeCheck = checkFileSize(selectedFile);
-    if (!sizeCheck.valid) {
+    if (!sizeCheck.ok) {
       showError(sizeCheck.message || 'File is too large.');
       return;
     }

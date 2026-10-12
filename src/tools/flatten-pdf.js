@@ -18,10 +18,9 @@ export function renderFlattenPdf(container) {
 
   async function handleFile(selectedFile) {
     if (!selectedFile) return;
-    const typeCheck = validateFileType(selectedFile, [PDF_MIME]);
-    if (!typeCheck.valid) { showError(typeCheck.message || 'Please select a valid PDF file.'); return; }
+    if (!validateFileType(selectedFile, [PDF_MIME])) { showError('Please select a valid PDF file.'); return; }
     const sizeCheck = checkFileSize(selectedFile);
-    if (!sizeCheck.valid) { showError(sizeCheck.message || 'File is too large.'); return; }
+    if (!sizeCheck.ok) { showError(sizeCheck.message || 'File is too large.'); return; }
     hideError();
     file = selectedFile;
     flattenedBytes = null;
