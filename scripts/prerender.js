@@ -753,7 +753,7 @@ if (engineChunkFiles.length > 0) {
 let toolCount = 0;
 for (const [key, seoData] of Object.entries(TOOL_SEO_DATA)) {
   const cleanSlug = seoData.slug.replace(/^\//, '');
-  const canonicalUrl = `${DOMAIN}${seoData.slug}`;
+  const canonicalUrl = `${DOMAIN}${seoData.slug}/`;
   const customSchema = buildToolSchemaJson(seoData, canonicalUrl);
   const toolContentHtml = buildToolPageHtml(seoData);
 
@@ -833,7 +833,7 @@ function buildArticleCardHtml(a) {
   const blogListHtml = createPageHtml({
     title: 'PDF Guides & How-Tos — PDFHome Blog',
     description: 'Practical PDF guides written by humans: how to unlock, redact, merge, compress, and convert PDFs — free tips with no fluff.',
-    canonicalUrl: `${DOMAIN}/blog`,
+    canonicalUrl: `${DOMAIN}/blog/`,
     currentPath: '/blog',
     mainContentHtml: `
       <div class="tool-page">
@@ -859,7 +859,7 @@ function buildArticleCardHtml(a) {
 
 // Individual articles
 for (const a of ARTICLES) {
-  const canonicalUrl = `${DOMAIN}/blog/${a.slug}`;
+  const canonicalUrl = `${DOMAIN}/blog/${a.slug}/`;
   const related = ARTICLES.filter(x => x.slug !== a.slug).slice(0, 3);
   const articleHtml = createPageHtml({
     title: a.metaTitle,
@@ -925,7 +925,7 @@ for (const a of ARTICLES) {
 const privacyHtml = createPageHtml({
   title: 'Privacy Policy — PDFHome',
   description: 'Read the PDFHome Privacy Policy. 100% client-side, zero server uploads, and complete document confidentiality.',
-  canonicalUrl: `${DOMAIN}/privacy`,
+  canonicalUrl: `${DOMAIN}/privacy/`,
   mainContentHtml: `
     <div class="legal-page" style="max-width:860px; margin:0 auto; padding:var(--space-8) var(--space-4)">
       <div class="tool-page__header" style="margin-bottom:var(--space-8)">
@@ -1031,7 +1031,7 @@ console.log('  ✓ Pre-rendered: /privacy (dist/privacy/index.html)');
 const termsHtml = createPageHtml({
   title: 'Terms of Service — PDFHome',
   description: 'Review the PDFHome Terms of Service for using our free, in-browser PDF utilities.',
-  canonicalUrl: `${DOMAIN}/terms`,
+  canonicalUrl: `${DOMAIN}/terms/`,
   mainContentHtml: `
     <div class="legal-page" style="max-width:860px; margin:0 auto; padding:var(--space-8) var(--space-4)">
       <div class="tool-page__header" style="margin-bottom:var(--space-8)">
@@ -1073,7 +1073,7 @@ console.log('  ✓ Pre-rendered: /terms (dist/terms/index.html)');
 const contactHtml = createPageHtml({
   title: 'Contact & Support Desk — PDFHome',
   description: 'Get in touch with the PDFHome team for support, questions, and feature requests.',
-  canonicalUrl: `${DOMAIN}/contact`,
+  canonicalUrl: `${DOMAIN}/contact/`,
   mainContentHtml: `
     <div class="legal-page" style="max-width:860px; margin:0 auto; padding:var(--space-8) var(--space-4)">
       <div class="tool-page__header" style="margin-bottom:var(--space-8)">
@@ -1103,7 +1103,7 @@ console.log('  ✓ Pre-rendered: /contact (dist/contact/index.html)');
 const aboutHtml = createPageHtml({
   title: 'About Us — PDFHome',
   description: 'Learn about PDFHome: free, privacy-first PDF tools that run 100% in your browser. No uploads, no accounts, no watermarks.',
-  canonicalUrl: `${DOMAIN}/about`,
+  canonicalUrl: `${DOMAIN}/about/`,
   mainContentHtml: `
     <div class="legal-page" style="max-width:860px; margin:0 auto; padding:var(--space-8) var(--space-4)">
       <div class="tool-page__header" style="margin-bottom:var(--space-8)">
