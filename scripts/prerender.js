@@ -277,7 +277,7 @@ const prerenderedCards = TOOL_REGISTRY.filter(card => TOOL_SEO_DATA[card.id]);
         </div>
 
         <!-- Primary CTA: start the most popular task instantly -->
-        <div style="display:flex; flex-wrap:wrap; gap:var(--space-2); justify-content:center; margin-top:var(--space-5)">
+        <div class="home__hero-ctas" style="display:flex; flex-wrap:wrap; gap:var(--space-2); justify-content:center; margin-top:var(--space-5)">
           <a href="/merge-pdf" class="btn btn-primary btn-lg">Merge PDF Now</a>
           <a href="/pdf-to-word" class="btn btn-secondary btn-lg">PDF to Word</a>
           <a href="/compress-pdf" class="btn btn-secondary btn-lg">Compress PDF</a>
