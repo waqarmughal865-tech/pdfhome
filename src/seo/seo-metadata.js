@@ -290,7 +290,7 @@ export const TOOL_SEO_DATA = {
     metaTitle: 'Rotate PDF Pages Online Free — Turn PDF 90, 180, 270 Degrees | PDFHome',
     metaDescription: 'Rotate PDF pages permanently online. Turn individual pages or all pages 90, 180, or 270 degrees clockwise or counter-clockwise. Free. Document files never leave your browser.',
     h1: 'Rotate PDF Pages Online Free',
-    intro: 'Fix upside-down or sideways pages in your PDF documents. Scanned documents often come out rotated — select individual pages or rotate the entire document by 90°, 180°, or 270° with visual thumbnails showing every page. Save the corrected PDF permanently. Rotation is lossless and runs entirely in your browser.',
+    intro: 'Fix upside-down or sideways pages in your PDF documents. Scanned documents often come out rotated — select individual pages or rotate the entire document by 90°, 180°, or 270° with visual thumbnails showing every page. Save the corrected PDF permanently. Rotation is lossless and runs entirely in your browser. You can rotate just the pages that need it — select thumbnails individually instead of turning the whole document. The correction is saved into the file itself, so pages stay fixed wherever you open the PDF next.',
     howTo: [
       { step: 1, title: 'Upload PDF Document', desc: 'Drop your PDF file into the page organizer workspace.' },
       { step: 2, title: 'Rotate Specific or All Pages', desc: 'Click the rotation buttons on individual page thumbnails or use the bulk rotate tools.' },
@@ -543,7 +543,7 @@ export const TOOL_SEO_DATA = {
     metaTitle: 'PowerPoint to PDF Converter Free — Convert PPTX to PDF Online | PDFHome',
     metaDescription: 'Convert Microsoft PowerPoint (.pptx) presentations to PDF online for free. Fast, private in-browser conversion with zero file uploads.',
     h1: 'PowerPoint to PDF Converter Free Online',
-    intro: 'Convert PowerPoint presentations (.pptx) into clean, high-resolution PDF decks right in your browser. PDFs are perfect for distributing slides that must look identical everywhere — no font substitutions, no layout shifts, no "please install PowerPoint" messages. Each slide becomes a crisp PDF page. No uploads, no sign-up, no watermarks.',
+    intro: 'Convert PowerPoint presentations (.pptx) into clean, high-resolution PDF decks right in your browser. PDFs are perfect for distributing slides that must look identical everywhere — no font substitutions, no layout shifts, no "please install PowerPoint" messages. Each slide becomes a crisp PDF page. No uploads, no sign-up, no watermarks. PDFs are also the safer way to share decks outside your organization — no accidental edits, no missing fonts, and the file opens on any phone or computer without special software.',
     howTo: [
       { step: 1, title: 'Upload Presentation', desc: 'Select or drag and drop your .pptx file into the converter workbench.' },
       { step: 2, title: 'Convert Slides', desc: 'Our client-side engine renders each slide into crisp PDF pages in memory.' },
@@ -571,7 +571,7 @@ export const TOOL_SEO_DATA = {
     metaTitle: 'PDF Page Editor Online Free — Organize, Watermark & Protect Pages | PDFHome',
     metaDescription: 'Edit PDF pages in one unified workbench: reorder, rotate, delete, crop, add page numbers, apply watermarks, and password-protect. Free, private, and fully in-browser.',
     h1: 'PDF Page Editor Workbench',
-    intro: 'Open any PDF in the Page Editor Workbench to reorganize, enhance, and secure it without uploading anything. Reorder pages with drag and drop, rotate or delete unwanted sheets, crop margins, stamp page numbers, add text or image watermarks, and lock the file with a password — all in one continuous workspace that runs entirely in your browser.',
+    intro: 'Open any PDF in the Page Editor Workbench to reorganize, enhance, and secure it without uploading anything. Reorder pages with drag and drop, rotate or delete unwanted sheets, crop margins, stamp page numbers, add text or image watermarks, and lock the file with a password — all in one continuous workspace that runs entirely in your browser. Think of it as mission control for a single PDF: instead of opening five different tools, do your page-level edits here in one pass — reorder, clean up, stamp, and secure — then download once.',
     howTo: [
       { step: 1, title: 'Open Your PDF', desc: 'Drop a PDF file into the workbench to load every page as a live thumbnail.' },
       { step: 2, title: 'Edit Freely', desc: 'Reorder, rotate, delete, crop, number, watermark, or protect pages using the editing suite below the preview.' },
@@ -602,7 +602,7 @@ export const TOOL_SEO_DATA = {
     metaTitle: 'Online Document Converter — PDF to Word, Excel, PowerPoint & JPG | PDFHome',
     metaDescription: 'Convert documents both ways in your browser: PDF to Word, Excel, PowerPoint, JPG and back again. Free, private, no sign-up, zero server uploads.',
     h1: 'Online Document Converter',
-    intro: 'Convert between PDF and popular office formats without installing anything. Turn PDFs into editable Word documents, Excel spreadsheets, PowerPoint decks, or JPG images — or go the other way and create PDFs from Word, Excel, PowerPoint, and image files. Every conversion runs locally in your browser, so your documents stay private.',
+    intro: 'Convert between PDF and popular office formats without installing anything. Turn PDFs into editable Word documents, Excel spreadsheets, PowerPoint decks, or JPG images — or go the other way and create PDFs from Word, Excel, PowerPoint, and image files. Every conversion runs locally in your browser, so your documents stay private. Not sure which format you need? As a rule: Word for editing text, Excel for tables and numbers, PowerPoint for slides, JPG for sharing single pages as images. Pick the tool that matches what you will do with the file next.',
     howTo: [
       { step: 1, title: 'Choose a Direction', desc: 'Pick whether you are converting from PDF to an office format, or creating a PDF from another file type.' },
       { step: 2, title: 'Upload Your File', desc: 'Drop your document into the upload area. Files are read locally and never sent to a server.' },
@@ -693,7 +693,7 @@ export const TOOL_SEO_DATA = {
     metaTitle: 'Unlock PDF Free — Remove PDF Password Online | PDFHome',
     metaDescription: 'Remove password protection from any PDF online, free. No password needed — upload your locked PDF and download a fully unlocked copy. 100% private, in-browser.',
     h1: 'Unlock PDF Online Free',
-    intro: 'Locked out of your own PDF? Upload the password-protected file and get back a fully unlocked copy in seconds — no password required. Whether it is an old document whose password you forgot or a file with printing restrictions, this tool strips the protection cleanly. Everything happens inside your browser, so your documents never touch a server.',
+    intro: 'Locked out of your own PDF? Upload the password-protected file and get back a fully unlocked copy in seconds — no password required. Whether it is an old document whose password you forgot or a file with printing restrictions, this tool strips the protection cleanly. Everything happens inside your browser, so your documents never touch a server. A quick note on what this handles: printing, copying, and editing restrictions (owner passwords) come off cleanly. If a file demands a password just to open, that is strong encryption — try the obvious passwords first, or ask whoever created the file.',
     howTo: [
       { step: 1, title: 'Upload Locked PDF', desc: 'Select the password-protected PDF you want to unlock.' },
       { step: 2, title: 'Unlock Instantly', desc: 'Click "Unlock PDF" — the password protection is removed in seconds.' },
@@ -723,7 +723,7 @@ export const TOOL_SEO_DATA = {
     metaTitle: 'Redact PDF Free — Black Out Sensitive Text Online | PDFHome',
     metaDescription: 'Permanently black out names, numbers, and addresses in any PDF. Free online PDF redaction tool — runs in your browser, nothing is uploaded.',
     h1: 'Redact PDF Online Free',
-    intro: 'Sharing a document but need to hide the sensitive bits? Type the names, phone numbers, addresses, or ID numbers to conceal, and every occurrence is permanently covered with a solid black box. Ideal for contracts, legal filings, medical records, and public disclosures. Because it all happens in your browser, confidential documents stay confidential.',
+    intro: 'Sharing a document but need to hide the sensitive bits? Type the names, phone numbers, addresses, or ID numbers to conceal, and every occurrence is permanently covered with a solid black box. Ideal for contracts, legal filings, medical records, and public disclosures. Because it all happens in your browser, confidential documents stay confidential. After redacting, verify before sharing: try selecting the covered text — if you can still copy it, it is not hidden yet. Also strip identifying metadata from the file before sending it anywhere.',
     howTo: [
       { step: 1, title: 'Upload PDF', desc: 'Select the PDF containing sensitive text.' },
       { step: 2, title: 'Enter Text to Hide', desc: 'Type each word or phrase to redact, one per line.' },
@@ -753,7 +753,7 @@ export const TOOL_SEO_DATA = {
     metaTitle: 'Edit PDF Text Free — Find & Replace Text Online | PDFHome',
     metaDescription: 'Find and replace text directly inside any PDF online, free. Fix typos, update names and dates — replacements keep the original position and size.',
     h1: 'Edit PDF Text Online Free',
-    intro: 'Spotted a typo in a PDF? Need to update a company name or a date across the document? Enter the text to find and its replacement — every occurrence is swapped right inside the PDF, keeping its original position and approximate size. No retyping, no converters. And since it runs in your browser, your files stay private.',
+    intro: 'Spotted a typo in a PDF? Need to update a company name or a date across the document? Enter the text to find and its replacement — every occurrence is swapped right inside the PDF, keeping its original position and approximate size. No retyping, no converters. And since it runs in your browser, your files stay private. This works best for short corrections — a name, a date, a figure. The replacement keeps the original position and approximate size, so the surrounding layout stays intact. For heavy rewriting, converting to Word first is usually the better route.',
     howTo: [
       { step: 1, title: 'Upload PDF', desc: 'Select the PDF you want to edit.' },
       { step: 2, title: 'Find & Replace', desc: 'Enter the text to find and the replacement text.' },
@@ -783,7 +783,7 @@ export const TOOL_SEO_DATA = {
     metaTitle: 'Flatten PDF Free — Lock Form Fields Online | PDFHome',
     metaDescription: 'Flatten a PDF online, free — bake fillable form fields, checkboxes and annotations into permanent static pages. Nothing editable anymore.',
     h1: 'Flatten PDF Online Free',
-    intro: 'Finished filling out a PDF form? Flattening bakes every field, ticked checkbox, signature, and annotation permanently into the page — so nobody can change your answers afterwards. Essential before emailing contracts, applications, and official forms. The whole process runs in your browser; your file is never uploaded.',
+    intro: 'Finished filling out a PDF form? Flattening bakes every field, ticked checkbox, signature, and annotation permanently into the page — so nobody can change your answers afterwards. Essential before emailing contracts, applications, and official forms. The whole process runs in your browser; your file is never uploaded. Flattening is also what makes a filled form safe to share: recipients see exactly what you entered, on any device, with no risk of fields shifting or resetting. Do it as the final step, after everything is filled in correctly.',
     howTo: [
       { step: 1, title: 'Upload PDF Form', desc: 'Select the PDF with fillable fields or annotations.' },
       { step: 2, title: 'Flatten', desc: 'Click "Flatten PDF" — fields are baked into the pages.' },
@@ -813,7 +813,7 @@ export const TOOL_SEO_DATA = {
     metaTitle: 'Grayscale PDF Free — Convert PDF to Black & White Online | PDFHome',
     metaDescription: 'Convert a color PDF to black & white online, free. Perfect for printing or a classic look. Fast, private, in-browser conversion.',
     h1: 'Convert PDF to Grayscale Online Free',
-    intro: 'Turn a full-color PDF into elegant black & white. Whether you want to save color ink when printing, give a document a classic printed feel, or meet submission requirements, this tool converts every page to grayscale in seconds. All processing happens locally in your browser — your files are never uploaded.',
+    intro: 'Turn a full-color PDF into elegant black & white. Whether you want to save color ink when printing, give a document a classic printed feel, or meet submission requirements, this tool converts every page to grayscale in seconds. All processing happens locally in your browser — your files are never uploaded. Tip: grayscale also trims file size as a side effect, since color data is discarded — handy when emailing large documents. Very light colors can wash out, so glance at the preview before downloading.',
     howTo: [
       { step: 1, title: 'Upload PDF', desc: 'Select the color PDF you want to convert.' },
       { step: 2, title: 'Convert', desc: 'Click "Convert to Grayscale" — each page is re-rendered in black & white.' },
@@ -843,7 +843,7 @@ export const TOOL_SEO_DATA = {
     metaTitle: 'Edit PDF Metadata Free — Title, Author, Keywords Online | PDFHome',
     metaDescription: 'Edit PDF metadata online, free — change the title, author, subject, keywords, creator and producer stored inside any PDF. Private, in-browser.',
     h1: 'Edit PDF Metadata Online Free',
-    intro: 'Every PDF carries hidden details — its title, author, subject, and keywords — that search engines, libraries, and document managers read. This editor shows you the current values and lets you update them in seconds, so your documents are properly labeled and discoverable. Everything runs in your browser; nothing is uploaded.',
+    intro: 'Every PDF carries hidden details — its title, author, subject, and keywords — that search engines, libraries, and document managers read. This editor shows you the current values and lets you update them in seconds, so your documents are properly labeled and discoverable. Everything runs in your browser; nothing is uploaded. Clean metadata matters more than people think: author names and timestamps travel with every shared file. Before sending a sensitive document externally, strip the identifying fields here — it takes seconds and closes an easy privacy leak.',
     howTo: [
       { step: 1, title: 'Upload PDF', desc: 'Select the PDF whose details you want to edit.' },
       { step: 2, title: 'Edit Fields', desc: 'Update the title, author, subject, keywords, creator, or producer.' },
