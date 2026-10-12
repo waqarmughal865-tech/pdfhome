@@ -390,13 +390,20 @@ async function navigate() {
 
   updateActiveNav(path);
 
+  // Only show the loading spinner if the route chunk takes longer than 250ms.
+  // Fast transitions keep the current page visible instead of flashing a
+  // blank spinner — this removes the flicker on click.
+  let spinnerTimer = null;
   if (contentEl && !isInitialNav) {
-    // Show subtle transition indicator for heavy chunks on client-side route changes
-    contentEl.innerHTML = `
-      <div style="display:flex; justify-content:center; align-items:center; min-height:40vh;">
-        <div class="spinner" style="width:32px; height:32px; border:3px solid var(--color-border); border-top-color:var(--color-primary); border-radius:50%; animation:spin 0.8s linear infinite;"></div>
-      </div>
-    `;
+    spinnerTimer = setTimeout(() => {
+      if (contentEl) {
+        contentEl.innerHTML = `
+          <div style="display:flex; justify-content:center; align-items:center; min-height:40vh;">
+            <div class="spinner" style="width:32px; height:32px; border:3px solid var(--color-border); border-top-color:var(--color-primary); border-radius:50%; animation:spin 0.8s linear infinite;"></div>
+          </div>
+        `;
+      }
+    }, 250);
   }
 
   try {
@@ -421,6 +428,7 @@ async function navigate() {
       `;
     }
   } finally {
+    if (spinnerTimer) clearTimeout(spinnerTimer);
     isInitialNav = false;
   }
 
