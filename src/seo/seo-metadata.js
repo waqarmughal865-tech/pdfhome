@@ -683,6 +683,186 @@ export const TOOL_SEO_DATA = {
       { q: 'Are my files uploaded to a server?', a: 'No. The scan and extraction happen completely inside your web browser. Your documents never leave your device.' }
     ],
     relatedTools: ['pdf-to-jpg', 'pdf-to-text', 'compress-pdf', 'split-pdf']
+  },
+
+  'unlock-pdf': {
+    slug: '/unlock-pdf',
+    aliases: ['#/unlock-pdf'],
+    name: 'Unlock PDF',
+    toolId: 'unlock-pdf',
+    metaTitle: 'Unlock PDF Free — Remove PDF Password Online | PDFHome',
+    metaDescription: 'Remove password protection from any PDF online, free. No password needed — upload your locked PDF and download a fully unlocked copy. 100% private, in-browser.',
+    h1: 'Unlock PDF Online Free',
+    intro: 'Locked out of your own PDF? Upload the password-protected file and get back a fully unlocked copy in seconds — no password required. Whether it is an old document whose password you forgot or a file with printing restrictions, this tool strips the protection cleanly. Everything happens inside your browser, so your documents never touch a server.',
+    howTo: [
+      { step: 1, title: 'Upload Locked PDF', desc: 'Select the password-protected PDF you want to unlock.' },
+      { step: 2, title: 'Unlock Instantly', desc: 'Click "Unlock PDF" — the password protection is removed in seconds.' },
+      { step: 3, title: 'Download', desc: 'Download your fully unlocked PDF with no restrictions.' }
+    ],
+    features: [
+      { title: 'No Password Needed', desc: 'Removes owner-password protection without you having to remember it.' },
+      { title: 'Removes All Restrictions', desc: 'Printing, copying, and editing limits are stripped away with the lock.' },
+      { title: 'Instant & Free', desc: 'Unlocking takes seconds and there are no limits or watermarks.' },
+      { title: 'Completely Private', desc: 'Your file is processed locally — it never leaves your device.' }
+    ],
+    faqs: [
+      { q: 'Do I need to know the PDF password?', a: 'No. This tool removes owner-level protection (printing, copying, editing restrictions) without the password. Files encrypted with a strong user password that blocks opening entirely may not be unlockable.' },
+      { q: 'Is it legal to unlock a PDF?', a: 'Unlocking a PDF you own or have legitimate rights to is fine — for example, removing a password from your own document. Do not use this on files you have no right to access.' },
+      { q: 'Will the unlocked PDF look the same?', a: 'Yes. Only the security settings are removed; the content, layout, and quality stay exactly the same.' },
+      { q: 'Are my files uploaded to a server?', a: 'No. The entire unlock process runs inside your web browser. Your PDFs never leave your device.' },
+      { q: 'What if my PDF is not locked?', a: 'The tool will tell you the PDF is not password-protected — you can still re-save it, but unlocking is unnecessary.' }
+    ],
+    relatedTools: ['protect-pdf', 'redact-pdf', 'merge-pdf', 'compress-pdf']
+  },
+
+  'redact-pdf': {
+    slug: '/redact-pdf',
+    aliases: ['#/redact-pdf'],
+    name: 'Redact PDF',
+    toolId: 'redact-pdf',
+    metaTitle: 'Redact PDF Free — Black Out Sensitive Text Online | PDFHome',
+    metaDescription: 'Permanently black out names, numbers, and addresses in any PDF. Free online PDF redaction tool — runs in your browser, nothing is uploaded.',
+    h1: 'Redact PDF Online Free',
+    intro: 'Sharing a document but need to hide the sensitive bits? Type the names, phone numbers, addresses, or ID numbers to conceal, and every occurrence is permanently covered with a solid black box. Ideal for contracts, legal filings, medical records, and public disclosures. Because it all happens in your browser, confidential documents stay confidential.',
+    howTo: [
+      { step: 1, title: 'Upload PDF', desc: 'Select the PDF containing sensitive text.' },
+      { step: 2, title: 'Enter Text to Hide', desc: 'Type each word or phrase to redact, one per line.' },
+      { step: 3, title: 'Download', desc: 'Click "Redact PDF" and download the blacked-out copy.' }
+    ],
+    features: [
+      { title: 'Permanent Blackout', desc: 'Matches are covered with opaque boxes baked into the file — they cannot be selected or revealed.' },
+      { title: 'Every Occurrence', desc: 'All instances of each term across all pages are redacted at once.' },
+      { title: 'Precise Targeting', desc: 'Only the text you list is hidden; the rest of the document is untouched.' },
+      { title: 'Private by Design', desc: 'Redaction runs locally. Sensitive files never leave your device.' }
+    ],
+    faqs: [
+      { q: 'Is the redaction truly permanent?', a: 'The matched text is covered with opaque black boxes burned into the page content. For maximum safety with highly sensitive documents, always double-check the output before sharing.' },
+      { q: 'Can I redact a whole paragraph?', a: 'Enter the exact phrase on one line and every occurrence will be boxed out. For long passages, list the key identifying terms.' },
+      { q: 'Does redaction work on scanned PDFs?', a: 'Scanned PDFs are images without a text layer, so text search cannot find matches. Run scanned documents through the OCR tool first, then redact the result.' },
+      { q: 'Is matching case-sensitive?', a: 'No — redaction matching ignores case, so "John Smith" will also match "JOHN SMITH".' },
+      { q: 'Are my files uploaded anywhere?', a: 'No. Everything runs inside your browser; your documents never leave your device.' }
+    ],
+    relatedTools: ['edit-pdf-text', 'unlock-pdf', 'protect-pdf', 'flatten-pdf']
+  },
+
+  'edit-pdf-text': {
+    slug: '/edit-pdf-text',
+    aliases: ['#/edit-pdf-text'],
+    name: 'Edit PDF Text',
+    toolId: 'edit-pdf-text',
+    metaTitle: 'Edit PDF Text Free — Find & Replace Text Online | PDFHome',
+    metaDescription: 'Find and replace text directly inside any PDF online, free. Fix typos, update names and dates — replacements keep the original position and size.',
+    h1: 'Edit PDF Text Online Free',
+    intro: 'Spotted a typo in a PDF? Need to update a company name or a date across the document? Enter the text to find and its replacement — every occurrence is swapped right inside the PDF, keeping its original position and approximate size. No retyping, no converters. And since it runs in your browser, your files stay private.',
+    howTo: [
+      { step: 1, title: 'Upload PDF', desc: 'Select the PDF you want to edit.' },
+      { step: 2, title: 'Find & Replace', desc: 'Enter the text to find and the replacement text.' },
+      { step: 3, title: 'Download', desc: 'Click "Replace Text" and download the edited PDF.' }
+    ],
+    features: [
+      { title: 'True Find & Replace', desc: 'Every occurrence across all pages is replaced in one go.' },
+      { title: 'Position Preserved', desc: 'Replacement text is drawn at the original location with matching size.' },
+      { title: 'Instant Results', desc: 'No conversion round-trips — edits apply directly to the PDF.' },
+      { title: 'Fully Private', desc: 'Your document is edited locally and never uploaded anywhere.' }
+    ],
+    faqs: [
+      { q: 'Will the replacement use the same font?', a: 'The replacement is drawn in a clean standard font at the original size and position. For pixel-perfect typography, edit the source document instead.' },
+      { q: 'Is the find case-sensitive?', a: 'Yes — "Acme" will not match "acme". Enter the text exactly as it appears.' },
+      { q: 'Can I edit scanned PDFs?', a: 'Scanned PDFs are images with no editable text. Run them through the OCR tool first to add a text layer, then edit.' },
+      { q: 'What if the replacement is longer than the original?', a: 'Longer replacements are drawn over the covered area and may overlap nearby text. Keep replacements close to the original length for the cleanest result.' },
+      { q: 'Are my files uploaded to a server?', a: 'No. The whole edit happens inside your web browser.' }
+    ],
+    relatedTools: ['redact-pdf', 'pdf-to-text', 'pdf-to-word', 'merge-pdf']
+  },
+
+  'flatten-pdf': {
+    slug: '/flatten-pdf',
+    aliases: ['#/flatten-pdf'],
+    name: 'Flatten PDF',
+    toolId: 'flatten-pdf',
+    metaTitle: 'Flatten PDF Free — Lock Form Fields Online | PDFHome',
+    metaDescription: 'Flatten a PDF online, free — bake fillable form fields, checkboxes and annotations into permanent static pages. Nothing editable anymore.',
+    h1: 'Flatten PDF Online Free',
+    intro: 'Finished filling out a PDF form? Flattening bakes every field, ticked checkbox, signature, and annotation permanently into the page — so nobody can change your answers afterwards. Essential before emailing contracts, applications, and official forms. The whole process runs in your browser; your file is never uploaded.',
+    howTo: [
+      { step: 1, title: 'Upload PDF Form', desc: 'Select the PDF with fillable fields or annotations.' },
+      { step: 2, title: 'Flatten', desc: 'Click "Flatten PDF" — fields are baked into the pages.' },
+      { step: 3, title: 'Download', desc: 'Download the locked, non-editable PDF.' }
+    ],
+    features: [
+      { title: 'Locks Every Field', desc: 'Text fields, checkboxes, radio buttons, and dropdowns become static content.' },
+      { title: 'Bakes Annotations', desc: 'Comments and markup are merged permanently into the page.' },
+      { title: 'Tamper-Resistant', desc: 'Recipients see exactly what you submitted — nothing can be altered.' },
+      { title: 'Private Processing', desc: 'Flattening happens locally in your browser.' }
+    ],
+    faqs: [
+      { q: 'What does flattening a PDF do?', a: 'It converts interactive form fields and annotations into ordinary, non-editable page content. The visual appearance stays the same, but nothing can be changed afterwards.' },
+      { q: 'Can I un-flatten a PDF later?', a: 'No — flattening is permanent. Keep a copy of the original fillable PDF if you may need to edit it again.' },
+      { q: 'Does flattening change how the PDF looks?', a: 'No. Field values, ticks, and signatures appear exactly as before — they are just no longer interactive.' },
+      { q: 'My PDF has no form fields — what happens?', a: 'The tool will tell you no fields were found and re-save the PDF unchanged.' },
+      { q: 'Are my files uploaded anywhere?', a: 'No. Everything runs inside your browser; your documents never leave your device.' }
+    ],
+    relatedTools: ['sign-pdf', 'protect-pdf', 'redact-pdf', 'merge-pdf']
+  },
+
+  'grayscale-pdf': {
+    slug: '/grayscale-pdf',
+    aliases: ['#/grayscale-pdf'],
+    name: 'Grayscale PDF',
+    toolId: 'grayscale-pdf',
+    metaTitle: 'Grayscale PDF Free — Convert PDF to Black & White Online | PDFHome',
+    metaDescription: 'Convert a color PDF to black & white online, free. Perfect for printing or a classic look. Fast, private, in-browser conversion.',
+    h1: 'Convert PDF to Grayscale Online Free',
+    intro: 'Turn a full-color PDF into elegant black & white. Whether you want to save color ink when printing, give a document a classic printed feel, or meet submission requirements, this tool converts every page to grayscale in seconds. All processing happens locally in your browser — your files are never uploaded.',
+    howTo: [
+      { step: 1, title: 'Upload PDF', desc: 'Select the color PDF you want to convert.' },
+      { step: 2, title: 'Convert', desc: 'Click "Convert to Grayscale" — each page is re-rendered in black & white.' },
+      { step: 3, title: 'Download', desc: 'Download your grayscale PDF, ready to print.' }
+    ],
+    features: [
+      { title: 'True Grayscale', desc: 'Every page is re-rendered through a proper grayscale filter — smooth tones, no harsh thresholding.' },
+      { title: 'Print-Ready', desc: 'Ideal for black-and-white printers: no wasted color ink, clean output.' },
+      { title: 'Keeps Page Size', desc: 'Page dimensions are preserved; only the colors change.' },
+      { title: 'Private by Design', desc: 'Conversion runs entirely in your browser.' }
+    ],
+    faqs: [
+      { q: 'Will text still be selectable after conversion?', a: 'No. Pages are re-rendered as images during conversion, so text becomes part of the image. Use the OCR tool afterwards if you need selectable text.' },
+      { q: 'Does grayscale reduce file size?', a: 'Sometimes, since color data is removed — but re-rendered pages are images, so very text-heavy PDFs may grow slightly. Compress afterwards if needed.' },
+      { q: 'What quality are the converted pages?', a: 'Pages are rendered at 2x scale for crisp output that prints cleanly.' },
+      { q: 'Can I convert only some pages to grayscale?', a: 'Currently the whole document is converted. Split out the pages you want first, convert them, then merge back.' },
+      { q: 'Are my files uploaded to a server?', a: 'No. The conversion happens completely inside your web browser.' }
+    ],
+    relatedTools: ['compress-pdf', 'pdf-to-jpg', 'split-pdf', 'merge-pdf']
+  },
+
+  'metadata-editor': {
+    slug: '/metadata-editor',
+    aliases: ['#/metadata-editor'],
+    name: 'Metadata Editor',
+    toolId: 'metadata-editor',
+    metaTitle: 'Edit PDF Metadata Free — Title, Author, Keywords Online | PDFHome',
+    metaDescription: 'Edit PDF metadata online, free — change the title, author, subject, keywords, creator and producer stored inside any PDF. Private, in-browser.',
+    h1: 'Edit PDF Metadata Online Free',
+    intro: 'Every PDF carries hidden details — its title, author, subject, and keywords — that search engines, libraries, and document managers read. This editor shows you the current values and lets you update them in seconds, so your documents are properly labeled and discoverable. Everything runs in your browser; nothing is uploaded.',
+    howTo: [
+      { step: 1, title: 'Upload PDF', desc: 'Select the PDF whose details you want to edit.' },
+      { step: 2, title: 'Edit Fields', desc: 'Update the title, author, subject, keywords, creator, or producer.' },
+      { step: 3, title: 'Save', desc: 'Click "Save Metadata" and download the updated PDF.' }
+    ],
+    features: [
+      { title: 'Shows Current Values', desc: 'Existing metadata is loaded into the form, so you can see what is stored now.' },
+      { title: 'All Key Fields', desc: 'Edit title, author, subject, keywords, creator, and producer.' },
+      { title: 'SEO-Friendly', desc: 'Proper titles and keywords help your PDFs get found and look professional.' },
+      { title: 'Fully Private', desc: 'Reading and writing metadata happens locally in your browser.' }
+    ],
+    faqs: [
+      { q: 'What is PDF metadata?', a: 'Hidden document properties — title, author, subject, keywords, and software info — stored inside the PDF. Readers, search engines, and file managers use them to identify and organize documents.' },
+      { q: 'Why should I edit PDF metadata?', a: 'A proper title and author make your PDF look professional, improve searchability, and help document-management systems file it correctly.' },
+      { q: 'Does editing metadata change the visible content?', a: 'No. Only the hidden properties are updated; the pages look exactly the same.' },
+      { q: 'Can I remove metadata instead?', a: 'Clearing a field and saving will leave that property empty in most cases. For full sanitization, check the saved file\'s properties.' },
+      { q: 'Are my files uploaded anywhere?', a: 'No. The entire process runs inside your web browser.' }
+    ],
+    relatedTools: ['protect-pdf', 'flatten-pdf', 'compress-pdf', 'merge-pdf']
   }
 };
 

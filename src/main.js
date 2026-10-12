@@ -81,6 +81,36 @@ const routes = {
     renderExtractImages(mount);
   }),
 
+  '/unlock-pdf': (container) => renderToolPage(container, 'unlock-pdf', async (mount) => {
+    const { renderUnlockPdf } = await import('./tools/unlock-pdf.js');
+    renderUnlockPdf(mount);
+  }),
+
+  '/redact-pdf': (container) => renderToolPage(container, 'redact-pdf', async (mount) => {
+    const { renderRedactPdf } = await import('./tools/redact-pdf.js');
+    renderRedactPdf(mount);
+  }),
+
+  '/edit-pdf-text': (container) => renderToolPage(container, 'edit-pdf-text', async (mount) => {
+    const { renderEditPdfText } = await import('./tools/edit-pdf-text.js');
+    renderEditPdfText(mount);
+  }),
+
+  '/flatten-pdf': (container) => renderToolPage(container, 'flatten-pdf', async (mount) => {
+    const { renderFlattenPdf } = await import('./tools/flatten-pdf.js');
+    renderFlattenPdf(mount);
+  }),
+
+  '/grayscale-pdf': (container) => renderToolPage(container, 'grayscale-pdf', async (mount) => {
+    const { renderGrayscalePdf } = await import('./tools/grayscale-pdf.js');
+    renderGrayscalePdf(mount);
+  }),
+
+  '/metadata-editor': (container) => renderToolPage(container, 'metadata-editor', async (mount) => {
+    const { renderMetadataEditor } = await import('./tools/metadata-editor.js');
+    renderMetadataEditor(mount);
+  }),
+
   '/ocr-pdf': (container) => renderToolPage(container, 'ocr-pdf', async (mount) => {
     const { renderConvert } = await import('./tools/convert.js');
     renderConvert(mount, 'ocr-pdf');

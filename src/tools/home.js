@@ -147,6 +147,72 @@ export const TOOL_REGISTRY = [
     keywords: ['extract images from pdf', 'pdf image extractor', 'save images from pdf', 'get pictures from pdf', 'pdf to png images', 'embedded images']
   },
   {
+    id: 'unlock-pdf',
+    name: 'Unlock PDF',
+    desc: 'Remove password protection from any PDF instantly — no password needed',
+    category: 'security',
+    iconClass: 'protect-pdf',
+    iconName: 'unlock',
+    path: '/unlock-pdf',
+    badge: 'New',
+    keywords: ['unlock pdf', 'remove pdf password', 'decrypt pdf', 'pdf password remover', 'unlock protected pdf']
+  },
+  {
+    id: 'redact-pdf',
+    name: 'Redact PDF',
+    desc: 'Permanently black out sensitive text like names, numbers and addresses',
+    category: 'security',
+    iconClass: 'protect-pdf',
+    iconName: 'shieldCheck',
+    path: '/redact-pdf',
+    badge: 'New',
+    keywords: ['redact pdf', 'black out text pdf', 'pdf redaction', 'hide sensitive text pdf', 'censor pdf']
+  },
+  {
+    id: 'edit-pdf-text',
+    name: 'Edit PDF Text',
+    desc: 'Find and replace text directly inside your PDF documents',
+    category: 'core',
+    iconClass: 'pdf-to-word',
+    iconName: 'edit',
+    path: '/edit-pdf-text',
+    badge: 'New',
+    keywords: ['edit pdf text', 'replace text in pdf', 'pdf text editor', 'change text pdf', 'find and replace pdf']
+  },
+  {
+    id: 'flatten-pdf',
+    name: 'Flatten PDF',
+    desc: 'Bake form fields and annotations into permanent, non-editable pages',
+    category: 'organize',
+    iconClass: 'merge',
+    iconName: 'layers',
+    path: '/flatten-pdf',
+    badge: 'New',
+    keywords: ['flatten pdf', 'pdf form flatten', 'lock pdf form fields', 'make pdf non editable', 'bake annotations pdf']
+  },
+  {
+    id: 'grayscale-pdf',
+    name: 'Grayscale PDF',
+    desc: 'Convert a color PDF to black & white for printing or a classic look',
+    category: 'core',
+    iconClass: 'pdf-to-image',
+    iconName: 'image',
+    path: '/grayscale-pdf',
+    badge: 'New',
+    keywords: ['grayscale pdf', 'pdf to black and white', 'convert pdf to grayscale', 'bw pdf', 'remove color pdf']
+  },
+  {
+    id: 'metadata-editor',
+    name: 'Metadata Editor',
+    desc: 'View and edit your PDF\'s title, author, subject and keywords',
+    category: 'organize',
+    iconClass: 'merge',
+    iconName: 'sliders',
+    path: '/metadata-editor',
+    badge: 'New',
+    keywords: ['pdf metadata editor', 'edit pdf properties', 'pdf title author', 'change pdf metadata', 'pdf document properties']
+  },
+  {
     id: 'image-to-pdf',
     name: 'JPG / Image to PDF',
     desc: 'Convert JPG, PNG, and WebP pictures into a clean, uniform PDF document',
