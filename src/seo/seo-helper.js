@@ -7,6 +7,24 @@
 import { DOMAIN } from './seo-metadata.js';
 
 /**
+ * Query-param junk URLs (e.g. ?q={search_term_string} discovered by Google
+ * from a since-removed SearchAction block) are not real pages — the site's
+ * search never reads URL parameters. Mark them noindex so they don't linger
+ * in Search Console as "alternative" pages. Returns true if noindex applied.
+ */
+function applyJunkParamRobots() {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('q')) {
+      const metaRobots = document.querySelector('meta[name="robots"]');
+      if (metaRobots) metaRobots.content = 'noindex, follow';
+      return true;
+    }
+  } catch (e) { /* URLSearchParams unavailable — ignore */ }
+  return false;
+}
+
+/**
  * Update document head metadata for the current tool page.
  */
 export function updatePageSeo(seoData) {
@@ -19,6 +37,8 @@ export function updatePageSeo(seoData) {
   if (metaRobots) {
     metaRobots.content = 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1';
   }
+  // Junk ?q= URLs must not be indexed (overrides the default above)
+  applyJunkParamRobots();
 
   // 2. Meta Description
   let metaDesc = document.querySelector('meta[name="description"]');
@@ -69,6 +89,8 @@ export function resetHomeSeo() {
   if (metaRobots) {
     metaRobots.content = 'index, follow, max-snippet:-1, max-image-preview:large, max-video-preview:-1';
   }
+  // Junk ?q= URLs must not be indexed (overrides the default above)
+  applyJunkParamRobots();
 
   let metaDesc = document.querySelector('meta[name="description"]');
   if (metaDesc) metaDesc.content = homeDesc;
