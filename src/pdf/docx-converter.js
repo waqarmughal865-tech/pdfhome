@@ -416,6 +416,29 @@ function parseItemsIntoLines(items, pageHeight, linkAnnotations = []) {
 }
 
 // Build structured blocks (headings, tables, tabbed metadata, lists, paragraphs) from parsed lines
+// Strip a leading bullet/number marker from text + runs. The Word renderer
+// prepends its own bullet glyph, so leaving the marker in would double it.
+function stripBulletMarker(text, runs) {
+  const m = String(text || '').match(/^([•●▪▫–—-]|(?:\d+|[a-zA-Z])[\.\)])\s+/);
+  if (!m) return { text, runs };
+  const newText = String(text).slice(m[0].length);
+  let newRuns = runs;
+  if (runs && runs.length > 0) {
+    newRuns = [];
+    for (let idx = 0; idx < runs.length; idx++) {
+      const r = runs[idx];
+      if (idx === 0 && r && typeof r.text === 'string') {
+        const stripped = { ...r, text: r.text.replace(/^([•●▪▫–—-]|(?:\d+|[a-zA-Z])[\.\)])\s*/, '') };
+        stripped.hasSpaceBefore = false;
+        if (stripped.text || stripped.hasSpaceBefore) newRuns.push(stripped);
+      } else if (r) {
+        if (newRuns.length === 0) r.hasSpaceBefore = false;
+        newRuns.push(r);
+      }
+    }
+  }
+  return { text: newText, runs: newRuns };
+}
 function buildBlocksFromLines(parsedLines, pageWidth, minContentX, deduplicatedLines = []) {
   const processedBlocks = [];
   let i = 0;
@@ -643,10 +666,11 @@ function buildBlocksFromLines(parsedLines, pageWidth, minContentX, deduplicatedL
             }
           }
 
+          const strippedR = isBullet ? stripBulletMarker(mergedRText, mergedRRuns) : { text: mergedRText, runs: mergedRRuns };
           rightBlocks.push({
             type: isTitle ? 'heading' : (isBullet ? 'list' : 'paragraph'),
-            text: mergedRText,
-            runs: mergedRRuns.length > 0 ? mergedRRuns : null,
+            text: strippedR.text,
+            runs: strippedR.runs && strippedR.runs.length > 0 ? strippedR.runs : null,
             fontSize: curR.fontSize || 10,
             level: 2,
             isBold: Boolean(curR.isBold),
@@ -686,8 +710,11 @@ function buildBlocksFromLines(parsedLines, pageWidth, minContentX, deduplicatedL
     // Check bullet list item
     const bulletMatch = text.match(/^([•●▪▫–—-]|(?:\d+|[a-zA-Z])[\.\)])\s+(.*)$/);
     if (bulletMatch) {
-      let bulletBody = bulletMatch[2];
-      const mergedListRuns = cur.runs ? [...cur.runs] : [];
+      // Strip the marker from runs too (renderer prepends its own bullet).
+      // NOTE: pass the ORIGINAL line text so the helper can strip the runs.
+      const stripped0 = stripBulletMarker(text, cur.runs ? [...cur.runs] : []);
+      let bulletBody = stripped0.text;
+      const mergedListRuns = stripped0.runs || [];
       let nextLineIdx = pIdx + 1;
 
       while (nextLineIdx < processedBlocks.length) {
@@ -1158,6 +1185,47 @@ export async function pdfToDocx(pdfBuffer, optionsOrProgress = {}, maybeProgress
         let splitTopY = 0;
         if (crossColumnTopY.length > 0) {
           splitTopY = Math.min(...crossColumnTopY) - 5;
+        }
+
+        // Universal top-band header rule (XY-cut style reading order):
+        // a shallow band of prominent text sitting above the shorter column
+        // is a page header even when it does not physically span the gutter
+        // (e.g. a CV name/title aligned with one column only). Without this,
+        // the title gets buried inside its column and reads AFTER the entire
+        // other column — unlike Adobe/competitor converters.
+        // Purely geometric on already-extracted items: zero perf impact.
+        if (splitTopY === 0) {
+          const gutterMid = (g.start + g.end) / 2;
+          let col1Top = -Infinity, col2Top = -Infinity, pageTop = -Infinity;
+          for (const it of validItems) {
+            const y = it.transform[5];
+            if (y > pageTop) pageTop = y;
+            const w = it.width || (it.str.length * 6);
+            const midX = it.transform[4] + w / 2;
+            if (midX < gutterMid) { if (y > col1Top) col1Top = y; }
+            else { if (y > col2Top) col2Top = y; }
+          }
+          if (col1Top > -Infinity && col2Top > -Infinity) {
+            const bandBottom = Math.min(col1Top, col2Top);
+            const bandItems = validItems.filter(it => it.transform[5] > bandBottom + 2);
+            if (bandItems.length > 0) {
+              // distinct baselines inside the band (3.5pt tolerance buckets)
+              const baselineBuckets = new Set(
+                bandItems.map(it => Math.round(it.transform[5] / 3.5))
+              );
+              const bandHeight = pageTop - bandBottom;
+              const hasProminentTitle = bandItems.some(it => {
+                const fs = Math.round(Math.hypot(it.transform[0], it.transform[1])) || 11;
+                return fs >= 18;
+              });
+              // Shallow band (a title block, not a tall sidebar), few lines,
+              // and genuinely title-sized text — otherwise leave columns alone.
+              if (baselineBuckets.size >= 1 && baselineBuckets.size <= 5 &&
+                  bandHeight < pageHeight * 0.30 && hasProminentTitle) {
+                splitTopY = bandBottom;
+              }
+            }
+          }
         }
 
         const headerItems = [];
@@ -1651,7 +1719,7 @@ export async function pdfToDocx(pdfBuffer, optionsOrProgress = {}, maybeProgress
                 <w:pPr>
                   <w:spacing w:before="20" w:after="20" w:line="${lineDxa}" w:lineRule="auto"/>
                 </w:pPr>
-                ${renderRuns(cellContent, 10, isHead, false, isHead ? '0F172A' : '334155')}
+                ${renderRuns(cellContent.runs || cellContent.text || '', 10, isHead, false, isHead ? '0F172A' : '334155')}
               </w:p>
             </w:tc>
           `;
