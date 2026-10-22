@@ -18,7 +18,7 @@ import './ConsentBanner.js';
 // Configuration: Google AdSense Publisher ID
 export const ADSENSE_CONFIG = {
   enabled: true,
-  caPubId: 'ca-pub-9649951726869483',
+  caPubId: 'ca-pub-9887731533822355',
   slots: {
     homeBanner: '',       // Responsive Leaderboard
     workspaceBottom: '',  // Workspace Bottom Banner

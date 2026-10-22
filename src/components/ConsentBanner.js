@@ -22,7 +22,7 @@ import { refreshAds } from './AdSlot.js';
 
 export const CONSENT_KEY = 'pdfhome-consent';
 export const ADSENSE_SCRIPT_SRC =
-  'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9649951726869483';
+  'https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-9887731533822355';
 
 let bannerEl = null;
 let initialized = false;
