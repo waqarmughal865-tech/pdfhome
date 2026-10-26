@@ -50,12 +50,12 @@ if (fs.existsSync(themeInitSrc)) {
  * Shell Navigation Links
  */
 const NAV_TOOLS = [
-  { id: 'sign', label: 'Sign PDF', path: '/sign-pdf' },
-  { id: 'pages', label: 'Page Editor', path: '/pages' },
-  { id: 'convert', label: 'Convert', path: '/convert' },
-  { id: 'merge', label: 'Merge', path: '/merge-pdf' },
-  { id: 'split', label: 'Split', path: '/split-pdf' },
-  { id: 'compress', label: 'Compress', path: '/compress-pdf' },
+  { id: 'sign', label: 'Sign PDF', path: '/sign-pdf/' },
+  { id: 'pages', label: 'Page Editor', path: '/pages/' },
+  { id: 'convert', label: 'Convert', path: '/convert/' },
+  { id: 'merge', label: 'Merge', path: '/merge-pdf/' },
+  { id: 'split', label: 'Split', path: '/split-pdf/' },
+  { id: 'compress', label: 'Compress', path: '/compress-pdf/' },
 ];
 
 /**
@@ -73,7 +73,7 @@ function truncateWords(text, maxLen) {
  */
 function buildShellHtml(mainContentHtml, currentPath = '/') {
   const navHtml = NAV_TOOLS.map(t => {
-    const isActive = t.path === currentPath;
+    const isActive = t.path.replace(/\/+$/, '') === (currentPath || '/').replace(/\/+$/, '');
     return `
       <a class="app-header__nav-link ${isActive ? 'app-header__nav-link--active' : ''}"
          href="${t.path}"
@@ -84,7 +84,7 @@ function buildShellHtml(mainContentHtml, currentPath = '/') {
   }).join('');
 
   const navHtmlMobile = NAV_TOOLS.map(t => {
-    const isActive = t.path === currentPath;
+    const isActive = t.path.replace(/\/+$/, '') === (currentPath || '/').replace(/\/+$/, '');
     return `
       <a class="app-header__nav-link mobile-nav__link ${isActive ? 'app-header__nav-link--active' : ''}"
          href="${t.path}"
@@ -141,7 +141,7 @@ function buildShellHtml(mainContentHtml, currentPath = '/') {
               <span style="font-size:11px; font-weight:700; text-transform:uppercase; color:var(--color-text-tertiary)">
                 Contact & Support
               </span>
-              <a href="/contact" class="app-footer__link" style="color:var(--color-accent); font-weight:600; text-decoration:none; display:flex; align-items:center; gap:6px">
+              <a href="/contact/" class="app-footer__link" style="color:var(--color-accent); font-weight:600; text-decoration:none; display:flex; align-items:center; gap:6px">
                 ${icon('mail', 14)} Send Us a Message
               </a>
             </div>
@@ -151,12 +151,12 @@ function buildShellHtml(mainContentHtml, currentPath = '/') {
           <div>
             <div class="app-footer__col-title">Core Tools</div>
             <ul class="app-footer__list">
-              <li><a class="app-footer__link" href="/merge-pdf">${icon('chevronRight', 12)} Merge PDF</a></li>
-              <li><a class="app-footer__link" href="/split-pdf">${icon('chevronRight', 12)} Split PDF</a></li>
-              <li><a class="app-footer__link" href="/compress-pdf">${icon('chevronRight', 12)} Compress PDF</a></li>
-              <li><a class="app-footer__link" href="/sign-pdf">${icon('chevronRight', 12)} Sign PDF Online</a></li>
-              <li><a class="app-footer__link" href="/rotate-pdf">${icon('chevronRight', 12)} Rotate PDF</a></li>
-              <li><a class="app-footer__link" href="/delete-pdf-pages">${icon('chevronRight', 12)} Delete PDF Pages</a></li>
+              <li><a class="app-footer__link" href="/merge-pdf/">${icon('chevronRight', 12)} Merge PDF</a></li>
+              <li><a class="app-footer__link" href="/split-pdf/">${icon('chevronRight', 12)} Split PDF</a></li>
+              <li><a class="app-footer__link" href="/compress-pdf/">${icon('chevronRight', 12)} Compress PDF</a></li>
+              <li><a class="app-footer__link" href="/sign-pdf/">${icon('chevronRight', 12)} Sign PDF Online</a></li>
+              <li><a class="app-footer__link" href="/rotate-pdf/">${icon('chevronRight', 12)} Rotate PDF</a></li>
+              <li><a class="app-footer__link" href="/delete-pdf-pages/">${icon('chevronRight', 12)} Delete PDF Pages</a></li>
             </ul>
           </div>
 
@@ -164,12 +164,12 @@ function buildShellHtml(mainContentHtml, currentPath = '/') {
           <div>
             <div class="app-footer__col-title">Office & Images</div>
             <ul class="app-footer__list">
-              <li><a class="app-footer__link" href="/pdf-to-word">${icon('chevronRight', 12)} PDF to Word</a></li>
-              <li><a class="app-footer__link" href="/pdf-to-excel">${icon('chevronRight', 12)} PDF to Excel</a></li>
-              <li><a class="app-footer__link" href="/pdf-to-powerpoint">${icon('chevronRight', 12)} PDF to PowerPoint</a></li>
-              <li><a class="app-footer__link" href="/pdf-to-jpg">${icon('chevronRight', 12)} PDF to JPG</a></li>
-              <li><a class="app-footer__link" href="/jpg-to-pdf">${icon('chevronRight', 12)} JPG to PDF</a></li>
-              <li><a class="app-footer__link" href="/ocr-pdf">${icon('chevronRight', 12)} OCR PDF</a></li>
+              <li><a class="app-footer__link" href="/pdf-to-word/">${icon('chevronRight', 12)} PDF to Word</a></li>
+              <li><a class="app-footer__link" href="/pdf-to-excel/">${icon('chevronRight', 12)} PDF to Excel</a></li>
+              <li><a class="app-footer__link" href="/pdf-to-powerpoint/">${icon('chevronRight', 12)} PDF to PowerPoint</a></li>
+              <li><a class="app-footer__link" href="/pdf-to-jpg/">${icon('chevronRight', 12)} PDF to JPG</a></li>
+              <li><a class="app-footer__link" href="/jpg-to-pdf/">${icon('chevronRight', 12)} JPG to PDF</a></li>
+              <li><a class="app-footer__link" href="/ocr-pdf/">${icon('chevronRight', 12)} OCR PDF</a></li>
             </ul>
           </div>
 
@@ -177,10 +177,10 @@ function buildShellHtml(mainContentHtml, currentPath = '/') {
           <div>
             <div class="app-footer__col-title">Page & Security</div>
             <ul class="app-footer__list">
-              <li><a class="app-footer__link" href="/protect-pdf">${icon('chevronRight', 12)} Protect PDF</a></li>
-              <li><a class="app-footer__link" href="/watermark-pdf">${icon('chevronRight', 12)} Watermark PDF</a></li>
-              <li><a class="app-footer__link" href="/crop-pdf">${icon('chevronRight', 12)} Crop PDF</a></li>
-              <li><a class="app-footer__link" href="/page-numbers">${icon('chevronRight', 12)} Number Pages</a></li>
+              <li><a class="app-footer__link" href="/protect-pdf/">${icon('chevronRight', 12)} Protect PDF</a></li>
+              <li><a class="app-footer__link" href="/watermark-pdf/">${icon('chevronRight', 12)} Watermark PDF</a></li>
+              <li><a class="app-footer__link" href="/crop-pdf/">${icon('chevronRight', 12)} Crop PDF</a></li>
+              <li><a class="app-footer__link" href="/page-numbers/">${icon('chevronRight', 12)} Number Pages</a></li>
             </ul>
           </div>
 
@@ -188,10 +188,10 @@ function buildShellHtml(mainContentHtml, currentPath = '/') {
           <div>
             <div class="app-footer__col-title">Company & Legal</div>
             <ul class="app-footer__list">
-              <li><a class="app-footer__link" href="/privacy">${icon('chevronRight', 12)} Privacy Policy</a></li>
-              <li><a class="app-footer__link" href="/terms">${icon('chevronRight', 12)} Terms of Service</a></li>
-              <li><a class="app-footer__link" href="/about">${icon('chevronRight', 12)} About Us</a></li>
-              <li><a class="app-footer__link" href="/contact">${icon('chevronRight', 12)} Contact Us</a></li>
+              <li><a class="app-footer__link" href="/privacy/">${icon('chevronRight', 12)} Privacy Policy</a></li>
+              <li><a class="app-footer__link" href="/terms/">${icon('chevronRight', 12)} Terms of Service</a></li>
+              <li><a class="app-footer__link" href="/about/">${icon('chevronRight', 12)} About Us</a></li>
+              <li><a class="app-footer__link" href="/contact/">${icon('chevronRight', 12)} Contact Us</a></li>
               <li><button type="button" class="app-footer__link" data-cookie-settings style="background:none; border:none; padding:0; cursor:pointer; font-family:inherit; color:inherit; text-align:left; display:flex; align-items:center; gap:var(--space-1)">${icon('chevronRight', 12)} Cookie Settings</button></li>
             </ul>
           </div>
@@ -278,9 +278,9 @@ const prerenderedCards = TOOL_REGISTRY.filter(card => TOOL_SEO_DATA[card.id]);
 
         <!-- Primary CTA: start the most popular task instantly -->
         <div class="home__hero-ctas" style="display:flex; flex-wrap:wrap; gap:var(--space-2); justify-content:center; margin-top:var(--space-5)">
-          <a href="/merge-pdf" class="btn btn-primary btn-lg">Merge PDF Now</a>
-          <a href="/pdf-to-word" class="btn btn-secondary btn-lg">PDF to Word</a>
-          <a href="/compress-pdf" class="btn btn-secondary btn-lg">Compress PDF</a>
+          <a href="/merge-pdf/" class="btn btn-primary btn-lg">Merge PDF Now</a>
+          <a href="/pdf-to-word/" class="btn btn-secondary btn-lg">PDF to Word</a>
+          <a href="/compress-pdf/" class="btn btn-secondary btn-lg">Compress PDF</a>
         </div>
       </div>
 
@@ -405,7 +405,7 @@ function buildToolPageHtml(seoData) {
       const relTool = TOOL_SEO_DATA[relKey];
       if (!relTool) return '';
       return `
-        <a href="${relTool.slug}" class="related-tool-card">
+        <a href="${relTool.slug}/" class="related-tool-card">
           <div class="related-tool-card__header">
             <span class="related-tool-card__icon">${icon('fileText', 20)}</span>
             <span class="related-tool-card__name">${relTool.name}</span>
@@ -817,7 +817,7 @@ function buildArticleSchemaJson(a, canonicalUrl) {
 
 function buildArticleCardHtml(a) {
   return `
-    <a class="tool-card" href="/blog/${a.slug}">
+    <a class="tool-card" href="/blog/${a.slug}/">
       <div class="tool-card__header">
         <div class="tool-card__icon tool-card__icon--pdf-to-word">${icon('fileText', 22)}</div>
         <span class="tool-card__badge">Guide</span>
@@ -873,7 +873,7 @@ for (const a of ARTICLES) {
           <div>
             <p style="font-size:var(--text-xs); color:var(--color-text-tertiary); margin:0 0 4px">
               <a href="/" style="color:var(--color-text-tertiary)">Home</a> ·
-              <a href="/blog" style="color:var(--color-text-tertiary)">Guides</a>
+              <a href="/blog/" style="color:var(--color-text-tertiary)">Guides</a>
             </p>
             <h1 class="tool-page__title" style="font-size:var(--text-2xl)">${escapeHtmlAttr(a.h1)}</h1>
             <p style="font-size:var(--text-xs); color:var(--color-text-tertiary); margin-top:6px">
@@ -892,7 +892,7 @@ for (const a of ARTICLES) {
               <div style="margin:var(--space-10) 0; padding:var(--space-6); background:var(--color-bg-secondary); border:1px solid var(--color-border); border-radius:var(--radius-xl); text-align:center">
                 <h3 style="font-size:var(--text-lg); font-weight:var(--weight-bold); color:var(--color-text-primary); margin:0 0 var(--space-2)">Try it right now — free</h3>
                 <p style="margin:0 0 var(--space-4); font-size:var(--text-sm)">No signup, no uploads, runs entirely in your browser.</p>
-                <a href="${a.toolSlug}" class="btn btn-primary btn-lg">Open ${escapeHtmlAttr(a.toolName)} →</a>
+                <a href="${a.toolSlug}/" class="btn btn-primary btn-lg">Open ${escapeHtmlAttr(a.toolName)} →</a>
               </div>
             ` : ''}
             ${a.faqs && a.faqs.length ? `
@@ -1004,7 +1004,7 @@ const privacyHtml = createPageHtml({
           </p>
           <div style="margin-top:var(--space-3); display:inline-flex; align-items:center; gap:var(--space-3); background:var(--color-bg-primary); padding:var(--space-3) var(--space-5); border-radius:var(--radius-lg); border:1px solid var(--color-border)">
             ${icon('mail', 18)}
-            <a href="/contact" style="color:var(--color-accent); font-weight:600; text-decoration:none">
+            <a href="/contact/" style="color:var(--color-accent); font-weight:600; text-decoration:none">
               Official PDF Home Support Desk
             </a>
           </div>
@@ -1015,7 +1015,7 @@ const privacyHtml = createPageHtml({
             Messages submitted through our contact form are stored in our private Firebase Realtime Database (name, email address, message, topic, submission time, and browser locale) so our team can respond to your inquiry. We keep contact submissions only as long as needed to handle your request and maintain a support history, after which they are deleted.
           </p>
           <p style="margin-top:var(--space-3)">
-            To request a copy or deletion of your contact submission, send a message through our <a href="/contact" style="color:var(--color-accent); text-decoration:underline">Support Desk</a> referencing the email address you used — we will honor deletion requests promptly. Messages you queued while offline (<code style="background:var(--color-bg-tertiary); padding:2px 6px; border-radius:4px">pdf_contact_offline_queue</code>) stay only in your browser until delivered and can be removed by clearing site data.
+            To request a copy or deletion of your contact submission, send a message through our <a href="/contact/" style="color:var(--color-accent); text-decoration:underline">Support Desk</a> referencing the email address you used — we will honor deletion requests promptly. Messages you queued while offline (<code style="background:var(--color-bg-tertiary); padding:2px 6px; border-radius:4px">pdf_contact_offline_queue</code>) stay only in your browser until delivered and can be removed by clearing site data.
           </p>
         </section>
       </div>
@@ -1134,13 +1134,13 @@ const aboutHtml = createPageHtml({
         <section style="border-top:1px solid var(--color-border); padding-top:var(--space-6)">
           <h2 style="font-size:var(--text-xl); font-weight:var(--weight-bold); color:var(--color-text-primary); margin-bottom:var(--space-3)">How PDFHome is supported</h2>
           <p>
-            PDFHome is free and will remain free. The site is supported by unobtrusive advertising. Ads are only loaded after you accept our cookie-consent banner — if you decline, the tools work exactly the same with no ads. You can change your choice at any time using the "Cookie Settings" link in the footer. Read our <a href="/privacy" style="color:var(--color-accent)">Privacy Policy</a> for full details.
+            PDFHome is free and will remain free. The site is supported by unobtrusive advertising. Ads are only loaded after you accept our cookie-consent banner — if you decline, the tools work exactly the same with no ads. You can change your choice at any time using the "Cookie Settings" link in the footer. Read our <a href="/privacy/" style="color:var(--color-accent)">Privacy Policy</a> for full details.
           </p>
         </section>
         <section style="border-top:1px solid var(--color-border); padding-top:var(--space-6)">
           <h2 style="font-size:var(--text-xl); font-weight:var(--weight-bold); color:var(--color-text-primary); margin-bottom:var(--space-3)">Get in touch</h2>
           <p>
-            Found a bug, have a feature request, or need help? Reach us through the <a href="/contact" style="color:var(--color-accent)">Contact &amp; Support desk</a>.
+            Found a bug, have a feature request, or need help? Reach us through the <a href="/contact/" style="color:var(--color-accent)">Contact &amp; Support desk</a>.
           </p>
         </section>
       </div>
@@ -1167,9 +1167,9 @@ const notFoundHtml = createPageHtml({
       </p>
       <div style="display:flex; flex-wrap:wrap; gap:var(--space-2); justify-content:center; margin-bottom:var(--space-8)">
         <a href="/" class="btn btn-primary">← Back to Home</a>
-        <a href="/merge-pdf" class="btn btn-secondary">Merge PDF</a>
-        <a href="/compress-pdf" class="btn btn-secondary">Compress PDF</a>
-        <a href="/pdf-to-word" class="btn btn-secondary">PDF to Word</a>
+        <a href="/merge-pdf/" class="btn btn-secondary">Merge PDF</a>
+        <a href="/compress-pdf/" class="btn btn-secondary">Compress PDF</a>
+        <a href="/pdf-to-word/" class="btn btn-secondary">PDF to Word</a>
       </div>
       <p style="font-size:12px; color:var(--color-text-tertiary)">
         Looking for a specific tool? Use the navigation above or browse all tools on the <a href="/" style="color:var(--color-primary)">homepage</a>.

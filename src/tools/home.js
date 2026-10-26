@@ -14,7 +14,7 @@ export const TOOL_REGISTRY = [
     category: 'sign',
     iconClass: 'pages',
     iconName: 'penTool',
-    path: '/sign-pdf',
+    path: '/sign-pdf/',
     badge: 'Popular',
     keywords: ['signature on pdf', 'sign pdf', 'transparent signature', 'digital signature', 'draw signature', 'e-sign', 'sign', 'handwritten signature', 'stamp signature', 'electronic signature', 'online pdf signer', 'autograph', 'sign contract']
   },
@@ -25,7 +25,7 @@ export const TOOL_REGISTRY = [
     category: 'convert',
     iconClass: 'docx',
     iconName: 'fileText',
-    path: '/pdf-to-word',
+    path: '/pdf-to-word/',
     badge: 'High Demand',
     keywords: ['pdf to word', 'pdf to docx', 'convert pdf to word', 'editable docx', 'word document', 'export word', 'doc', 'docx']
   },
@@ -36,7 +36,7 @@ export const TOOL_REGISTRY = [
     category: 'core',
     iconClass: 'merge',
     iconName: 'merge',
-    path: '/merge-pdf',
+    path: '/merge-pdf/',
     badge: 'Essential',
     keywords: ['merge pdf', 'combine pdf', 'join pdf', 'unite pdf', 'merge documents', 'combine files', 'stitch', 'bind', 'bundle', 'attach']
   },
@@ -47,7 +47,7 @@ export const TOOL_REGISTRY = [
     category: 'core',
     iconClass: 'split',
     iconName: 'scissors',
-    path: '/split-pdf',
+    path: '/split-pdf/',
     keywords: ['split pdf', 'extract pages', 'separate pdf', 'cut pdf', 'page extractor', 'divide pdf', 'slice', 'break up', 'isolate pages']
   },
   {
@@ -57,7 +57,7 @@ export const TOOL_REGISTRY = [
     category: 'core',
     iconClass: 'compress',
     iconName: 'compress',
-    path: '/compress-pdf',
+    path: '/compress-pdf/',
     badge: 'Smart Size',
     keywords: ['compress pdf', 'reduce pdf size', 'shrink pdf', 'optimize pdf', 'smaller pdf', 'downsize pdf', 'compact', 'minify', 'make pdf smaller']
   },
@@ -68,7 +68,7 @@ export const TOOL_REGISTRY = [
     category: 'security',
     iconClass: 'convert',
     iconName: 'stamp',
-    path: '/watermark-pdf',
+    path: '/watermark-pdf/',
     badge: 'Security',
     keywords: ['watermark on pdf', 'watermark pdf', 'add watermark', 'confidential stamp', 'logo watermark', 'copyright stamp', 'text watermark', 'stamp', 'draft']
   },
@@ -79,7 +79,7 @@ export const TOOL_REGISTRY = [
     category: 'security',
     iconClass: 'compress',
     iconName: 'lock',
-    path: '/protect-pdf',
+    path: '/protect-pdf/',
     badge: 'Encrypted',
     keywords: ['protect pdf', 'password protect pdf', 'lock pdf', 'encrypt pdf', 'secure pdf', 'set password', 'restrict pdf', 'encryption', 'privacy lock']
   },
@@ -90,7 +90,7 @@ export const TOOL_REGISTRY = [
     category: 'convert',
     iconClass: 'ocr',
     iconName: 'scan',
-    path: '/ocr-pdf',
+    path: '/ocr-pdf/',
     badge: 'AI Engine',
     keywords: ['ocr pdf', 'picture pdf to text', 'searchable pdf', 'scanned pdf to text', 'extract text from image pdf', 'optical character recognition', 'tesseract', 'scan text', 'read scanned pdf', 'image to text']
   },
@@ -101,7 +101,7 @@ export const TOOL_REGISTRY = [
     category: 'convert',
     iconClass: 'excel',
     iconName: 'fileSpreadsheet',
-    path: '/pdf-to-excel',
+    path: '/pdf-to-excel/',
     keywords: ['pdf to excel', 'pdf to xlsx', 'convert pdf to sheet', 'extract table from pdf', 'spreadsheet', 'xls', 'xlsx', 'table']
   },
   {
@@ -111,7 +111,7 @@ export const TOOL_REGISTRY = [
     category: 'convert',
     iconClass: 'slides',
     iconName: 'presentation',
-    path: '/pdf-to-powerpoint',
+    path: '/pdf-to-powerpoint/',
     keywords: ['pdf to slides', 'pdf to pptx', 'pdf to powerpoint', 'convert pdf to presentation', 'slides', 'deck', 'powerpoint']
   },
   {
@@ -121,7 +121,7 @@ export const TOOL_REGISTRY = [
     category: 'core',
     iconClass: 'pdf-to-image',
     iconName: 'image',
-    path: '/pdf-to-jpg',
+    path: '/pdf-to-jpg/',
     keywords: ['pdf to image', 'pdf to jpg', 'pdf to png', 'extract pictures from pdf', 'convert pdf to pictures', 'rasterize', 'export photos']
   },
   {
@@ -131,7 +131,7 @@ export const TOOL_REGISTRY = [
     category: 'convert',
     iconClass: 'docx',
     iconName: 'fileText',
-    path: '/pdf-to-text',
+    path: '/pdf-to-text/',
     badge: 'New',
     keywords: ['pdf to text', 'extract text from pdf', 'pdf to txt', 'copy text from pdf', 'pdf text extractor', 'get text from pdf']
   },
@@ -142,7 +142,7 @@ export const TOOL_REGISTRY = [
     category: 'core',
     iconClass: 'pdf-to-image',
     iconName: 'image',
-    path: '/extract-images',
+    path: '/extract-images/',
     badge: 'New',
     keywords: ['extract images from pdf', 'pdf image extractor', 'save images from pdf', 'get pictures from pdf', 'pdf to png images', 'embedded images']
   },
@@ -153,7 +153,7 @@ export const TOOL_REGISTRY = [
     category: 'security',
     iconClass: 'protect-pdf',
     iconName: 'unlock',
-    path: '/unlock-pdf',
+    path: '/unlock-pdf/',
     badge: 'New',
     keywords: ['unlock pdf', 'remove pdf password', 'decrypt pdf', 'pdf password remover', 'unlock protected pdf']
   },
@@ -164,7 +164,7 @@ export const TOOL_REGISTRY = [
     category: 'security',
     iconClass: 'protect-pdf',
     iconName: 'shieldCheck',
-    path: '/redact-pdf',
+    path: '/redact-pdf/',
     badge: 'New',
     keywords: ['redact pdf', 'black out text pdf', 'pdf redaction', 'hide sensitive text pdf', 'censor pdf']
   },
@@ -175,7 +175,7 @@ export const TOOL_REGISTRY = [
     category: 'core',
     iconClass: 'pdf-to-word',
     iconName: 'edit',
-    path: '/edit-pdf-text',
+    path: '/edit-pdf-text/',
     badge: 'New',
     keywords: ['edit pdf text', 'replace text in pdf', 'pdf text editor', 'change text pdf', 'find and replace pdf']
   },
@@ -186,7 +186,7 @@ export const TOOL_REGISTRY = [
     category: 'organize',
     iconClass: 'merge',
     iconName: 'layers',
-    path: '/flatten-pdf',
+    path: '/flatten-pdf/',
     badge: 'New',
     keywords: ['flatten pdf', 'pdf form flatten', 'lock pdf form fields', 'make pdf non editable', 'bake annotations pdf']
   },
@@ -197,7 +197,7 @@ export const TOOL_REGISTRY = [
     category: 'core',
     iconClass: 'pdf-to-image',
     iconName: 'image',
-    path: '/grayscale-pdf',
+    path: '/grayscale-pdf/',
     badge: 'New',
     keywords: ['grayscale pdf', 'pdf to black and white', 'convert pdf to grayscale', 'bw pdf', 'remove color pdf']
   },
@@ -208,7 +208,7 @@ export const TOOL_REGISTRY = [
     category: 'organize',
     iconClass: 'merge',
     iconName: 'sliders',
-    path: '/metadata-editor',
+    path: '/metadata-editor/',
     badge: 'New',
     keywords: ['pdf metadata editor', 'edit pdf properties', 'pdf title author', 'change pdf metadata', 'pdf document properties']
   },
@@ -219,7 +219,7 @@ export const TOOL_REGISTRY = [
     category: 'core',
     iconClass: 'image-to-pdf',
     iconName: 'paperclip',
-    path: '/jpg-to-pdf',
+    path: '/jpg-to-pdf/',
     keywords: ['image to pdf', 'jpg to pdf', 'png to pdf', 'photos to pdf', 'pictures to pdf', 'convert photo to pdf', 'scan to pdf', 'pic to pdf']
   },
   {
@@ -229,7 +229,7 @@ export const TOOL_REGISTRY = [
     category: 'organize',
     iconClass: 'pages',
     iconName: 'rotateCw',
-    path: '/rotate-pdf',
+    path: '/rotate-pdf/',
     keywords: ['rotate pdf', 'turn pdf', 'reorient pdf', 'rotate pages', 'clockwise rotate', 'flip pdf', 'landscape to portrait', 'fix upside down']
   },
   {
@@ -239,7 +239,7 @@ export const TOOL_REGISTRY = [
     category: 'organize',
     iconClass: 'split',
     iconName: 'trash',
-    path: '/delete-pdf-pages',
+    path: '/delete-pdf-pages/',
     keywords: ['delete pdf pages', 'remove pages from pdf', 'delete page', 'remove blank pages', 'discard pages', 'cut out pages', 'strip pages']
   },
   {
@@ -249,7 +249,7 @@ export const TOOL_REGISTRY = [
     category: 'organize',
     iconClass: 'pages',
     iconName: 'crop',
-    path: '/crop-pdf',
+    path: '/crop-pdf/',
     keywords: ['crop pdf', 'trim margins', 'crop pages', 'trim pdf', 'cut borders', 'remove scanner margins', 'white borders', 'trim white space']
   },
   {
@@ -259,7 +259,7 @@ export const TOOL_REGISTRY = [
     category: 'organize',
     iconClass: 'pages',
     iconName: 'hash',
-    path: '/page-numbers',
+    path: '/page-numbers/',
     keywords: ['number pdf pages', 'page numbers', 'header footer', 'bates numbering', 'add page numbers', 'page count', 'page footer']
   },
   {
@@ -269,7 +269,7 @@ export const TOOL_REGISTRY = [
     category: 'convert',
     iconClass: 'excel',
     iconName: 'fileSpreadsheet',
-    path: '/excel-to-pdf',
+    path: '/excel-to-pdf/',
     keywords: ['excel to pdf', 'xlsx to pdf', 'convert sheet to pdf', 'export excel as pdf', 'sheet to pdf', 'xls to pdf']
   },
   {
@@ -279,7 +279,7 @@ export const TOOL_REGISTRY = [
     category: 'convert',
     iconClass: 'slides',
     iconName: 'presentation',
-    path: '/slides-to-pdf',
+    path: '/slides-to-pdf/',
     keywords: ['pptx to pdf', 'slides to pdf', 'powerpoint to pdf', 'export slides to pdf', 'ppt to pdf']
   },
   {
@@ -289,7 +289,7 @@ export const TOOL_REGISTRY = [
     category: 'convert',
     iconClass: 'docx',
     iconName: 'fileText',
-    path: '/word-to-pdf',
+    path: '/word-to-pdf/',
     keywords: ['word to pdf', 'docx to pdf', 'convert word to pdf', 'save as pdf', 'doc to pdf', 'document to pdf']
   },
   {
@@ -299,7 +299,7 @@ export const TOOL_REGISTRY = [
     category: 'organize',
     iconClass: 'pages',
     iconName: 'layers',
-    path: '/pages',
+    path: '/pages/',
     badge: 'Suite',
     keywords: ['page editor', 'editor', 'pdf editor', 'workbench', 'edit pdf']
   }
@@ -418,9 +418,9 @@ export function renderHome(container) {
 
         <!-- Primary CTA: start the most popular task instantly -->
         <div class="home__hero-ctas" style="display:flex; flex-wrap:wrap; gap:var(--space-2); justify-content:center; margin-top:var(--space-5)">
-          <a href="/merge-pdf" class="btn btn-primary btn-lg">Merge PDF Now</a>
-          <a href="/pdf-to-word" class="btn btn-secondary btn-lg">PDF to Word</a>
-          <a href="/compress-pdf" class="btn btn-secondary btn-lg">Compress PDF</a>
+          <a href="/merge-pdf/" class="btn btn-primary btn-lg">Merge PDF Now</a>
+          <a href="/pdf-to-word/" class="btn btn-secondary btn-lg">PDF to Word</a>
+          <a href="/compress-pdf/" class="btn btn-secondary btn-lg">Compress PDF</a>
         </div>
       </div>
 
