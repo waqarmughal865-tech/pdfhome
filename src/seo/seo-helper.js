@@ -49,8 +49,11 @@ export function updatePageSeo(seoData) {
   }
   metaDesc.content = seoData.metaDescription || '';
 
-  // 3. Canonical URL
-  const canonicalUrl = `${DOMAIN}${seoData.slug}`;
+  // 3. Canonical URL — must end with a trailing slash to match the prerendered
+  // page and the sitemap URL exactly. The bare slug 308-redirects to the slash
+  // URL, so a bare-slug canonical left Google unable to settle on a canonical
+  // (tool pages sat in "alternative page" / "page with redirect").
+  const canonicalUrl = `${DOMAIN}${seoData.slug.replace(/\/?$/, '/')}`;
   let linkCanonical = document.querySelector('link[rel="canonical"]');
   if (!linkCanonical) {
     linkCanonical = document.createElement('link');
@@ -233,7 +236,8 @@ export function updateSimpleSeo({ title, description, slug, noindex = false }) {
   let metaDesc = document.querySelector('meta[name="description"]');
   if (metaDesc) metaDesc.content = description || '';
 
-  const canonicalUrl = `${DOMAIN}${slug}`;
+  // Canonical must end with a trailing slash (see updatePageSeo above).
+  const canonicalUrl = `${DOMAIN}${slug.replace(/\/?$/, '/')}`;
   let linkCanonical = document.querySelector('link[rel="canonical"]');
   if (linkCanonical) linkCanonical.href = canonicalUrl;
 
