@@ -86,7 +86,7 @@ export function renderAdSlot(type = 'banner', slotKey = 'workspaceBottom') {
           </div>
           <p class="ad-fallback-desc">${randomTip.desc}</p>
         </div>
-        <a href="/sign-pdf" class="ad-fallback-link" title="Explore Tool">
+        <a href="/sign-pdf/" class="ad-fallback-link" title="Explore Tool">
           Try Tool ${icon('arrowRight', 12)}
         </a>
       </div>

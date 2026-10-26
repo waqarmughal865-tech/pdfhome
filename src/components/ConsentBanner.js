@@ -113,7 +113,7 @@ function renderBanner() {
     <div>
       We use cookies for ads (Google AdSense) and to remember your preferences.
       You can accept or reject advertising cookies — PDF tools work the same either way.
-      See our <a href="/privacy">Privacy Policy</a> for details.
+      See our <a href="/privacy/">Privacy Policy</a> for details.
     </div>
     <div class="pdfhome-consent-actions">
       <button type="button" class="pdfhome-consent-btn pdfhome-consent-btn--accept" data-consent="accept">Accept</button>

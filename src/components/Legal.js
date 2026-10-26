@@ -97,7 +97,7 @@ export function renderPrivacy(container) {
           </p>
           <div style="margin-top:var(--space-3); display:inline-flex; align-items:center; gap:var(--space-3); background:var(--color-bg-primary); padding:var(--space-3) var(--space-5); border-radius:var(--radius-lg); border:1px solid var(--color-border)">
             ${icon('mail', 18)}
-            <a href="/contact" style="color:var(--color-accent); font-weight:600; text-decoration:none">
+            <a href="/contact/" style="color:var(--color-accent); font-weight:600; text-decoration:none">
               Official PDF Home Support Desk
             </a>
           </div>
@@ -109,7 +109,7 @@ export function renderPrivacy(container) {
             Messages submitted through our contact form are stored in our private Firebase Realtime Database (name, email address, message, topic, submission time, and browser locale) so our team can respond to your inquiry. We keep contact submissions only as long as needed to handle your request and maintain a support history, after which they are deleted.
           </p>
           <p style="margin-top:var(--space-3)">
-            To request a copy or deletion of your contact submission, send a message through our <a href="/contact" style="color:var(--color-accent); text-decoration:underline">Support Desk</a> referencing the email address you used — we will honor deletion requests promptly. Messages you queued while offline (<code style="background:var(--color-bg-tertiary); padding:2px 6px; border-radius:4px">pdf_contact_offline_queue</code>) stay only in your browser until delivered and can be removed by clearing site data.
+            To request a copy or deletion of your contact submission, send a message through our <a href="/contact/" style="color:var(--color-accent); text-decoration:underline">Support Desk</a> referencing the email address you used — we will honor deletion requests promptly. Messages you queued while offline (<code style="background:var(--color-bg-tertiary); padding:2px 6px; border-radius:4px">pdf_contact_offline_queue</code>) stay only in your browser until delivered and can be removed by clearing site data.
           </p>
         </section>
 
@@ -172,7 +172,7 @@ export function renderTerms(container) {
           </p>
           <div style="margin-top:var(--space-3); display:inline-flex; align-items:center; gap:var(--space-3); background:var(--color-bg-primary); padding:var(--space-3) var(--space-5); border-radius:var(--radius-lg); border:1px solid var(--color-border)">
             ${icon('mail', 18)}
-            <a href="/contact" style="color:var(--color-accent); font-weight:600; text-decoration:none">
+            <a href="/contact/" style="color:var(--color-accent); font-weight:600; text-decoration:none">
               Official PDF Home Support Desk
             </a>
           </div>
@@ -383,21 +383,21 @@ export function renderAbout(container) {
         <section style="border-top:1px solid var(--color-border); padding-top:var(--space-6)">
           <h2 style="font-size:var(--text-xl); font-weight:var(--weight-bold); color:var(--color-text-primary); margin-bottom:var(--space-3)">What you can do here</h2>
           <p>
-            PDFHome includes tools for everyday document tasks: <a href="/merge-pdf" style="color:var(--color-accent)">merging</a> multiple PDFs into one, <a href="/split-pdf" style="color:var(--color-accent)">splitting</a> and extracting pages, <a href="/compress-pdf" style="color:var(--color-accent)">compressing</a> large files, <a href="/convert" style="color:var(--color-accent)">converting</a> between PDF, Word, Excel, PowerPoint and JPG, <a href="/pages" style="color:var(--color-accent)">organizing pages</a> with rotate, crop, page numbers, watermarks, digital signatures, and password protection, plus <a href="/ocr-pdf" style="color:var(--color-accent)">OCR text recognition</a> for scanned documents.
+            PDFHome includes tools for everyday document tasks: <a href="/merge-pdf/" style="color:var(--color-accent)">merging</a> multiple PDFs into one, <a href="/split-pdf/" style="color:var(--color-accent)">splitting</a> and extracting pages, <a href="/compress-pdf/" style="color:var(--color-accent)">compressing</a> large files, <a href="/convert/" style="color:var(--color-accent)">converting</a> between PDF, Word, Excel, PowerPoint and JPG, <a href="/pages/" style="color:var(--color-accent)">organizing pages</a> with rotate, crop, page numbers, watermarks, digital signatures, and password protection, plus <a href="/ocr-pdf/" style="color:var(--color-accent)">OCR text recognition</a> for scanned documents.
           </p>
         </section>
 
         <section style="border-top:1px solid var(--color-border); padding-top:var(--space-6)">
           <h2 style="font-size:var(--text-xl); font-weight:var(--weight-bold); color:var(--color-text-primary); margin-bottom:var(--space-3)">How PDFHome is supported</h2>
           <p>
-            PDFHome is free and will remain free. The site is supported by unobtrusive advertising. Ads are only loaded after you accept our cookie-consent banner — if you decline, the tools work exactly the same with no ads. You can change your choice at any time using the "Cookie Settings" link in the footer. Read our <a href="/privacy" style="color:var(--color-accent)">Privacy Policy</a> for full details.
+            PDFHome is free and will remain free. The site is supported by unobtrusive advertising. Ads are only loaded after you accept our cookie-consent banner — if you decline, the tools work exactly the same with no ads. You can change your choice at any time using the "Cookie Settings" link in the footer. Read our <a href="/privacy/" style="color:var(--color-accent)">Privacy Policy</a> for full details.
           </p>
         </section>
 
         <section style="border-top:1px solid var(--color-border); padding-top:var(--space-6)">
           <h2 style="font-size:var(--text-xl); font-weight:var(--weight-bold); color:var(--color-text-primary); margin-bottom:var(--space-3)">Get in touch</h2>
           <p>
-            Found a bug, have a feature request, or need help? Reach us through the <a href="/contact" style="color:var(--color-accent)">Contact &amp; Support desk</a> — every message goes directly to the team behind PDFHome.
+            Found a bug, have a feature request, or need help? Reach us through the <a href="/contact/" style="color:var(--color-accent)">Contact &amp; Support desk</a> — every message goes directly to the team behind PDFHome.
           </p>
         </section>
       </div>

@@ -368,9 +368,9 @@ async function navigate() {
           </p>
           <div style="display:flex; flex-wrap:wrap; gap:var(--space-2); justify-content:center; margin-bottom:var(--space-8)">
             <a href="/" class="btn btn-primary">← Back to Home</a>
-            <a href="/merge-pdf" class="btn btn-secondary">Merge PDF</a>
-            <a href="/compress-pdf" class="btn btn-secondary">Compress PDF</a>
-            <a href="/pdf-to-word" class="btn btn-secondary">PDF to Word</a>
+            <a href="/merge-pdf/" class="btn btn-secondary">Merge PDF</a>
+            <a href="/compress-pdf/" class="btn btn-secondary">Compress PDF</a>
+            <a href="/pdf-to-word/" class="btn btn-secondary">PDF to Word</a>
           </div>
           <p style="font-size:12px; color:var(--color-text-tertiary)">
             Looking for a specific tool? Use the navigation above or browse all tools on the <a href="/" style="color:var(--color-primary)">homepage</a>.

@@ -14,7 +14,7 @@ export function getArticle(slug) {
 function articleCard(a) {
   const tool = a.toolSlug && TOOL_SEO_DATA[a.toolSlug.replace(/^\//, '')];
   return `
-    <a class="tool-card" href="/blog/${a.slug}" data-category="guide">
+    <a class="tool-card" href="/blog/${a.slug}/" data-category="guide">
       <div class="tool-card__header">
         <div class="tool-card__icon tool-card__icon--pdf-to-word">${icon('fileText', 22)}</div>
         <span class="tool-card__badge">Guide</span>
@@ -55,7 +55,7 @@ export function renderArticle(container, slug) {
       <div class="tool-page-wrapper" style="text-align:center; padding:var(--space-12) var(--space-4);">
         <h1 style="font-size:var(--text-xl); font-weight:700;">Article Not Found</h1>
         <p style="color:var(--color-text-secondary); margin: var(--space-4) 0;">This guide doesn't exist or was moved.</p>
-        <a href="/blog" class="btn btn-primary">← All Guides</a>
+        <a href="/blog/" class="btn btn-primary">← All Guides</a>
       </div>`;
     return;
   }
@@ -65,11 +65,11 @@ export function renderArticle(container, slug) {
   container.innerHTML = `
     <div class="tool-page">
       <div class="tool-page__header">
-        <a class="tool-page__back" href="/blog" title="All guides">${icon('chevronLeft')}</a>
+        <a class="tool-page__back" href="/blog/" title="All guides">${icon('chevronLeft')}</a>
         <div>
           <p style="font-size:var(--text-xs); color:var(--color-text-tertiary); margin:0 0 4px">
             <a href="/" style="color:var(--color-text-tertiary)">Home</a> ·
-            <a href="/blog" style="color:var(--color-text-tertiary)">Guides</a>
+            <a href="/blog/" style="color:var(--color-text-tertiary)">Guides</a>
           </p>
           <h1 class="tool-page__title" style="font-size:var(--text-2xl)">${a.h1}</h1>
           <p style="font-size:var(--text-xs); color:var(--color-text-tertiary); margin-top:6px">
@@ -91,7 +91,7 @@ export function renderArticle(container, slug) {
             <div style="margin:var(--space-10) 0; padding:var(--space-6); background:var(--color-bg-secondary); border:1px solid var(--color-border); border-radius:var(--radius-xl); text-align:center">
               <h3 style="font-size:var(--text-lg); font-weight:var(--weight-bold); color:var(--color-text-primary); margin:0 0 var(--space-2)">Try it right now — free</h3>
               <p style="margin:0 0 var(--space-4); font-size:var(--text-sm)">No signup, no uploads, runs entirely in your browser.</p>
-              <a href="${a.toolSlug}" class="btn btn-primary btn-lg">${icon('arrowRight', 18)} Open ${a.toolName}</a>
+              <a href="${a.toolSlug}/" class="btn btn-primary btn-lg">${icon('arrowRight', 18)} Open ${a.toolName}</a>
             </div>
           ` : ''}
 

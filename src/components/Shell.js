@@ -6,12 +6,12 @@ import { icon } from './icons.js';
 import { initContactModal } from './ContactModal.js';
 
 const TOOLS = [
-  { id: 'sign', label: 'Sign PDF', path: '/sign-pdf' },
-  { id: 'pages', label: 'Page Editor', path: '/pages' },
-  { id: 'convert', label: 'Convert', path: '/convert' },
-  { id: 'merge', label: 'Merge', path: '/merge-pdf' },
-  { id: 'split', label: 'Split', path: '/split-pdf' },
-  { id: 'compress', label: 'Compress', path: '/compress-pdf' },
+  { id: 'sign', label: 'Sign PDF', path: '/sign-pdf/' },
+  { id: 'pages', label: 'Page Editor', path: '/pages/' },
+  { id: 'convert', label: 'Convert', path: '/convert/' },
+  { id: 'merge', label: 'Merge', path: '/merge-pdf/' },
+  { id: 'split', label: 'Split', path: '/split-pdf/' },
+  { id: 'compress', label: 'Compress', path: '/compress-pdf/' },
 ];
 
 /**
@@ -90,12 +90,12 @@ export function renderShell(appEl) {
           <div>
             <div class="app-footer__col-title">Core Tools</div>
             <ul class="app-footer__list">
-              <li><a class="app-footer__link" href="/merge-pdf">${icon('chevronRight', 12)} Merge PDF</a></li>
-              <li><a class="app-footer__link" href="/split-pdf">${icon('chevronRight', 12)} Split PDF</a></li>
-              <li><a class="app-footer__link" href="/compress-pdf">${icon('chevronRight', 12)} Compress PDF</a></li>
-              <li><a class="app-footer__link" href="/sign-pdf">${icon('chevronRight', 12)} Sign PDF Online</a></li>
-              <li><a class="app-footer__link" href="/rotate-pdf">${icon('chevronRight', 12)} Rotate PDF</a></li>
-              <li><a class="app-footer__link" href="/delete-pdf-pages">${icon('chevronRight', 12)} Delete PDF Pages</a></li>
+              <li><a class="app-footer__link" href="/merge-pdf/">${icon('chevronRight', 12)} Merge PDF</a></li>
+              <li><a class="app-footer__link" href="/split-pdf/">${icon('chevronRight', 12)} Split PDF</a></li>
+              <li><a class="app-footer__link" href="/compress-pdf/">${icon('chevronRight', 12)} Compress PDF</a></li>
+              <li><a class="app-footer__link" href="/sign-pdf/">${icon('chevronRight', 12)} Sign PDF Online</a></li>
+              <li><a class="app-footer__link" href="/rotate-pdf/">${icon('chevronRight', 12)} Rotate PDF</a></li>
+              <li><a class="app-footer__link" href="/delete-pdf-pages/">${icon('chevronRight', 12)} Delete PDF Pages</a></li>
             </ul>
           </div>
 
@@ -103,12 +103,12 @@ export function renderShell(appEl) {
           <div>
             <div class="app-footer__col-title">Office & Images</div>
             <ul class="app-footer__list">
-              <li><a class="app-footer__link" href="/pdf-to-word">${icon('chevronRight', 12)} PDF to Word</a></li>
-              <li><a class="app-footer__link" href="/pdf-to-excel">${icon('chevronRight', 12)} PDF to Excel</a></li>
-              <li><a class="app-footer__link" href="/pdf-to-powerpoint">${icon('chevronRight', 12)} PDF to PowerPoint</a></li>
-              <li><a class="app-footer__link" href="/pdf-to-jpg">${icon('chevronRight', 12)} PDF to JPG</a></li>
-              <li><a class="app-footer__link" href="/jpg-to-pdf">${icon('chevronRight', 12)} JPG to PDF</a></li>
-              <li><a class="app-footer__link" href="/ocr-pdf">${icon('chevronRight', 12)} OCR PDF</a></li>
+              <li><a class="app-footer__link" href="/pdf-to-word/">${icon('chevronRight', 12)} PDF to Word</a></li>
+              <li><a class="app-footer__link" href="/pdf-to-excel/">${icon('chevronRight', 12)} PDF to Excel</a></li>
+              <li><a class="app-footer__link" href="/pdf-to-powerpoint/">${icon('chevronRight', 12)} PDF to PowerPoint</a></li>
+              <li><a class="app-footer__link" href="/pdf-to-jpg/">${icon('chevronRight', 12)} PDF to JPG</a></li>
+              <li><a class="app-footer__link" href="/jpg-to-pdf/">${icon('chevronRight', 12)} JPG to PDF</a></li>
+              <li><a class="app-footer__link" href="/ocr-pdf/">${icon('chevronRight', 12)} OCR PDF</a></li>
             </ul>
           </div>
 
@@ -116,11 +116,11 @@ export function renderShell(appEl) {
           <div>
             <div class="app-footer__col-title">Page & Security</div>
             <ul class="app-footer__list">
-              <li><a class="app-footer__link" href="/protect-pdf">${icon('chevronRight', 12)} Protect PDF</a></li>
-              <li><a class="app-footer__link" href="/watermark-pdf">${icon('chevronRight', 12)} Watermark PDF</a></li>
-              <li><a class="app-footer__link" href="/crop-pdf">${icon('chevronRight', 12)} Crop PDF</a></li>
-              <li><a class="app-footer__link" href="/page-numbers">${icon('chevronRight', 12)} Number Pages</a></li>
-              <li><a class="app-footer__link" href="/pages">${icon('chevronRight', 12)} Page Editor</a></li>
+              <li><a class="app-footer__link" href="/protect-pdf/">${icon('chevronRight', 12)} Protect PDF</a></li>
+              <li><a class="app-footer__link" href="/watermark-pdf/">${icon('chevronRight', 12)} Watermark PDF</a></li>
+              <li><a class="app-footer__link" href="/crop-pdf/">${icon('chevronRight', 12)} Crop PDF</a></li>
+              <li><a class="app-footer__link" href="/page-numbers/">${icon('chevronRight', 12)} Number Pages</a></li>
+              <li><a class="app-footer__link" href="/pages/">${icon('chevronRight', 12)} Page Editor</a></li>
             </ul>
           </div>
 
@@ -128,11 +128,11 @@ export function renderShell(appEl) {
           <div>
             <div class="app-footer__col-title">Company & Legal</div>
             <ul class="app-footer__list">
-              <li><a class="app-footer__link" href="/privacy">${icon('chevronRight', 12)} Privacy Policy</a></li>
-              <li><a class="app-footer__link" href="/terms">${icon('chevronRight', 12)} Terms of Service</a></li>
-              <li><a class="app-footer__link" href="/about">${icon('chevronRight', 12)} About Us</a></li>
-              <li><a class="app-footer__link" href="/blog">${icon('chevronRight', 12)} Guides & How-Tos</a></li>
-              <li><a class="app-footer__link" href="/contact" data-open-contact>${icon('chevronRight', 12)} Contact Us</a></li>
+              <li><a class="app-footer__link" href="/privacy/">${icon('chevronRight', 12)} Privacy Policy</a></li>
+              <li><a class="app-footer__link" href="/terms/">${icon('chevronRight', 12)} Terms of Service</a></li>
+              <li><a class="app-footer__link" href="/about/">${icon('chevronRight', 12)} About Us</a></li>
+              <li><a class="app-footer__link" href="/blog/">${icon('chevronRight', 12)} Guides & How-Tos</a></li>
+              <li><a class="app-footer__link" href="/contact/" data-open-contact>${icon('chevronRight', 12)} Contact Us</a></li>
               <li><button type="button" class="app-footer__link" data-cookie-settings style="background:none; border:none; padding:0; cursor:pointer; font-family:inherit; color:inherit; text-align:left; display:flex; align-items:center; gap:var(--space-1)">${icon('chevronRight', 12)} Cookie Settings</button></li>
               <li><button type="button" class="app-footer__link" data-open-contact style="background:none; border:none; padding:0; cursor:pointer; font-family:inherit; color:inherit; text-align:left; display:flex; align-items:center; gap:var(--space-1)">${icon('chevronRight', 12)} Help & Support</button></li>
             </ul>
@@ -225,9 +225,16 @@ export function renderShell(appEl) {
   return document.getElementById('main-content');
 }
 
+// Strip one trailing slash so '/merge-pdf/' and '/merge-pdf' compare equal.
+function stripSlash(p) {
+  const s = (p || '/').replace(/^#/, '');
+  return (s.length > 1 && s.endsWith('/')) ? s.slice(0, -1) : s;
+}
+
 function isLinkActive(rawPath, tool) {
-  const norm = (rawPath || '/').replace(/^#/, '');
-  if (norm === tool.path) return true;
+  const norm = stripSlash(rawPath);
+  const toolPath = stripSlash(tool.path);
+  if (norm === toolPath) return true;
   if (tool.id === 'sign') {
     return norm === '/sign-pdf';
   }
@@ -278,7 +285,7 @@ export function updateActiveNav(rawPath) {
     const linkHref = link.getAttribute('href');
     link.classList.toggle(
       'app-header__nav-link--active',
-      toolObj ? isLinkActive(rawPath, toolObj) : linkHref === rawPath
+      toolObj ? isLinkActive(rawPath, toolObj) : (linkHref ? stripSlash(linkHref) === stripSlash(rawPath) : false)
     );
   });
 }
