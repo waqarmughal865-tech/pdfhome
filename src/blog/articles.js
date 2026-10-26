@@ -37,7 +37,7 @@ export const ARTICLES = [
       {
         heading: 'Step 2: Upload it to the unlock tool',
         body: [
-          'Open the <a href="/unlock-pdf">Unlock PDF tool</a> and drop your file in. Everything happens inside your browser — the file never goes to any server, which matters a lot when you\'re dealing with sensitive documents.',
+          'Open the <a href="/unlock-pdf/">Unlock PDF tool</a> and drop your file in. Everything happens inside your browser — the file never goes to any server, which matters a lot when you\'re dealing with sensitive documents.',
         ],
       },
       {
@@ -102,7 +102,7 @@ export const ARTICLES = [
       {
         heading: 'Step 2: Redact every occurrence',
         body: [
-          'Open the <a href="/redact-pdf">Redact PDF tool</a>, upload your file, and type each term on its own line. The tool finds every match across all pages and covers each one with a solid black box baked into the file.',
+          'Open the <a href="/redact-pdf/">Redact PDF tool</a>, upload your file, and type each term on its own line. The tool finds every match across all pages and covers each one with a solid black box baked into the file.',
           'Don\'t redact one page at a time or eyeball it. Let the tool catch all occurrences — humans miss things, especially in long documents.',
         ],
       },
@@ -116,13 +116,13 @@ export const ARTICLES = [
       {
         heading: 'What about scanned PDFs?',
         body: [
-          'Scanned PDFs are just images of text — there\'s no text layer to search, so redaction tools can\'t find matches. Run the scan through an <a href="/ocr-pdf">OCR tool</a> first to add a text layer, then redact. Or physically cover the sensitive areas on the scan before sharing.',
+          'Scanned PDFs are just images of text — there\'s no text layer to search, so redaction tools can\'t find matches. Run the scan through an <a href="/ocr-pdf/">OCR tool</a> first to add a text layer, then redact. Or physically cover the sensitive areas on the scan before sharing.',
         ],
       },
       {
         heading: 'The metadata trap most people forget',
         body: [
-        'Even if the visible text is perfectly covered, PDFs carry invisible baggage: the author\'s name, the software used, creation dates, sometimes even edit history. If you\'re redacting a document for privacy, that metadata can give you away. Run the file through a <a href="/metadata-editor">metadata editor</a> afterwards and strip out anything identifying — it takes twenty seconds.',
+        'Even if the visible text is perfectly covered, PDFs carry invisible baggage: the author\'s name, the software used, creation dates, sometimes even edit history. If you\'re redacting a document for privacy, that metadata can give you away. Run the file through a <a href="/metadata-editor/">metadata editor</a> afterwards and strip out anything identifying — it takes twenty seconds.',
         ],
       },
       {
@@ -162,13 +162,13 @@ export const ARTICLES = [
       {
         heading: 'Step 1: Check what kind of PDF you have',
         body: [
-          'Can you select the text in your PDF? Then it has a real text layer and conversion will work well. Can\'t select anything? It\'s a scan — run it through <a href="/ocr-pdf">OCR</a> first, or the converter will hand you a Word file full of images.',
+          'Can you select the text in your PDF? Then it has a real text layer and conversion will work well. Can\'t select anything? It\'s a scan — run it through <a href="/ocr-pdf/">OCR</a> first, or the converter will hand you a Word file full of images.',
         ],
       },
       {
         heading: 'Step 2: Convert it',
         body: [
-          'Drop the file into the <a href="/pdf-to-word">PDF to Word tool</a> and download the .docx. The whole thing runs in your browser, so even confidential documents are safe.',
+          'Drop the file into the <a href="/pdf-to-word/">PDF to Word tool</a> and download the .docx. The whole thing runs in your browser, so even confidential documents are safe.',
         ],
       },
       {
@@ -182,13 +182,13 @@ export const ARTICLES = [
       {
         heading: 'When conversion isn\'t the answer',
         body: [
-          'If you only need the <em>text</em> and don\'t care about formatting, <a href="/pdf-to-text">PDF to Text</a> is faster and cleaner. If the PDF is mostly images with a little text, consider whether you even need Word at all.',
+          'If you only need the <em>text</em> and don\'t care about formatting, <a href="/pdf-to-text/">PDF to Text</a> is faster and cleaner. If the PDF is mostly images with a little text, consider whether you even need Word at all.',
         ],
       },
       {
         heading: 'Scanned PDFs need one extra step first',
         body: [
-        'If your PDF is a scan (photos of pages, no selectable text), there\'s nothing to convert yet — it\'s just pictures. Run it through <a href="/ocr-pdf">OCR</a> first to recognize the text, then convert the result to Word. Skipping this step is the #1 reason people get empty Word files.',
+        'If your PDF is a scan (photos of pages, no selectable text), there\'s nothing to convert yet — it\'s just pictures. Run it through <a href="/ocr-pdf/">OCR</a> first to recognize the text, then convert the result to Word. Skipping this step is the #1 reason people get empty Word files.',
         ],
       },
       {
@@ -203,7 +203,7 @@ export const ARTICLES = [
       { q: 'Can I convert a scanned PDF to Word?', a: 'Not directly — scans are images. Run OCR first to recognize the text, then convert.' },
       { q: 'Is my document uploaded anywhere?', a: 'No. PDFHome converts entirely in your browser — your file never leaves your device.' },
       { q: 'Why is my Word file a different size than the PDF?', a: 'Totally normal. Word stores text and formatting differently than PDF\'s fixed layout — the file can end up bigger or smaller. The content is what matters, not the byte count.' },
-      { q: 'Can I convert a password-protected PDF?', a: 'Remove the protection first with the <a href="/unlock-pdf">Unlock PDF</a> tool, then convert. A locked file will block the converter.' },
+      { q: 'Can I convert a password-protected PDF?', a: 'Remove the protection first with the <a href="/unlock-pdf/">Unlock PDF</a> tool, then convert. A locked file will block the converter.' },
     ],
   },
 
@@ -228,7 +228,7 @@ export const ARTICLES = [
       {
         heading: 'Step 1: Drop your files in',
         body: [
-          'Open the <a href="/merge-pdf">Merge PDF tool</a> and drop in all your PDFs — or click to browse. Order matters, so arrange them the way you want them in the final document. Most tools let you drag files to reorder.',
+          'Open the <a href="/merge-pdf/">Merge PDF tool</a> and drop in all your PDFs — or click to browse. Order matters, so arrange them the way you want them in the final document. Most tools let you drag files to reorder.',
         ],
       },
       {
@@ -246,13 +246,13 @@ export const ARTICLES = [
       {
         heading: 'Tips worth knowing',
         body: [
-          '<ul><li><strong>Locked PDFs won\'t merge.</strong> If a file is password-protected, <a href="/unlock-pdf">unlock it</a> first.</li><li><strong>File size adds up.</strong> Merging ten 10MB scans gives you a 100MB monster. <a href="/compress-pdf">Compress</a> afterwards if it\'s too big to email.</li><li><strong>Bookmarks don\'t always survive.</strong> If your PDFs had bookmarks or a table of contents, check them in the merged file.</li></ul>',
+          '<ul><li><strong>Locked PDFs won\'t merge.</strong> If a file is password-protected, <a href="/unlock-pdf/">unlock it</a> first.</li><li><strong>File size adds up.</strong> Merging ten 10MB scans gives you a 100MB monster. <a href="/compress-pdf/">Compress</a> afterwards if it\'s too big to email.</li><li><strong>Bookmarks don\'t always survive.</strong> If your PDFs had bookmarks or a table of contents, check them in the merged file.</li></ul>',
         ],
       },
       {
         heading: 'Merging for print vs. merging for screen',
         body: [
-        'If the merged PDF is headed to a printer, keep every page at full quality — compression artifacts that are invisible on screen become very visible on paper. If it\'s for emailing or reading on a phone, run the result through <a href="/compress-pdf">compression</a> afterwards. Same content, half the size, and nobody reading on a screen will notice.',
+        'If the merged PDF is headed to a printer, keep every page at full quality — compression artifacts that are invisible on screen become very visible on paper. If it\'s for emailing or reading on a phone, run the result through <a href="/compress-pdf/">compression</a> afterwards. Same content, half the size, and nobody reading on a screen will notice.',
         ],
       },
       {
@@ -299,7 +299,7 @@ export const ARTICLES = [
       {
         heading: 'Step 1: Compress it',
         body: [
-          'Drop the file into the <a href="/compress-pdf">Compress PDF tool</a>. It squeezes images and cleans up overhead, all in your browser.',
+          'Drop the file into the <a href="/compress-pdf/">Compress PDF tool</a>. It squeezes images and cleans up overhead, all in your browser.',
         ],
       },
       {
@@ -311,13 +311,13 @@ export const ARTICLES = [
       {
         heading: 'Still too big? Go after the images',
         body: [
-          'If compression alone didn\'t get you under the limit, the nuclear option is reducing image resolution. Converting color scans to <a href="/grayscale-pdf">grayscale</a> can also cut size dramatically — most documents don\'t need color.',
+          'If compression alone didn\'t get you under the limit, the nuclear option is reducing image resolution. Converting color scans to <a href="/grayscale-pdf/">grayscale</a> can also cut size dramatically — most documents don\'t need color.',
         ],
       },
       {
         heading: 'Still too big? Go after the images',
         body: [
-        'If compression didn\'t shrink things enough, the images are the culprit — they\'re usually 80–90% of a PDF\'s size. The nuclear option: extract the images with the <a href="/extract-images">image extractor</a>, shrink the big ones in any photo editor, and rebuild. It\'s manual work, but it beats a file that won\'t send.',
+        'If compression didn\'t shrink things enough, the images are the culprit — they\'re usually 80–90% of a PDF\'s size. The nuclear option: extract the images with the <a href="/extract-images/">image extractor</a>, shrink the big ones in any photo editor, and rebuild. It\'s manual work, but it beats a file that won\'t send.',
         ],
       },
       {
@@ -357,7 +357,7 @@ export const ARTICLES = [
       {
         heading: 'Step 1: Scan the PDF',
         body: [
-          'Open the <a href="/extract-images">Extract Images tool</a> and upload your PDF. It scans every page and lists each embedded picture — photos, illustrations, diagrams, charts — as thumbnails with their dimensions.',
+          'Open the <a href="/extract-images/">Extract Images tool</a> and upload your PDF. It scans every page and lists each embedded picture — photos, illustrations, diagrams, charts — as thumbnails with their dimensions.',
         ],
       },
       {
@@ -369,7 +369,7 @@ export const ARTICLES = [
       {
         heading: 'What if it finds nothing?',
         body: [
-          'Two possibilities. One: the PDF genuinely has no embedded images — just text and vector graphics. Two: what looks like an "image" is actually a full page render. In that case, use <a href="/pdf-to-jpg">PDF to JPG</a> to render pages as images instead.',
+          'Two possibilities. One: the PDF genuinely has no embedded images — just text and vector graphics. Two: what looks like an "image" is actually a full page render. In that case, use <a href="/pdf-to-jpg/">PDF to JPG</a> to render pages as images instead.',
           'Also worth knowing: tiny decorative icons (under 32 pixels) are filtered out automatically, so you only get the meaningful pictures.',
         ],
       },
@@ -426,7 +426,7 @@ export const ARTICLES = [
       {
         heading: 'Step 2: Pull out your pages',
         body: [
-          'Open the <a href="/split-pdf">Split PDF tool</a>, drop your file in, and either type the range (like 10-15) or click thumbnails to pick pages visually. Thumbnails are your friend when you\'re not sure of page numbers — you can see exactly what you\'re grabbing.',
+          'Open the <a href="/split-pdf/">Split PDF tool</a>, drop your file in, and either type the range (like 10-15) or click thumbnails to pick pages visually. Thumbnails are your friend when you\'re not sure of page numbers — you can see exactly what you\'re grabbing.',
         ],
       },
       {
@@ -459,7 +459,7 @@ export const ARTICLES = [
       { q: 'Can I split out non-consecutive pages?', a: 'Yes. Pick individual pages like 2, 7, 19 and they\'ll be combined into one new PDF in that order.' },
       { q: 'Is there a page limit?', a: 'No hard limit, but be sensible — pulling 500 pages out one by one will test your patience. Use ranges for big jobs.' },
       { q: 'Can I split a PDF on my phone?', a: 'Yes — the tool runs in your mobile browser. Picking pages via thumbnails works fine on touchscreens.' },
-      { q: 'Does splitting work on protected PDFs?', a: 'Remove the protection first with the <a href="/unlock-pdf">Unlock PDF tool</a>, then split.' },
+      { q: 'Does splitting work on protected PDFs?', a: 'Remove the protection first with the <a href="/unlock-pdf/">Unlock PDF tool</a>, then split.' },
     ],
   },
 
@@ -483,13 +483,13 @@ export const ARTICLES = [
       {
         heading: 'Step 1: Check if your PDF has real tables',
         body: [
-          'If you can select the text in the PDF, you\'re good — the tables are real and convertible. If it\'s a scan (no selectable text), run it through <a href="/ocr-pdf">OCR</a> first, then convert.',
+          'If you can select the text in the PDF, you\'re good — the tables are real and convertible. If it\'s a scan (no selectable text), run it through <a href="/ocr-pdf/">OCR</a> first, then convert.',
         ],
       },
       {
         heading: 'Step 2: Convert it',
         body: [
-          'Drop the file into the <a href="/pdf-to-excel">PDF to Excel tool</a>. The converter finds table structures and maps them to spreadsheet cells — headers, rows, numeric columns.',
+          'Drop the file into the <a href="/pdf-to-excel/">PDF to Excel tool</a>. The converter finds table structures and maps them to spreadsheet cells — headers, rows, numeric columns.',
         ],
       },
       {
@@ -521,7 +521,7 @@ export const ARTICLES = [
       { q: 'Will formulas come across?', a: 'No — PDFs don\'t contain formulas, only the visible values. You\'ll get the numbers; you rebuild the formulas in Excel.' },
       { q: 'My table came out as one column. Why?', a: 'The PDF probably uses spaces instead of a real table structure. Try selecting the text — if it doesn\'t select in neat columns, the converter had nothing to work with.' },
       { q: 'Is my financial data safe?', a: 'Yes. The entire conversion runs inside your browser — your statements and figures are never uploaded anywhere.' },
-      { q: 'Can I convert a scanned table?', a: 'Run <a href="/ocr-pdf">OCR</a> first to add a text layer, then convert. Results depend heavily on scan quality — clean scans work well.' },
+      { q: 'Can I convert a scanned table?', a: 'Run <a href="/ocr-pdf/">OCR</a> first to add a text layer, then convert. Results depend heavily on scan quality — clean scans work well.' },
       { q: 'What about PDF bank statements?', a: 'They convert like any table, but verify every figure — financial data deserves a row-by-row check before you trust it.' },
     ],
   },
@@ -546,7 +546,7 @@ export const ARTICLES = [
       {
         heading: 'Step 1: Convert the PDF',
         body: [
-          'Drop it into the <a href="/pdf-to-powerpoint">PDF to PowerPoint tool</a>. Every page becomes one slide, in order. The whole thing runs in your browser — nothing uploaded.',
+          'Drop it into the <a href="/pdf-to-powerpoint/">PDF to PowerPoint tool</a>. Every page becomes one slide, in order. The whole thing runs in your browser — nothing uploaded.',
         ],
       },
       {
@@ -615,7 +615,7 @@ export const ARTICLES = [
       {
         heading: 'Step 2: Convert and download',
         body: [
-          'Run the <a href="/pdf-to-jpg">PDF to JPG tool</a> and download individual pages, or grab everything as a ZIP when you need the whole document as images.',
+          'Run the <a href="/pdf-to-jpg/">PDF to JPG tool</a> and download individual pages, or grab everything as a ZIP when you need the whole document as images.',
         ],
       },
       {
@@ -678,13 +678,13 @@ export const ARTICLES = [
       {
         heading: 'Step 2: Arrange and convert',
         body: [
-          'Drop them into the <a href="/jpg-to-pdf">JPG to PDF tool</a>, drag to reorder, set page size and margins, and convert. Each image becomes one PDF page.',
+          'Drop them into the <a href="/jpg-to-pdf/">JPG to PDF tool</a>, drag to reorder, set page size and margins, and convert. Each image becomes one PDF page.',
         ],
       },
       {
         heading: 'Step 3: Make it a real document',
         body: [
-          'If the photos are text documents, run the result through <a href="/ocr-pdf">OCR</a> afterwards to make the text selectable and searchable. That one step turns \'pictures of paper\' into a genuinely useful PDF.',
+          'If the photos are text documents, run the result through <a href="/ocr-pdf/">OCR</a> afterwards to make the text selectable and searchable. That one step turns \'pictures of paper\' into a genuinely useful PDF.',
         ],
       },
       {
@@ -711,7 +711,7 @@ export const ARTICLES = [
       { q: 'Will the PDF be searchable?', a: 'Not automatically — photos are just images. Run OCR on the result to add a searchable text layer.' },
       { q: 'PNG or WebP instead of JPG?', a: 'The tool accepts JPG, PNG, and WebP. Use whatever you have; the output PDF is the same.' },
       { q: 'My PDF pages are different sizes. Why?', a: 'Each page matches its source image dimensions. For uniform pages, resize images to the same size before converting.' },
-      { q: 'Can I add text to the PDF afterwards?', a: 'The pages are images, so text isn\'t editable. For searchable text, run <a href="/ocr-pdf">OCR</a> on the result.' },
+      { q: 'Can I add text to the PDF afterwards?', a: 'The pages are images, so text isn\'t editable. For searchable text, run <a href="/ocr-pdf/">OCR</a> on the result.' },
     ],
   },
 
@@ -741,7 +741,7 @@ export const ARTICLES = [
       {
         heading: 'Step 2: Run the OCR',
         body: [
-          'Drop the scan into the <a href="/ocr-pdf">OCR PDF tool</a>. The engine reads each page in your browser via Web Workers — your private scans are never uploaded anywhere, which matters for sensitive documents.',
+          'Drop the scan into the <a href="/ocr-pdf/">OCR PDF tool</a>. The engine reads each page in your browser via Web Workers — your private scans are never uploaded anywhere, which matters for sensitive documents.',
         ],
       },
       {
@@ -765,7 +765,7 @@ export const ARTICLES = [
       {
         heading: 'What to do with the searchable PDF',
         body: [
-          'Now that text is real: search across the document, copy quotes, index it in your document manager, or extract all text with the <a href="/pdf-to-text">PDF to Text tool</a>. The scan just became a first-class digital citizen.',
+          'Now that text is real: search across the document, copy quotes, index it in your document manager, or extract all text with the <a href="/pdf-to-text/">PDF to Text tool</a>. The scan just became a first-class digital citizen.',
         ],
       },
     ],
@@ -798,7 +798,7 @@ export const ARTICLES = [
       {
         heading: 'Step 1: Spot the offenders',
         body: [
-          'Open the <a href="/rotate-pdf">Rotate PDF tool</a> and look at the thumbnails. Mark every page that\'s sideways or upside down — thumbnails make this a ten-second job even in long documents.',
+          'Open the <a href="/rotate-pdf/">Rotate PDF tool</a> and look at the thumbnails. Mark every page that\'s sideways or upside down — thumbnails make this a ten-second job even in long documents.',
         ],
       },
       {
@@ -861,7 +861,7 @@ export const ARTICLES = [
       {
         heading: 'Step 1: See every page',
         body: [
-          'Drop the file into the <a href="/delete-pdf-pages">Delete Pages tool</a>. Thumbnails show you everything at a glance — the blank pages and duplicates jump out immediately.',
+          'Drop the file into the <a href="/delete-pdf-pages/">Delete Pages tool</a>. Thumbnails show you everything at a glance — the blank pages and duplicates jump out immediately.',
         ],
       },
       {
@@ -891,7 +891,7 @@ export const ARTICLES = [
       {
         heading: 'Splitting vs. deleting: pick right',
         body: [
-          'Deleting removes pages from the output; <a href="/split-pdf">splitting</a> extracts pages into a new file. Want a shorter version AND keep the full original? Split out what you need instead of deleting from a copy.',
+          'Deleting removes pages from the output; <a href="/split-pdf/">splitting</a> extracts pages into a new file. Want a shorter version AND keep the full original? Split out what you need instead of deleting from a copy.',
         ],
       },
     ],
@@ -929,7 +929,7 @@ export const ARTICLES = [
       {
         heading: 'Step 2: Tune it with live preview',
         body: [
-          'Open the <a href="/watermark-pdf">Watermark PDF tool</a> and adjust opacity, size, rotation, and position while watching the preview. The golden rule: visible enough to notice, light enough to read through. Around 15–25% opacity usually nails it.',
+          'Open the <a href="/watermark-pdf/">Watermark PDF tool</a> and adjust opacity, size, rotation, and position while watching the preview. The golden rule: visible enough to notice, light enough to read through. Around 15–25% opacity usually nails it.',
         ],
       },
       {
@@ -941,7 +941,7 @@ export const ARTICLES = [
       {
         heading: 'What watermarks can and can\'t do',
         body: [
-          'A watermark deters casual copying and marks ownership clearly. It won\'t stop someone determined — anyone can crop or cover it with enough effort. For real security, combine watermarking with <a href="/protect-pdf">password protection</a>.',
+          'A watermark deters casual copying and marks ownership clearly. It won\'t stop someone determined — anyone can crop or cover it with enough effort. For real security, combine watermarking with <a href="/protect-pdf/">password protection</a>.',
         ],
       },
       {
@@ -953,7 +953,7 @@ export const ARTICLES = [
       {
         heading: 'Combining with other protections',
         body: [
-          'Watermark for deterrence + <a href="/protect-pdf">password</a> for access control + <a href="/flatten-pdf">flattening</a> to lock it all in. Each layer covers a different weakness. A watermarked, password-protected, flattened PDF is about as safe as a shareable document gets.',
+          'Watermark for deterrence + <a href="/protect-pdf/">password</a> for access control + <a href="/flatten-pdf/">flattening</a> to lock it all in. Each layer covers a different weakness. A watermarked, password-protected, flattened PDF is about as safe as a shareable document gets.',
         ],
       },
     ],
@@ -992,7 +992,7 @@ export const ARTICLES = [
       {
         heading: 'Step 2: Place it on the document',
         body: [
-          'Open the <a href="/sign-pdf">Sign PDF tool</a>, drop your file in, and drag the signature exactly where it goes. Resize and adjust transparency until it looks natural on the page.',
+          'Open the <a href="/sign-pdf/">Sign PDF tool</a>, drop your file in, and drag the signature exactly where it goes. Resize and adjust transparency until it looks natural on the page.',
         ],
       },
       {
@@ -1055,7 +1055,7 @@ export const ARTICLES = [
       {
         heading: 'Step 2: Encrypt the PDF',
         body: [
-          'Drop the file into the <a href="/protect-pdf">Protect PDF tool</a>, set your password, and download the encrypted copy. The encryption is standard and opens in every PDF reader — no special software needed on either end.',
+          'Drop the file into the <a href="/protect-pdf/">Protect PDF tool</a>, set your password, and download the encrypted copy. The encryption is standard and opens in every PDF reader — no special software needed on either end.',
         ],
       },
       {
@@ -1088,7 +1088,7 @@ export const ARTICLES = [
       { q: 'What if I forget the password?', a: 'Then the file is locked — strong encryption has no backdoor. Keep the password in a password manager. This is important enough to say twice.' },
       { q: 'Is my password sent anywhere?', a: 'No. Encryption happens entirely in your browser — your password is never transmitted or stored.' },
       { q: 'Owner password vs. user password?', a: 'User password locks opening the file (strongest). Owner password restricts printing/editing. This tool sets real encryption — the file can\'t be opened without the password.' },
-      { q: 'Can I remove the password later?', a: 'Yes — open it with the password, then use the <a href="/unlock-pdf">Unlock PDF tool</a> to save an unprotected copy.' },
+      { q: 'Can I remove the password later?', a: 'Yes — open it with the password, then use the <a href="/unlock-pdf/">Unlock PDF tool</a> to save an unprotected copy.' },
     ],
   },
 
@@ -1112,7 +1112,7 @@ export const ARTICLES = [
       {
         heading: 'Step 1: Draw your crop box',
         body: [
-          'Open the <a href="/crop-pdf">Crop PDF tool</a> and drag the crop box around the content to keep. The live preview shows exactly what each page will look like — no guessing.',
+          'Open the <a href="/crop-pdf/">Crop PDF tool</a> and drag the crop box around the content to keep. The live preview shows exactly what each page will look like — no guessing.',
         ],
       },
       {
@@ -1130,7 +1130,7 @@ export const ARTICLES = [
       {
         heading: 'Cropping vs. resizing: know the difference',
         body: [
-          'Cropping changes what\'s visible; the content keeps full resolution. If your goal is smaller file size rather than cleaner pages, you want <a href="/compress-pdf">compression</a> instead — different problem, different tool.',
+          'Cropping changes what\'s visible; the content keeps full resolution. If your goal is smaller file size rather than cleaner pages, you want <a href="/compress-pdf/">compression</a> instead — different problem, different tool.',
         ],
       },
       {
@@ -1181,7 +1181,7 @@ export const ARTICLES = [
       {
         heading: 'Step 2: Handle the cover page',
         body: [
-          'Open the <a href="/page-numbers">Page Numbers tool</a> and decide: does the cover count as page 1, or does numbering start after it? Reports and theses usually skip the cover — set that before you apply.',
+          'Open the <a href="/page-numbers/">Page Numbers tool</a> and decide: does the cover count as page 1, or does numbering start after it? Reports and theses usually skip the cover — set that before you apply.',
         ],
       },
       {
@@ -1244,7 +1244,7 @@ export const ARTICLES = [
       {
         heading: 'Step 2: Convert it',
         body: [
-          'Drop the .docx into the <a href="/word-to-pdf">Word to PDF tool</a>. Fonts, formatting, margins, and images are preserved exactly as you laid them out.',
+          'Drop the .docx into the <a href="/word-to-pdf/">Word to PDF tool</a>. Fonts, formatting, margins, and images are preserved exactly as you laid them out.',
         ],
       },
       {
@@ -1275,9 +1275,9 @@ export const ARTICLES = [
     faqs: [
       { q: 'Do I need Microsoft Word installed?', a: 'No. The conversion runs entirely in your browser — just upload the .docx.' },
       { q: 'Will my fonts look the same?', a: 'Yes — fonts are embedded in the PDF, so the document looks identical even on machines that never had those fonts.' },
-      { q: 'Can I convert back to Word later?', a: 'Yes, with the <a href="/pdf-to-word">PDF to Word tool</a> — though complex layouts may need minor cleanup after the round trip.' },
+      { q: 'Can I convert back to Word later?', a: 'Yes, with the <a href="/pdf-to-word/">PDF to Word tool</a> — though complex layouts may need minor cleanup after the round trip.' },
       { q: 'My PDF looks different from Word. Why?', a: 'Usually fonts or page rendering. Check the PDF carefully — 99% of conversions are pixel-faithful, and the 1% is almost always a font issue.' },
-      { q: 'Can I password-protect during conversion?', a: 'Convert first, then protect with the <a href="/protect-pdf">Protect PDF tool</a>. Two steps, thirty seconds.' },
+      { q: 'Can I password-protect during conversion?', a: 'Convert first, then protect with the <a href="/protect-pdf/">Protect PDF tool</a>. Two steps, thirty seconds.' },
     ],
   },
 
@@ -1307,7 +1307,7 @@ export const ARTICLES = [
       {
         heading: 'Step 2: Convert it',
         body: [
-          'Drop the .xlsx into the <a href="/excel-to-pdf">Excel to PDF tool</a>. Each sheet becomes PDF pages with grid alignment, numbers, and formatting preserved.',
+          'Drop the .xlsx into the <a href="/excel-to-pdf/">Excel to PDF tool</a>. Each sheet becomes PDF pages with grid alignment, numbers, and formatting preserved.',
         ],
       },
       {
@@ -1370,7 +1370,7 @@ export const ARTICLES = [
       {
         heading: 'Step 2: Convert it',
         body: [
-          'Drop the .pptx into the <a href="/slides-to-pdf">Slides to PDF tool</a>. Each slide becomes one crisp PDF page, fonts embedded, layout frozen.',
+          'Drop the .pptx into the <a href="/slides-to-pdf/">Slides to PDF tool</a>. Each slide becomes one crisp PDF page, fonts embedded, layout frozen.',
         ],
       },
       {
@@ -1394,7 +1394,7 @@ export const ARTICLES = [
       {
         heading: 'File size for email',
         body: [
-          'Image-heavy decks make fat PDFs. If it\'s too big to email, <a href="/compress-pdf">compress</a> it after converting — screen-viewed slides survive compression beautifully.',
+          'Image-heavy decks make fat PDFs. If it\'s too big to email, <a href="/compress-pdf/">compress</a> it after converting — screen-viewed slides survive compression beautifully.',
         ],
       },
     ],
@@ -1426,7 +1426,7 @@ export const ARTICLES = [
       {
         heading: 'Step 1: See everything at once',
         body: [
-          'Drop your PDF into the <a href="/pages">Page Editor</a>. Every page appears as a thumbnail — this bird\'s-eye view is the whole point. Problems you couldn\'t see in a page-by-page view (duplicates, wrong order, strays) jump out immediately.',
+          'Drop your PDF into the <a href="/pages/">Page Editor</a>. Every page appears as a thumbnail — this bird\'s-eye view is the whole point. Problems you couldn\'t see in a page-by-page view (duplicates, wrong order, strays) jump out immediately.',
         ],
       },
       {
@@ -1464,7 +1464,7 @@ export const ARTICLES = [
       { q: 'Will this change my original file?', a: 'No. The workbench builds a new PDF from your edits — the original stays exactly as it was.' },
       { q: 'Can I do everything in one session?', a: 'Yes — reorder, rotate, delete, crop, watermark, number, and protect can all happen before a single download.' },
       { q: 'Is there a page limit?', a: 'No hard limit, but very large documents (hundreds of pages) are smoother in smaller batches.' },
-      { q: 'Can I edit the actual text in the workbench?', a: 'The workbench handles pages (order, rotation, deletion). For text changes, use <a href="/edit-pdf-text">Edit PDF Text</a> — different layer of the document.' },
+      { q: 'Can I edit the actual text in the workbench?', a: 'The workbench handles pages (order, rotation, deletion). For text changes, use <a href="/edit-pdf-text/">Edit PDF Text</a> — different layer of the document.' },
       { q: 'Does it work on scanned PDFs?', a: 'Yes — pages are pages. Thumbnails, rotation, and deletion all work on scans exactly like born-digital PDFs.' },
     ],
   },
@@ -1552,13 +1552,13 @@ export const ARTICLES = [
       {
         heading: 'Step 1: Check the PDF has text',
         body: [
-          'Try selecting a sentence. If it selects, there\'s a real text layer and extraction will be perfect. If nothing selects, it\'s a scan — run <a href="/ocr-pdf">OCR</a> first, then extract.',
+          'Try selecting a sentence. If it selects, there\'s a real text layer and extraction will be perfect. If nothing selects, it\'s a scan — run <a href="/ocr-pdf/">OCR</a> first, then extract.',
         ],
       },
       {
         heading: 'Step 2: Extract it',
         body: [
-          'Drop the file into the <a href="/pdf-to-text">PDF to Text tool</a> and download the result. The whole document\'s text, in reading order, as a plain .txt file.',
+          'Drop the file into the <a href="/pdf-to-text/">PDF to Text tool</a> and download the result. The whole document\'s text, in reading order, as a plain .txt file.',
         ],
       },
       {
@@ -1570,7 +1570,7 @@ export const ARTICLES = [
       {
         heading: 'What plain text is good for',
         body: [
-          'Quoting in articles, feeding into translation tools, text analysis, archiving content without formatting baggage, and anywhere you need words without layout. When formatting matters, convert to <a href="/pdf-to-word">Word</a> instead — different job, different tool.',
+          'Quoting in articles, feeding into translation tools, text analysis, archiving content without formatting baggage, and anywhere you need words without layout. When formatting matters, convert to <a href="/pdf-to-word/">Word</a> instead — different job, different tool.',
         ],
       },
       {
@@ -1591,7 +1591,7 @@ export const ARTICLES = [
       { q: 'Will formatting be preserved?', a: 'No — you get plain text only. Headings, bold, tables, and images don\'t survive. For formatted output, convert to Word instead.' },
       { q: 'Can I extract from specific pages?', a: 'Extract the whole thing, then delete what you don\'t need — faster than picking pages for most jobs.' },
       { q: 'Why is the text out of order?', a: 'PDFs store text by position, not reading order. Multi-column layouts often extract incorrectly — a known quirk, not a bug.' },
-      { q: 'Tables extract as gibberish. Help?', a: 'Plain text can\'t represent tables. For table data, use <a href="/pdf-to-excel">PDF to Excel</a> instead — it rebuilds real cells.' },
+      { q: 'Tables extract as gibberish. Help?', a: 'Plain text can\'t represent tables. For table data, use <a href="/pdf-to-excel/">PDF to Excel</a> instead — it rebuilds real cells.' },
     ],
   },
 
@@ -1615,7 +1615,7 @@ export const ARTICLES = [
       {
         heading: 'Step 1: Find every occurrence',
         body: [
-          'Open the <a href="/edit-pdf-text">Edit PDF Text tool</a>, drop your file in, and enter the text to find. Check all occurrences before replacing — the typo in the header counts just as much as the one in paragraph three.',
+          'Open the <a href="/edit-pdf-text/">Edit PDF Text tool</a>, drop your file in, and enter the text to find. Check all occurrences before replacing — the typo in the header counts just as much as the one in paragraph three.',
         ],
       },
       {
@@ -1633,7 +1633,7 @@ export const ARTICLES = [
       {
         heading: 'When to convert instead',
         body: [
-          'Rewriting whole sections? Restructuring the document? Convert to <a href="/pdf-to-word">Word</a>, edit freely, and export back to PDF. Editing text in place is for surgery; conversion is for renovation.',
+          'Rewriting whole sections? Restructuring the document? Convert to <a href="/pdf-to-word/">Word</a>, edit freely, and export back to PDF. Editing text in place is for surgery; conversion is for renovation.',
         ],
       },
       {
@@ -1653,7 +1653,7 @@ export const ARTICLES = [
       { q: 'Will the font match?', a: 'The replacement uses a closely matching size and position. For short corrections it blends in well; long passages may show slight differences.' },
       { q: 'Can I edit scanned PDFs?', a: 'No — scans are images, not text. Run OCR first to add a text layer, though editing still works best on born-digital PDFs.' },
       { q: 'Is the original layout preserved?', a: 'Yes. Only the targeted text changes — everything else on the page stays exactly where it was.' },
-      { q: 'Can I change the font or color?', a: 'The tool matches existing formatting automatically. For styling changes, convert to <a href="/pdf-to-word">Word</a>, restyle freely, and export back.' },
+      { q: 'Can I change the font or color?', a: 'The tool matches existing formatting automatically. For styling changes, convert to <a href="/pdf-to-word/">Word</a>, restyle freely, and export back.' },
       { q: 'Why can\'t I edit some text?', a: 'It might be part of an image (scanned), a vector graphic, or a protected layer. Selectable, born-digital text is what this edits.' },
     ],
   },
@@ -1684,7 +1684,7 @@ export const ARTICLES = [
       {
         heading: 'Step 2: Flatten it',
         body: [
-          'Drop the file into the <a href="/flatten-pdf">Flatten PDF tool</a> and download the result. Fields, annotations, and form data are now permanent page content.',
+          'Drop the file into the <a href="/flatten-pdf/">Flatten PDF tool</a> and download the result. Fields, annotations, and form data are now permanent page content.',
         ],
       },
       {
@@ -1741,7 +1741,7 @@ export const ARTICLES = [
       {
         heading: 'Step 1: Convert it',
         body: [
-          'Drop the file into the <a href="/grayscale-pdf">Grayscale PDF tool</a>. Every page is converted in seconds — text, images, charts, all of it.',
+          'Drop the file into the <a href="/grayscale-pdf/">Grayscale PDF tool</a>. Every page is converted in seconds — text, images, charts, all of it.',
         ],
       },
       {
@@ -1804,7 +1804,7 @@ export const ARTICLES = [
       {
         heading: 'Step 1: See what\'s in there',
         body: [
-          'Open the <a href="/metadata-editor">Metadata Editor</a> and drop your file in. You\'ll see the current title, author, subject, and keywords — prepare to be surprised by what\'s been riding along.',
+          'Open the <a href="/metadata-editor/">Metadata Editor</a> and drop your file in. You\'ll see the current title, author, subject, and keywords — prepare to be surprised by what\'s been riding along.',
         ],
       },
       {
@@ -1834,7 +1834,7 @@ export const ARTICLES = [
       {
         heading: 'The full pre-share privacy pass',
         body: [
-          'Before sharing anything sensitive: (1) redact visible sensitive text, (2) strip identifying metadata here, (3) <a href="/flatten-pdf">flatten</a> to lock it all in. Three steps, two minutes, genuinely private document.',
+          'Before sharing anything sensitive: (1) redact visible sensitive text, (2) strip identifying metadata here, (3) <a href="/flatten-pdf/">flatten</a> to lock it all in. Three steps, two minutes, genuinely private document.',
         ],
       },
     ],
